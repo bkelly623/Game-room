@@ -4,11 +4,11 @@
 var KEY='hub.v1';
 function defaults(){return{v:1,pin:null,kids:[
   {id:'vinny',name:'Vinny',emoji:'🦊',color:'#E8742E',speak:false,games:['kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']},
-  {id:'luca',name:'Luca',emoji:'🐸',color:'#2FA35A',speak:true,games:['glorp','rocket','letters']},
+  {id:'luca',name:'Luca',emoji:'🐸',color:'#2FA35A',speak:true,games:['blocks','glorp','rocket']},
   {id:'jack',name:'Jack',emoji:'🐺',color:'#3E7CD6',speak:false,games:['kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']}
  ],log:{}}}
 var mem=null;
-function load(){if(mem)return mem;try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(d&&Array.isArray(d.kids)){d.log=d.log||{};mem=d;return d}}}catch(e){}mem=defaults();return mem}
+function load(){if(mem)return mem;try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(d&&Array.isArray(d.kids)){d.log=d.log||{};d.kids.forEach(function(k){var i=k.games.indexOf('letters');if(i>=0)k.games[i]='blocks'});mem=d;return d}}}catch(e){}mem=defaults();return mem}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(e){}}
 function kid(id){return load().kids.find(function(k){return k.id===id})||null}
 function game(id){return (window.CATALOG||[]).find(function(g){return g.id===id})||null}

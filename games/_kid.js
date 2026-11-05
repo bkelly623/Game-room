@@ -2,6 +2,7 @@
    every localStorage key the game uses is quietly stored as "kid.<kidId>::<key>". */
 (function(){
   'use strict';
+  if(window.__KID)return;
   var kid=null;
   try{kid=new URLSearchParams(location.search).get('kid')}catch(e){}
   if(!kid||!/^[a-z0-9-]{1,40}$/.test(kid))return;
@@ -11,4 +12,5 @@
   S.setItem=function(k,v){return s.call(this,this===ls?P+k:k,v)};
   S.removeItem=function(k){return r.call(this,this===ls?P+k:k)};
   window.__KID=kid;
+  window.__hubRaw=function(k){try{return g.call(ls,k)}catch(e){return null}};
 })();
