@@ -1,0 +1,496 @@
+<!doctype html><html><head><script src="../_kid.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Echo Mines</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a miner's console. Mine-shaft canvas (16:10) on top, spelling console with big on-screen keyboard beneath; build mode swaps the console for a block hotbar. Single deep-cave look. */
+:root{
+  --cave:#14101C; --panel:#221B2E; --panel2:#2F2640; --line:#4A3C5E;
+  --ink:#F3ECDF; --ink2:#B8AAC9; --lamp:#FFC94D; --lamp-d:#B5841E;
+  --ok:#73D98A; --bad:#F2687B; --gem:#5FE3E8;
+  --display:'Pixelify Sans','Trebuchet MS',system-ui,sans-serif;
+  --body:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--cave);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--gem);outline-offset:2px}
+#app{height:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:8px;padding-block:8px}
+.top{display:flex;align-items:center;gap:8px;flex:none}
+.brand{font-family:var(--display);font-weight:700;color:var(--lamp);font-size:20px;letter-spacing:.04em;margin-right:auto;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:3px 10px;font-family:var(--display);font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.depth b{color:var(--lamp)} .chip.streak b{color:var(--ok)}
+.ibtn{height:34px;min-width:34px;border-radius:10px;border:2px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0 8px;font-family:var(--display);font-size:14px}
+.ibtn svg{width:18px;height:18px}
+@media (max-width:440px){.brand{font-size:17px}.chip{font-size:13px;padding:2px 8px}.hide-sm{display:none}}
+#stage{position:relative;flex:none;align-self:center;border-radius:12px;overflow:hidden;box-shadow:0 0 0 3px var(--line),0 12px 40px rgba(0,0,0,.5);background:#000}
+#cv{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+#banner{position:absolute;left:0;right:0;top:30%;text-align:center;font-family:var(--display);font-weight:700;font-size:clamp(20px,5vw,32px);color:var(--lamp);text-shadow:0 3px 0 #3A2600,0 0 20px rgba(255,201,77,.4);pointer-events:none;animation:bannerIn 2.8s ease both}
+#banner small{display:block;font-size:.5em;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);text-shadow:0 2px 0 #000}
+@keyframes bannerIn{0%{opacity:0;transform:scale(.9)}12%,78%{opacity:1;transform:none}100%{opacity:0}}
+#bolt{position:absolute;left:8px;right:8px;bottom:8px;margin:0 auto;max-width:560px;background:rgba(14,36,48,.94);border:2px solid var(--gem);border-radius:12px;padding:6px 10px;font-size:15px;line-height:1.35;pointer-events:none}
+#bolt b{color:var(--gem);font-family:var(--display);margin-right:5px}
+/* console */
+#console{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.prompt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hear{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:12px;padding:9px 14px;background:var(--gem);color:#06303D;font-family:var(--display);font-weight:700;font-size:17px;box-shadow:0 4px 0 #1E8A90}
+.hear.alt{background:var(--panel2);color:var(--ink);box-shadow:0 4px 0 #0B0812;border:2px solid var(--line)}
+.hear:active{transform:translateY(3px);box-shadow:0 1px 0 #1E8A90}
+.hear svg{width:20px;height:20px}
+.plabel{color:var(--ink2);font-size:14px;margin-left:auto;text-align:right}
+.plabel b{color:var(--ink)}
+.clue{background:var(--panel);border:2px dashed var(--line);border-radius:12px;padding:8px 12px;font-size:17px;line-height:1.4}
+.answer{min-height:60px;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;background:#0D0A14;border:3px solid var(--line);border-radius:14px;padding:6px 10px;font-family:var(--display);font-size:clamp(28px,7vw,38px);letter-spacing:.06em}
+.answer .ph{font-family:var(--body);font-size:16px;color:#7D6F92;letter-spacing:0}
+.answer .caret{width:3px;height:1em;background:var(--lamp);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.answer.ok{border-color:var(--ok);background:#12301C}
+.answer.bad{border-color:var(--bad);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fix{background:#2A1620;border:2px solid var(--bad);border-radius:12px;padding:8px 12px;font-size:16px;line-height:1.45}
+.fix .row{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.fix .w{font-family:var(--display);font-size:24px;letter-spacing:.06em}
+.fix .w i{font-style:normal;color:var(--bad);text-decoration:line-through}
+.fix .w u{text-decoration:none;color:var(--lamp);border-bottom:3px solid var(--lamp)}
+.fix small{color:var(--ink2)}
+.fix .tip{margin-top:4px;color:var(--ink)}
+.kb{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+.kr{display:flex;gap:5px;justify-content:center}
+.key{flex:1;max-width:58px;height:clamp(40px,6.2vh,52px);border-radius:10px;border:2px solid #0B0812;background:var(--panel2);font-family:var(--display);font-size:22px;box-shadow:0 3px 0 #0B0812;touch-action:manipulation;padding:0}
+.key:active,.key.down{transform:translateY(2px);box-shadow:0 1px 0 #0B0812;background:var(--line)}
+.key.wide{flex:1.6;max-width:96px;font-size:15px}
+.key.go{flex:2.2;max-width:150px;background:var(--lamp);color:#3A2600;font-weight:700;font-size:18px;box-shadow:0 3px 0 var(--lamp-d)}
+/* build */
+#buildbar{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.hotbar{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.slot{position:relative;border:3px solid var(--line);background:var(--panel);border-radius:12px;padding:6px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--ink2)}
+.slot canvas{width:34px;height:34px;image-rendering:pixelated}
+.slot b{position:absolute;right:5px;top:3px;font-family:var(--display);font-size:13px;color:var(--ink)}
+.slot.sel{border-color:var(--lamp);box-shadow:0 0 0 2px var(--lamp) inset}
+.slot:disabled{opacity:.4}
+.brow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-family:var(--display);font-weight:700;font-size:18px;border:0;border-radius:12px;padding:11px 18px;background:var(--lamp);color:#3A2600;box-shadow:0 4px 0 var(--lamp-d);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--lamp-d)}
+.btn.ghost{background:var(--panel2);color:var(--ink);box-shadow:0 4px 0 #0B0812;border:2px solid var(--line)}
+.btn.small{font-size:15px;padding:8px 13px}
+.btn.on{outline:3px solid var(--lamp)}
+.hint{color:var(--ink2);font-size:14px}
+/* overlays */
+.ov{position:fixed;inset:0;z-index:20;overflow-y:auto;display:flex;justify-content:center;align-items:flex-start;background:rgba(10,8,16,.88);backdrop-filter:blur(3px);
+  padding:max(18px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(18px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.card{width:100%;max-width:620px;margin:auto;background:var(--panel);border:3px solid var(--line);border-radius:18px;box-shadow:0 8px 0 #0B0812;padding:20px}
+.card h2{font-family:var(--display);margin:0 0 6px;font-size:28px;color:var(--lamp);line-height:1.05;text-wrap:balance}
+.card p{line-height:1.5;margin:0 0 12px;color:var(--ink)}
+.card .sub{color:var(--ink2)}
+.logo{font-family:var(--display);font-weight:700;text-align:center;font-size:clamp(48px,14vw,76px);line-height:.9;color:var(--lamp);text-shadow:0 4px 0 #6B4A0A,0 8px 0 #2A1D05,0 0 30px rgba(255,201,77,.35);margin:4px 0 8px}
+.tag{text-align:center;color:var(--ink2);margin-bottom:16px;font-size:17px}
+.namebox{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:14px}
+.namebox label{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.namebox input{font-family:var(--display);font-size:24px;text-align:center;width:min(280px,100%);padding:8px;border-radius:12px;border:3px solid var(--line);background:#0D0A14;color:var(--ink)}
+.center{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.boltline{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start;background:#10222C;border:2px solid #2A6A78;border-radius:14px;padding:12px;margin-bottom:14px}
+.boltline canvas{width:52px;height:52px;image-rendering:pixelated;border-radius:10px;background:#183442}
+.boltline p{margin:0}
+.res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 14px}
+@media (max-width:460px){.res{grid-template-columns:minmax(0,1fr)}}
+.res div{background:#1A1424;border:2px solid var(--line);border-radius:12px;padding:10px}
+.res b{display:block;font-family:var(--display);font-size:20px;color:var(--lamp)}
+.res small{color:var(--ink2)}
+.feat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:8px 10px;border-radius:10px;background:#1A1424;margin-bottom:6px;align-items:center}
+.feat b{font-size:15px}
+.feat .st{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
+.st.m{background:var(--ok);color:#0E2A16}.st.w{background:var(--lamp);color:#3A2600}.st.n{background:#3A2F4C;color:var(--ink2)}
+.feat .bar{grid-column:1/-1;height:7px;border-radius:99px;background:#0D0A14;overflow:hidden}
+.feat .bar i{display:block;height:100%;background:var(--ok)}
+.feat small{grid-column:1/-1;color:var(--ink2);font-size:13px}
+.stagehead{font-family:var(--display);color:var(--ink2);font-size:14px;letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px}
+.words{display:flex;flex-wrap:wrap;gap:6px}
+.words span{background:#2A1620;border:1px solid var(--bad);border-radius:8px;padding:2px 8px;font-size:15px}
+textarea.log{width:100%;min-height:96px;background:#0D0A14;color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:8px;font:14px/1.4 var(--body);resize:vertical;user-select:text;-webkit-user-select:text}
+.num{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<div id="app">
+  <div class="top">
+    <div class="brand">ECHO MINES</div>
+    <span class="chip depth" title="Depth"><b id="depthN">0</b> ft</span>
+    <span class="chip streak hide-sm" title="Streak">streak <b id="streakN">0</b></span>
+    <button class="ibtn" id="modeBtn" aria-label="Build your base">Base</button>
+    <button class="ibtn" id="sndBtn" aria-label="Sound on"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 7h3l5-4v14l-5-4H3z"/><path id="sndWave" d="M14 6.5a5 5 0 0 1 0 7M16.5 4a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>
+    <button class="ibtn" id="repBtn" aria-label="Grown-ups report">Report</button>
+  </div>
+  <div id="stage">
+    <canvas id="cv" aria-label="Mine shaft"></canvas>
+    <div id="banner" hidden></div>
+    <div id="bolt" hidden></div>
+  </div>
+  <div id="console">
+    <div class="prompt">
+      <button class="hear" id="hearW"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 7h3l5-4v14l-5-4H3z"/><path d="M14 6.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Hear word</button>
+      <button class="hear alt" id="hearS">Hear sentence</button>
+      <div class="plabel" id="plabel"></div>
+    </div>
+    <div class="clue" id="clue" hidden></div>
+    <div class="fix" id="fix" hidden></div>
+    <div class="answer" id="answer"></div>
+    <div class="kb" id="kb"></div>
+  </div>
+  <div id="buildbar" hidden>
+    <div class="hotbar" id="hotbar"></div>
+    <div class="brow"><button class="btn ghost small" id="eraseBtn">Remove blocks</button><button class="btn ghost small" id="nightBtn">Night</button><button class="btn small" id="backBtn">Back to mining</button></div>
+    <div class="hint">Tap or drag on the scene to place blocks. Every word you spell right earns more.</div>
+  </div>
+</div>
+
+<div class="ov" id="titleOv">
+  <div class="card">
+    <div class="logo">ECHO<br>MINES</div>
+    <div class="tag">Hear the echo. Spell the word. Dig deeper.</div>
+    <div class="namebox"><label for="nameIn">Miner name</label><input id="nameIn" maxlength="12" placeholder="Miner" autocomplete="off"></div>
+    <div class="center"><button class="btn" id="goBtn">Start</button><button class="btn ghost" id="titleRep">Grown-ups</button></div>
+  </div>
+</div>
+<div class="ov" id="msgOv" hidden><div class="card" id="msgCard"></div></div>
+<div class="ov" id="repOv" hidden><div class="card" id="repCard"></div></div>
+
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const rnd=Math.random,ri=(a,b)=>a+Math.floor(rnd()*(b-a+1)),pick=a=>a[Math.floor(rnd()*a.length)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ================= spelling content (Words Their Way-style feature sequence) ================= */
+const STAGES=['Letter Name','Within Word Pattern','Syllables and Affixes'];
+const FEATS=[
+ {n:'Short a and i',st:0,tip:'Short a says /a/ like apple. Short i says /i/ like itch.',w:[['cat','The cat napped in a sunny spot.'],['map','We need a map to find the cave.'],['sit','Sit down on the rock.'],['big','That is a big spider.'],['hat','My hat has a lamp on it.'],['pin','Use a pin to hold the paper.'],['bag','Put the gems in your bag.'],['lip','I bit my lip.'],['fan','The fan blew cool air.'],['dig','Let us dig for treasure.'],['rat','A rat ran past the torch.'],['win','We will win the race.']]},
+ {n:'Short e, o and u',st:0,tip:'Short e says /e/ like egg, short o says /o/ like octopus, short u says /u/ like up.',w:[['bed','I made my bed.'],['hop','Frogs hop on lily pads.'],['sun','The sun is hot today.'],['net','Catch the bug with a net.'],['fox','A red fox ran into the woods.'],['cup','Fill the cup with water.'],['pen','Write it with a pen.'],['log','Sit on the log.'],['bug','A bug crawled up the wall.'],['red','The lava is bright red.'],['dot','Draw a dot on the map.'],['mud','My boots are full of mud.']]},
+ {n:'Digraphs: sh, ch, th, wh, ck',st:0,tip:'Two letters can make one sound. After a short vowel, the /k/ sound at the end is usually ck.',w:[['ship','The ship sailed away.'],['chin','He rubbed his chin.'],['that','Look at that cave.'],['when','When can we go mining?'],['duck','A duck swam in the pond.'],['shop','Let us shop for a new hat.'],['chop','Chop the wood for the fire.'],['with','Come with me.'],['rock','The rock is too heavy.'],['fish','The fish swam fast.'],['much','How much gold did you find?'],['back','Bring the pickaxe back.']]},
+ {n:'Blends: st, fr, tr, -nd, -mp',st:0,tip:'In a blend you can hear every letter. Stretch it out slowly: s-t-o-p.',w:[['stop','Stop at the edge of the cliff.'],['frog','The frog jumped into the water.'],['trip','We took a trip to the mountains.'],['hand','Hold my hand on the bridge.'],['jump','Jump over the gap.'],['black','The coal is black.'],['plant','Plant the seed in the dirt.'],['swim','Can you swim across the lake?'],['crab','A crab pinched my toe.'],['glad','I am glad you came.'],['best','That was the best day ever.'],['drum','Bang the drum loudly.']]},
+ {n:'Long a and i with silent e',st:1,tip:'A silent e at the end makes the vowel say its own name: cap becomes cape, kit becomes kite.',w:[['cake','We ate cake at the party.'],['bike','I rode my bike to the park.'],['game','Let us play a game.'],['ride','Can I ride the mine cart?'],['lake','The lake is deep and cold.'],['time','What time is it?'],['gate','Open the gate.'],['kite','The kite flew high.'],['made','I made a tower of blocks.'],['pine','A pine tree stood on the hill.'],['shape','A cube is a shape with six sides.'],['smile','Give me a big smile.']]},
+ {n:'Long o and u with silent e',st:1,tip:'The silent e trick works for o and u too: hop becomes hope, cub becomes cube.',w:[['home','Let us go home.'],['cute','The puppy is so cute.'],['rope','Climb down the rope.'],['mule','The mule carried the bags.'],['nose','My nose is cold.'],['tube','Squeeze the tube of paint.'],['joke','Tell me a funny joke.'],['huge','A huge cave opened up below us.'],['stone','The wall is made of stone.'],['flute','She played a song on the flute.'],['globe','Spin the globe and pick a country.'],['rule','The first rule of mining is safety.']]},
+ {n:'Vowel teams: ai, ay, ee, ea',st:1,tip:'When two vowels go walking, the first one says its name. Long a at the end of a word is usually ay; in the middle it is often ai.',w:[['rain','The rain fell all night.'],['play','Can you play outside?'],['feet','My feet are tired.'],['team','Our team won the game.'],['paint','Paint the wall blue.'],['stay','Stay close to the torch.'],['green','The grass is green.'],['beach','We built a castle at the beach.'],['trail','Follow the trail of gems.'],['gray','The sky turned gray.'],['sleep','Bats sleep upside down.'],['clean','Clean your pickaxe after mining.']]},
+ {n:'Vowel teams: oa, ow, igh, y',st:1,tip:'Long i at the end of a short word is often y, like fly. Before a t, long i is often igh, like night.',w:[['boat','We rowed the boat across the river.'],['snow','The snow covered the mountain.'],['night','Owls hunt at night.'],['fly','Bats fly in the dark.'],['coat','Wear a warm coat.'],['grow','Seeds grow into plants.'],['light','Turn on your helmet light.'],['try','Try one more time.'],['road','The road goes to the mine.'],['slow','The turtle is slow.'],['bright','The diamond was bright.'],['sky','Stars filled the sky.']]},
+ {n:'R-controlled: ar, or, er, ir, ur',st:1,tip:'The r changes the vowel sound. er, ir and ur all sound the same, so those words have to be remembered.',w:[['car','We drove the car to the store.'],['fork','Eat with a fork.'],['her','I gave her a gem.'],['bird','A bird sang in the tree.'],['turn','Turn left at the tunnel.'],['shark','A shark swam under the boat.'],['storm','The storm shook the windows.'],['girl','The girl found a gold nugget.'],['hurt','Did the fall hurt?'],['start','Start digging here.'],['first','I was the first one down.'],['burn','Lava can burn you.']]},
+ {n:'oi, oy, ou, ow, oo, aw',st:1,tip:'oy and ow usually come at the end of a word or syllable. oi and ou usually sit in the middle.',w:[['coin','I found a gold coin.'],['boy','The boy waved hello.'],['cloud','A cloud covered the sun.'],['cow','The cow said moo.'],['moon','The moon is full tonight.'],['book','Read me a book.'],['saw','I saw a bat.'],['point','Point to the exit.'],['toy','That robot is my favorite toy.'],['shout','Do not shout in the cave.'],['crown','The king wore a crown.'],['spoon','Stir it with a spoon.']]},
+ {n:'Tricky consonants: tch, dge, kn, wr',st:1,tip:'Right after a short vowel, /ch/ is spelled tch and /j/ is spelled dge. In kn and wr, the first letter is silent.',w:[['catch','Catch the ball.'],['bridge','Cross the bridge slowly.'],['knee','I scraped my knee.'],['write','Write your name here.'],['match','Find the match for this sock.'],['badge','He earned a badge for mining.'],['knot','Tie a knot in the rope.'],['wrap','Wrap the gift.'],['pitch','It was pitch black in the tunnel.'],['judge','The judge picked a winner.'],['knife','Cut the apple with a knife.'],['wrong','That turn was the wrong way.']]},
+ {n:'Adding -ing and -ed',st:2,tip:'Short vowel with one consonant at the end? Double it: hop, hopping. Ends in a silent e? Drop the e: bake, baking.',w:[['running','The dog is running fast.'],['hopping','The bunny is hopping away.'],['baking','Mom is baking bread.'],['smiled','She smiled at me.'],['stopped','The cart stopped at the end.'],['making','We are making a fort.'],['swimming','We went swimming in the lake.'],['hoped','I hoped we would find gold.'],['sitting','The cat is sitting on the mat.'],['liked','He liked the new game.'],['planned','We planned a trip.'],['riding','I am riding the mine cart.']]},
+ {n:'Two-syllable words',st:2,tip:'Clap the syllables and spell one part at a time: rab-bit, pen-cil, lit-tle.',w:[['rabbit','A rabbit hopped across the field.'],['tiger','The tiger has orange stripes.'],['paper','Draw it on paper.'],['napkin','Wipe your face with a napkin.'],['music','I love loud music.'],['basket','Put the eggs in the basket.'],['little','A little mouse ran by.'],['table','Set the table for dinner.'],['puzzle','This puzzle is tricky.'],['pencil','Sharpen your pencil.'],['river','The river flows to the sea.'],['candle','Light the candle.']]},
+ {n:'Prefixes and suffixes',st:2,tip:'Find the base word, then add the parts: un + happy, care + ful, kind + ness.',w:[['unhappy','The lost puppy looked unhappy.'],['careful','Be careful near the edge.'],['rewrite','Please rewrite your answer.'],['quickly','Run quickly to the exit.'],['hopeless','It is never hopeless.'],['preview','Watch the preview of the movie.'],['kindness','Kindness makes friends.'],['useful','A rope is useful in a cave.'],['sadly','The dog sadly watched us leave.'],['helpful','Bolt is very helpful.'],['replay','Let us replay that level.'],['painless','The shot was painless.']]},
+ {n:'Endings: -tion, -sion, -ture, -sure',st:2,tip:'The /shun/ sound at the end is usually tion; /zhun/ is sion. /cher/ at the end is often ture, and /zher/ is sure.',w:[['action','The movie was full of action.'],['motion','The cart was in motion.'],['station','Meet me at the station.'],['vision','Night vision helps in the dark.'],['television','Turn off the television.'],['picture','Draw a picture of a dragon.'],['nature','We hiked to see nature.'],['adventure','Every mine is an adventure.'],['future','Robots will help us in the future.'],['treasure','We found buried treasure.'],['measure','Measure the tunnel with a tape.'],['creature','A strange creature lived in the cave.']]}
+];
+const TIERS=[{n:'Dirt Tunnels',base:'dirt',ore:'roots',reward:'dirt'},{n:'Stone Halls',base:'stone',ore:'coal',reward:'stone'},{n:'Iron Caverns',base:'slate',ore:'ironore',reward:'iron'},{n:'Gold Grottos',base:'basalt',ore:'goldore',reward:'gold'},{n:'Diamond Depths',base:'obsidian',ore:'diaore',reward:'diamond'}];
+const tierOf=f=>Math.min(4,Math.floor(f/3));
+const TIER_START=[1,12,24,36,48];
+const MASTER=.8;
+
+/* ================= save ================= */
+const KEY='echomines.v1';
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function fresh(){return{name:'',placed:false,m:FEATS.map(()=>0),n:FEATS.map(()=>0),c:FEATS.map(()=>0),depth:0,rowT:[],counter:0,seen:{},review:[],missed:{},recent:[],streak:0,best:0,
+  inv:{dirt:10,planks:12,glass:6,torch:4,flower:3},base:null,stats:{words:0,correct:0,days:{}},survey:null,placement:null,sound:true,lastTier:0}}
+let D=fresh();
+function load(){try{const s=localStorage.getItem(KEY);if(s)D=Object.assign(fresh(),JSON.parse(s))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+function dayStat(){const k=today();if(!D.stats.days[k])D.stats.days[k]={w:0,c:0,sec:0};return D.stats.days[k]}
+
+/* ================= adaptive engine ================= */
+function focusF(){for(let i=0;i<FEATS.length;i++)if(D.m[i]<MASTER)return i;return FEATS.length-1}
+function recentAcc(){return D.recent.length?D.recent.reduce((a,b)=>a+b,0)/D.recent.length:.8}
+function pickFrom(f){const ws=FEATS[f].w;const fresh=ws.filter(([w])=>!(D.seen[w]>D.counter-30));const pool=fresh.length?fresh:ws;const [w,s]=pick(pool);D.seen[w]=D.counter;return{f,w,s}}
+function chooseWord(){D.counter++;
+  const due=D.review.find(r=>r.due<=D.counter);if(due){D.seen[due.w]=D.counter;return{f:due.f,w:due.w,s:due.s,review:true}}
+  const ff=focusF(),acc=recentAcc(),r=rnd();const pRev=acc<.65?.4:.18,pNext=acc>.88?.2:.1;let f=ff;
+  if(r<pRev&&ff>0)f=ri(Math.max(0,ff-3),ff-1);else if(r<pRev+pNext&&ff<FEATS.length-1)f=ff+1;
+  return pickFrom(f)}
+function grade(q,ok){const f=q.f;D.n[f]++;if(ok){D.c[f]++;D.m[f]+=(1-D.m[f])*.25}else D.m[f]-=D.m[f]*.35;
+  D.recent.push(ok?1:0);if(D.recent.length>10)D.recent.shift();
+  if(ok&&D.recent.length>=8&&recentAcc()>=.9)D.m[f]+=(1-D.m[f])*.12;
+  D.stats.words++;if(ok)D.stats.correct++;const ds=dayStat();ds.w++;if(ok)ds.c++;
+  const rv=D.review.find(r=>r.w===q.w);
+  if(!ok){D.missed[q.w]=(D.missed[q.w]||0)+1;if(rv){rv.need=2;rv.due=D.counter+ri(3,5)}else D.review.push({f,w:q.w,s:q.s,due:D.counter+ri(3,5),need:2})}
+  else if(rv){rv.need--;if(rv.need<=0)D.review=D.review.filter(r=>r!==rv);else rv.due=D.counter+ri(6,10)}
+  save()}
+/* placement survey: 2 words per pattern, in order, stops at the ceiling */
+function surveyStart(){const order=FEATS.map((f,i)=>i);D.survey={fi:0,words:[],res:[],log:[]};queueSurvey();save()}
+function queueSurvey(){const s=D.survey;const ws=FEATS[s.fi].w.slice();const a=pick(ws);let b=pick(ws);while(b===a)b=pick(ws);s.words=[a,b];s.res=[]}
+function surveyAnswer(ok,typed,word){const s=D.survey;s.res.push(ok);s.log.push({f:s.fi,w:word,typed,ok});
+  D.stats.words++;if(ok)D.stats.correct++;const ds=dayStat();ds.w++;if(ok)ds.c++;
+  if(s.res.length<2){save();return false}
+  const c=s.res.filter(Boolean).length;D.m[s.fi]=c===2?.85:c===1?.5:.15;D.n[s.fi]+=2;D.c[s.fi]+=c;
+  const prevC=s.fi>0?s.log.filter(l=>l.f===s.fi-1).filter(l=>l.ok).length:2;
+  const stop=(c<=1&&prevC<=1)||(c===0&&s.fi>=3)||s.fi>=FEATS.length-1;
+  if(stop){for(let i=s.fi+1;i<FEATS.length;i++)D.m[i]=.05;finishSurvey();return true}
+  s.fi++;queueSurvey();save();return false}
+function finishSurvey(){const s=D.survey;D.placed=true;const f=focusF();D.placement={date:today(),focus:f,mastered:FEATS.map((x,i)=>D.m[i]>=MASTER).filter(Boolean).length,words:s.log.length,correct:s.log.filter(l=>l.ok).length};
+  s.log.filter(l=>!l.ok&&D.m[l.f]<MASTER).forEach(l=>{if(!D.review.find(r=>r.w===l.w)){const it=FEATS[l.f].w.find(x=>x[0]===l.w);D.review.push({f:l.f,w:l.w,s:it[1],due:D.counter+ri(4,9),need:1})}});
+  D.survey=null;save()}
+
+/* ================= audio + speech ================= */
+let AC=null,sfxG;
+function audioInit(){if(AC){if(AC.state==='suspended')AC.resume();return}try{AC=new(window.AudioContext||window.webkitAudioContext)();sfxG=AC.createGain();sfxG.gain.value=D.sound?.5:0;sfxG.connect(AC.destination)}catch(e){AC=null}}
+function tone(f,dur,o={}){if(!AC||!D.sound)return;const t0=AC.currentTime+(o.at||0);const os=AC.createOscillator(),g=AC.createGain();os.type=o.type||'square';os.frequency.setValueAtTime(f,t0);if(o.slide)os.frequency.exponentialRampToValueAtTime(Math.max(30,f+o.slide),t0+dur);g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(o.vol||.1,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);os.connect(g);g.connect(sfxG);os.start(t0);os.stop(t0+dur+.03)}
+function noise(dur,vol,hp,at){if(!AC||!D.sound)return;const n=AC.sampleRate*dur|0,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(rnd()*2-1)*Math.pow(1-i/n,2);const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=hp;const g=AC.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(sfxG);s.start(AC.currentTime+(at||0))}
+const SFX={key(){tone(520+rnd()*120,.03,{vol:.04,type:'triangle'})},tick(){noise(.05,.12,2500)},break(){noise(.35,.35,250);tone(110,.2,{type:'triangle',vol:.25,slide:-50})},
+  gem(){[988,1319,1568].forEach((f,i)=>tone(f,.12,{vol:.06,at:i*.06}))},clank(){tone(1500,.07,{vol:.07});tone(950,.15,{vol:.06,at:.03});noise(.08,.1,3000)},
+  soft(){tone(660,.1,{vol:.05,type:'triangle'});tone(880,.12,{vol:.05,type:'triangle',at:.08})},tier(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.22,{vol:.07,at:i*.1}))},
+  place(){tone(220,.06,{type:'triangle',vol:.15});noise(.05,.08,1200)},erase(){noise(.1,.12,800)}};
+const sfx=n=>{if(SFX[n])SFX[n]()};
+const TTS=('speechSynthesis' in window)&&typeof SpeechSynthesisUtterance!=='undefined';
+let voice=null,ttsOK=TTS;
+function pickVoice(){if(!TTS)return;const vs=speechSynthesis.getVoices();if(!vs.length)return;const en=vs.filter(v=>/^en[-_]/i.test(v.lang));
+  voice=en.find(v=>/samantha|google us english|aria|jenny|allison|ava/i.test(v.name))||en.find(v=>/en[-_]us/i.test(v.lang))||en[0]||null}
+if(TTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;setTimeout(()=>{pickVoice();if(!speechSynthesis.getVoices().length){ttsOK=false;if(Q)renderPrompt()}},1500)}
+function speak(parts){if(!ttsOK)return;try{speechSynthesis.cancel();parts.forEach(t=>{const u=new SpeechSynthesisUtterance(t);u.rate=.82;u.pitch=1.05;if(voice)u.voice=voice;u.lang=voice?voice.lang:'en-US';speechSynthesis.speak(u)})}catch(e){ttsOK=false;renderPrompt()}}
+function sayWord(){if(Q)speak([Q.w])}
+function saySentence(){if(Q)speak([Q.w,Q.s,Q.w])}
+
+/* ================= pixel art ================= */
+const VW=256,VH=160,S=4;
+const cv=$('#cv'),ctx=cv.getContext('2d');cv.width=VW*S;cv.height=VH*S;
+function mk(w,h,f){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');if(f)f(x);return c}
+function speck(x,col,n,seed,y0=0,h=16){const r=mulberry(seed);x.fillStyle=col;for(let i=0;i<n;i++)x.fillRect(r()*16|0,y0+(r()*h|0),1,1)}
+function blob(x,seed,col,hi,n){const r=mulberry(seed);for(let i=0;i<n;i++){const px=2+(r()*11|0),py=2+(r()*11|0);x.fillStyle='#120E18';x.fillRect(px-1,py-1,4,4);x.fillStyle=col;x.fillRect(px,py,2,2);x.fillStyle=hi;x.fillRect(px,py,1,1)}}
+function ellF(cx,cy,rx,ry,col){ctx.fillStyle=col;cx=Math.round(cx);cy=Math.round(cy);for(let yy=-ry;yy<=ry;yy++){const w=Math.round(rx*Math.sqrt(Math.max(0,1-(yy*yy)/(ry*ry||1))));ctx.fillRect(cx-w,cy+yy,w*2+1,1)}}
+const TX={};
+function stoneLike(x,base,d,h,seed){x.fillStyle=base;x.fillRect(0,0,16,16);speck(x,d,26,seed);speck(x,h,12,seed+5);const r=mulberry(seed+9);x.fillStyle=d;for(let i=0;i<3;i++){const px=r()*12|0,py=r()*13|0;x.fillRect(px,py,3+(r()*2|0),1)}}
+function buildTex(){
+  TX.dirt=mk(16,16,x=>{x.fillStyle='#8A5A36';x.fillRect(0,0,16,16);speck(x,'#6E4428',30,3);speck(x,'#A6714A',14,4);speck(x,'#5A3620',6,5)});
+  TX.grass=mk(16,16,x=>{x.drawImage(TX.dirt,0,0);x.fillStyle='#5DB34A';x.fillRect(0,0,16,4);x.fillStyle='#7CCB5E';x.fillRect(0,0,16,1);const r=mulberry(8);x.fillStyle='#5DB34A';for(let i=0;i<16;i++)if(r()<.5)x.fillRect(i,4,1,1+(r()*2|0));speck(x,'#4A9A3C',6,9,0,4)});
+  TX.roots=mk(16,16,x=>{x.drawImage(TX.dirt,0,0);x.fillStyle='#C9A27A';x.fillRect(3,2,1,6);x.fillRect(4,7,3,1);x.fillRect(7,8,1,5);x.fillRect(11,3,1,4);x.fillRect(12,6,2,1)});
+  TX.stone=mk(16,16,x=>stoneLike(x,'#8B8794','#6C6877','#A9A5B4',21));
+  TX.coal=mk(16,16,x=>{x.drawImage(TX.stone,0,0);blob(x,31,'#2A2630','#4A4652',3)});
+  TX.slate=mk(16,16,x=>stoneLike(x,'#4F4B5E','#3A3748','#66627A',41));
+  TX.ironore=mk(16,16,x=>{x.drawImage(TX.slate,0,0);blob(x,51,'#D9A27A','#F4D2B5',3)});
+  TX.basalt=mk(16,16,x=>{stoneLike(x,'#3A3040','#2A2230','#52465C',61);x.fillStyle='#2A2230';x.fillRect(5,0,1,16);x.fillRect(11,0,1,16)});
+  TX.goldore=mk(16,16,x=>{x.drawImage(TX.basalt,0,0);blob(x,71,'#F7C548','#FFF0A8',3)});
+  TX.obsidian=mk(16,16,x=>{x.fillStyle='#1C1530';x.fillRect(0,0,16,16);speck(x,'#2E2450',22,81);speck(x,'#4A3A7A',8,82);x.fillStyle='#5C48A0';x.fillRect(3,4,2,1);x.fillRect(10,11,3,1)});
+  TX.diaore=mk(16,16,x=>{x.drawImage(TX.obsidian,0,0);blob(x,91,'#5FE3E8','#E8FFFF',3)});
+  TX.wall=mk(16,16,x=>{x.fillStyle='#1E1826';x.fillRect(0,0,16,16);speck(x,'#2A2234',20,101);speck(x,'#161220',10,102)});
+  TX.planks=mk(16,16,x=>{x.fillStyle='#B88A4E';x.fillRect(0,0,16,16);x.fillStyle='#8C6434';[3,7,11,15].forEach(y=>x.fillRect(0,y,16,1));x.fillRect(5,0,1,3);x.fillRect(12,4,1,3);x.fillRect(3,8,1,3);x.fillRect(9,12,1,3);speck(x,'#CFA266',10,111)});
+  TX.brick=mk(16,16,x=>{x.fillStyle='#B4523E';x.fillRect(0,0,16,16);x.fillStyle='#D8CFC4';[3,7,11,15].forEach(y=>x.fillRect(0,y,16,1));x.fillRect(4,0,1,3);x.fillRect(12,0,1,3);x.fillRect(0,4,1,3);x.fillRect(8,4,1,3);x.fillRect(4,8,1,3);x.fillRect(12,8,1,3);x.fillRect(0,12,1,3);x.fillRect(8,12,1,3);speck(x,'#93402F',10,121)});
+  TX.glass=mk(16,16,x=>{x.fillStyle='rgba(190,235,255,.28)';x.fillRect(0,0,16,16);x.fillStyle='#DFF6FF';x.fillRect(0,0,16,1);x.fillRect(0,15,16,1);x.fillRect(0,0,1,16);x.fillRect(15,0,1,16);x.fillRect(3,3,1,3);x.fillRect(4,2,2,1);x.fillRect(10,10,3,1)});
+  TX.iron=mk(16,16,x=>{x.fillStyle='#D8D4DC';x.fillRect(0,0,16,16);x.fillStyle='#B4B0BC';x.fillRect(0,0,16,1);x.fillRect(0,0,1,16);x.fillStyle='#F2F0F4';x.fillRect(2,2,12,1);x.fillStyle='#9C98A6';x.fillRect(0,15,16,1);x.fillRect(15,0,1,16);x.fillRect(2,8,12,1)});
+  TX.gold=mk(16,16,x=>{x.fillStyle='#F2BE3A';x.fillRect(0,0,16,16);x.fillStyle='#FFE89A';x.fillRect(1,1,14,2);x.fillRect(1,1,2,14);x.fillStyle='#C08A1A';x.fillRect(0,15,16,1);x.fillRect(15,0,1,16);x.fillRect(4,8,9,1)});
+  TX.diamond=mk(16,16,x=>{x.fillStyle='#4FD3DA';x.fillRect(0,0,16,16);x.fillStyle='#BFFBFF';x.fillRect(1,1,14,2);x.fillRect(1,1,2,14);x.fillRect(6,6,3,3);x.fillStyle='#2A9AA2';x.fillRect(0,15,16,1);x.fillRect(15,0,1,16);x.fillRect(9,9,4,1)});
+  TX.torch=mk(16,16,x=>{x.fillStyle='#6B4423';x.fillRect(7,6,2,9);x.fillStyle='#FF8A3C';x.fillRect(6,2,4,4);x.fillStyle='#FFE27A';x.fillRect(7,3,2,2)});
+  TX.flower=mk(16,16,x=>{x.fillStyle='#3E9A46';x.fillRect(7,8,2,8);x.fillRect(5,11,2,1);x.fillRect(9,12,2,1);x.fillStyle='#F06A8A';x.fillRect(5,3,6,5);x.fillRect(6,2,4,7);x.fillStyle='#FFE066';x.fillRect(7,4,2,3)});
+  TX.bedrock=mk(16,16,x=>{x.fillStyle='#3A3A40';x.fillRect(0,0,16,16);speck(x,'#222228',40,131);speck(x,'#5A5A62',16,132)});
+}
+const BLOCKS=['dirt','stone','planks','brick','glass','iron','gold','diamond','torch','flower'];
+const BNAME={dirt:'Dirt',stone:'Stone',planks:'Planks',brick:'Brick',glass:'Glass',iron:'Iron',gold:'Gold',diamond:'Diamond',torch:'Torch',flower:'Flower',grass:'Grass'};
+function minerSprite(swing){const key='miner'+swing;if(TX[key])return TX[key];
+  const a=mk(20,22,x=>{const R=(px,py,w,h,c)=>{x.fillStyle=c;x.fillRect(px+2,py+3,w,h)};
+    R(5,15,2,3,'#5B4636');R(8,15,2,3,'#5B4636');R(4,18,3,1,'#3A2A22');R(8,18,3,1,'#3A2A22');
+    R(4,9,7,6,'#3D86D6');R(4,13,7,1,'#2A5FA0');R(4,12,7,1,'#6B4423');
+    R(5,3,7,6,'#F2C29B');R(4,2,3,5,'#5A3420');R(10,5,1,2,'#241A33');R(10,7,1,1,'#F59A8A');
+    R(3,0,10,3,'#F2B632');R(2,2,12,1,'#C9921F');R(11,0,3,2,'#FFF4B0');
+    R(7+(swing?1:0),9,2,4,'#2A5FA0');R(7+(swing?1:0),13,2,1,'#F2C29B')});
+  const s=mk(20,22,x=>{x.drawImage(a,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#120E18';x.fillRect(0,0,20,22)});
+  TX[key]=mk(20,22,x=>{[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>x.drawImage(s,dx,dy));x.drawImage(a,0,0)});return TX[key]}
+function boltSprite(){if(TX.bolt)return TX.bolt;const a=mk(18,18,x=>{const R=(px,py,w,h,c)=>{x.fillStyle=c;x.fillRect(px,py,w,h)};
+  for(let yy=-6;yy<=6;yy++){const w=Math.round(Math.sqrt(36-yy*yy));R(9-w,9+yy,w*2+1,1,'#C9D3E0')}R(4,11,10,3,'#8E9BB0');R(4,7,10,4,'#1C2340');R(6,8,2,2,'#5EF2FF');R(10,8,2,2,'#5EF2FF');R(2,8,1,3,'#8E9BB0');R(15,8,1,3,'#8E9BB0');R(8,1,2,2,'#8E9BB0');R(8,0,2,1,'#E8556D')});
+  const s=mk(18,18,x=>{x.drawImage(a,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#120E18';x.fillRect(0,0,18,18)});
+  TX.bolt=mk(18,18,x=>{[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>x.drawImage(s,dx,dy));x.drawImage(a,0,0)});return TX.bolt}
+const GLY={'0':'111101101101111','1':'010110010010111','2':'111001111100111','3':'111001111001111','4':'101101111001001','5':'111100111001111','6':'111100111101111','7':'111001010010010','8':'111101111101111','9':'111101111001111','+':'000010111010000','!':'010010010000010',' ':'000000000000000'};
+function pxText(str,x,y,col){str=String(str).toUpperCase();const w=str.length*4-1,sx=Math.round(x-w/2),sy=Math.round(y);const pass=(c,ox,oy)=>{ctx.fillStyle=c;for(let i=0;i<str.length;i++){const g=GLY[str[i]]||GLY[' '];for(let k=0;k<15;k++)if(g[k]==='1')ctx.fillRect(sx+i*4+k%3+ox,sy+(k/3|0)+oy,1,1)}};[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>pass('#120E18',a,b));pass(col,0,0)}
+
+/* ================= mine scene ================= */
+let now=0,mode='mine',shake=0,parts=[];
+const miner={y:0,fromY:0,fallT:0,fallDur:0,swingT:0,clankT:0};
+let camY=0,crack=0,flashT=0,stars=null;
+const SHAFT=[7,8];
+function hash(a,b){return((a*73856093)^(b*19349663))>>>0}
+function curTier(){return tierOf(focusF())}
+function rowTier(r){return r<D.rowT.length?D.rowT[r]:(D.placed?curTier():0)}
+function blockTex(r,c){const t=TIERS[rowTier(r)];if(r===0)return TX.grass;const h=hash(r,c);
+  const deco=c!==SHAFT[0]&&c!==SHAFT[1]&&h%9===0;return TX[deco?t.ore:t.base]}
+function drawMine(){const my=miner.fallT>0?miner.fromY+(miner.y-miner.fromY)*easeOut(1-miner.fallT/miner.fallDur):miner.y;
+  const target=my*16-VH*.58;camY+=(target-camY)*.18;if(Math.abs(target-camY)>200)camY=target;
+  const sy=shake>0?(rnd()*2-1)*shake:0;const cy=Math.round(camY+sy);
+  ctx.setTransform(S,0,0,S,0,-cy*S);
+  if(cy<0){const g=ctx.createLinearGradient(0,cy,0,0);g.addColorStop(0,'#5FA8E8');g.addColorStop(1,'#BFE3F5');ctx.fillStyle=g;ctx.fillRect(0,cy,VW,-cy);
+    ctx.fillStyle='#FFE38A';ctx.fillRect(200,-70,14,14);ctx.fillStyle='#FFF6C8';ctx.fillRect(203,-67,8,8);
+    ctx.fillStyle='rgba(255,255,255,.85)';[[30,-60],[120,-80],[160,-40]].forEach(([x,y],i)=>{const xx=(x+now*4*(i+1))%300-30;ctx.fillRect(xx,y,26,6);ctx.fillRect(xx+5,y-4,14,4)});
+    ctx.fillStyle='#4A9A3C';for(let x=0;x<VW;x+=8)ctx.fillRect(x,-3-(hash(x,1)%3),8,3)}
+  const r0=Math.max(0,Math.floor(cy/16)),r1=Math.floor((cy+VH)/16)+1;const dep=D.depth;
+  for(let r=r0;r<=r1;r++)for(let c=0;c<16;c++){const air=(c===SHAFT[0]||c===SHAFT[1])&&r<dep;if(air){ctx.drawImage(TX.wall,c*16,r*16);if(r===0){ctx.fillStyle='#BFE3F5';ctx.fillRect(c*16,0,16,3)}continue}
+    ctx.drawImage(blockTex(r,c),c*16,r*16)}
+  for(let r=r0;r<Math.min(dep,r1+1);r++){ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(SHAFT[0]*16,r*16,3,16);ctx.fillRect(SHAFT[1]*16+13,r*16,3,16)}
+  for(let r=r0;r<=r1;r++)if(r<dep&&r%6===4){const left=(r/6|0)%2===0;const x=left?SHAFT[0]*16+2:SHAFT[1]*16+10,y=r*16+6;ctx.fillStyle='#6B4423';ctx.fillRect(x+1,y,2,6);const f=(now*12+r)|0;ctx.fillStyle='#FF8A3C';ctx.fillRect(x,y-3+(f%2),4,3);ctx.fillStyle='#FFE27A';ctx.fillRect(x+1,y-2,2,2)}
+  const ty=dep*16;if(crack>0||flashT>0){for(const c of SHAFT){const x=c*16;ctx.fillStyle='#120E18';const k=Math.min(4,crack);
+    if(k>=1){ctx.fillRect(x+7,ty+1,1,5);ctx.fillRect(x+5,ty+5,2,1)}if(k>=2){ctx.fillRect(x+3,ty+7,4,1);ctx.fillRect(x+8,ty+6,1,4);ctx.fillRect(x+9,ty+9,3,1)}
+    if(k>=3){ctx.fillRect(x+2,ty+11,5,1);ctx.fillRect(x+11,ty+3,1,5);ctx.fillRect(x+12,ty+12,2,1)}if(k>=4){ctx.fillRect(x+1,ty+3,3,1);ctx.fillRect(x+6,ty+13,1,3);ctx.fillRect(x+13,ty+8,2,1)}
+    if(flashT>0){ctx.fillStyle='rgba(242,104,123,'+(flashT*1.6)+')';ctx.fillRect(x,ty,16,16)}}}
+  if(!D.placed||mode==='mine'){ctx.fillStyle='rgba(255,201,77,'+(.12+.08*Math.sin(now*4))+')';ctx.fillRect(SHAFT[0]*16,ty,32,1)}
+  const mx=124,mY=Math.round(my*16);const sw=miner.swingT>0;
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(mx-6,mY-1,12,2);
+  if(sw){const p=1-miner.swingT/.32;const a=-2.2+p*2.9;ctx.save();ctx.translate(mx+3,mY-11);ctx.rotate(a);ctx.fillStyle='#120E18';ctx.fillRect(-1,-1,13,4);ctx.fillStyle='#8A5A2B';ctx.fillRect(0,0,11,2);
+    ctx.fillStyle='#120E18';ctx.fillRect(9,-5,4,12);ctx.fillStyle='#BFC6D6';ctx.fillRect(10,-4,2,10);ctx.restore()}
+  else{ctx.fillStyle='#120E18';ctx.fillRect(mx+5,mY-14,3,12);ctx.fillStyle='#8A5A2B';ctx.fillRect(mx+6,mY-13,1,10);ctx.fillStyle='#120E18';ctx.fillRect(mx+2,mY-16,9,3);ctx.fillStyle='#BFC6D6';ctx.fillRect(mx+3,mY-15,7,1)}
+  ctx.drawImage(minerSprite(sw?1:0),mx-10,mY-21);
+  const bx=mx+22,by=mY-26+Math.round(Math.sin(now*3)*2);ctx.fillStyle='#FF8A3C';ctx.fillRect(bx+8,by+17,2,2+((now*14|0)%2));ctx.drawImage(boltSprite(),bx,by);
+  drawParts();
+  ctx.setTransform(S,0,0,S,0,0);
+  const lx=mx+8,ly=mY-cy-18;const dark=clamp(dep/10,0,1)*(.45+curTierSafe()*.06);
+  if(dark>0.02){const g=ctx.createRadialGradient(lx,ly,18,lx,ly,150);g.addColorStop(0,'rgba(8,5,16,0)');g.addColorStop(1,'rgba(8,5,16,'+Math.min(.82,dark+.2)+')');ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
+    ctx.globalCompositeOperation='lighter';for(let r=r0;r<=r1;r++)if(r<dep&&r%6===4){const left=(r/6|0)%2===0;const x=left?SHAFT[0]*16+4:SHAFT[1]*16+12,y=r*16+4-cy;const lg=ctx.createRadialGradient(x,y,1,x,y,30);lg.addColorStop(0,'rgba(255,150,60,.3)');lg.addColorStop(1,'rgba(255,150,60,0)');ctx.fillStyle=lg;ctx.fillRect(x-30,y-30,60,60)}ctx.globalCompositeOperation='source-over'}}
+function curTierSafe(){return D.placed?curTier():0}
+const easeOut=t=>1-Math.pow(1-t,3);
+function drawParts(){for(const p of parts){const a=clamp(p.life/p.max,0,1);if(p.text){ctx.globalAlpha=Math.min(1,a*2);pxText(p.text,p.x,p.y,p.col);ctx.globalAlpha=1;continue}
+  ctx.globalAlpha=Math.min(1,a*1.5);if(p.tex){ctx.drawImage(p.tex,p.sx,p.sy,4,4,Math.round(p.x),Math.round(p.y),4,4)}else{ctx.fillStyle=p.col;ctx.fillRect(Math.round(p.x),Math.round(p.y),p.size,p.size)}ctx.globalAlpha=1}}
+function updParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;if(p.life<=0){parts.splice(i,1);continue}if(p.g)p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt}}
+function shatter(row){const t=TX[TIERS[rowTier(row)].base];for(const c of SHAFT)for(let i=0;i<10;i++)parts.push({x:c*16+rnd()*12,y:row*16+rnd()*12,vx:(rnd()-.5)*120,vy:-rnd()*110-20,g:320,life:.8,max:.8,tex:row===0?TX.grass:t,sx:(rnd()*12)|0,sy:(rnd()*12)|0})}
+function ftext(t,x,y,col){parts.push({x,y,vx:0,vy:-18,life:1.3,max:1.3,text:t,col})}
+function digDown(n){const from=D.depth;for(let k=0;k<n;k++){const r=D.depth;if(D.rowT.length<=r)D.rowT[r]=D.placed?curTier():0;D.depth++}
+  miner.fromY=from;miner.y=D.depth;miner.fallDur=n>1?Math.min(1.8,.25+n*.06):.32;miner.fallT=miner.fallDur;updateTop()}
+function dropTo(row){if(row<=D.depth)return;const from=D.depth;for(let r=from;r<row;r++){D.rowT[r]=Math.min(curTier(),TIER_START.filter(s=>s<=r).length-1)}D.depth=row;miner.fromY=from;miner.y=row;miner.fallDur=Math.min(2.2,.4+(row-from)*.05);miner.fallT=miner.fallDur;updateTop()}
+
+/* ================= base (build) scene ================= */
+const BW=16,BH=10;let night=false,eraseMode=false,selBlock='planks';
+function baseInit(){if(D.base&&D.base.length===BH)return;D.base=Array.from({length:BH},(_,r)=>Array(BW).fill(r===BH-1?'bedrock':r===BH-2?'grass':null))}
+function drawBase(){ctx.setTransform(S,0,0,S,0,0);const g=ctx.createLinearGradient(0,0,0,VH);
+  if(night){g.addColorStop(0,'#0B0A24');g.addColorStop(1,'#2A2450')}else{g.addColorStop(0,'#5FA8E8');g.addColorStop(1,'#CFEAF7')}ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
+  if(night){if(!stars){const r=mulberry(5);stars=Array.from({length:40},()=>[r()*VW|0,r()*100|0])}ctx.fillStyle='#FFFFFF';stars.forEach(([x,y],i)=>{if((now*2+i)%7>.6)ctx.fillRect(x,y,1,1)});ctx.fillStyle='#F2F0E0';ctx.fillRect(210,16,12,12);ctx.fillStyle='#0B0A24';ctx.fillRect(214,16,8,8)}
+  else{ctx.fillStyle='#FFE38A';ctx.fillRect(214,14,14,14);ctx.fillStyle='rgba(255,255,255,.85)';[[20,24],[110,12],[170,36]].forEach(([x,y],i)=>{const xx=(x+now*3*(i+1))%300-30;ctx.fillRect(xx,y,26,6);ctx.fillRect(xx+5,y-4,14,4)})}
+  ctx.fillStyle=night?'#1E2A3A':'#8CC3A0';for(let x=0;x<VW;x++){const h=40+Math.sin(x*.03)*10+Math.sin(x*.07)*5;ctx.fillRect(x,VH-32-h*.5,1,h)}
+  for(let r=0;r<BH;r++)for(let c=0;c<BW;c++){const b=D.base[r][c];if(!b)continue;ctx.drawImage(TX[b],c*16,r*16);if(b!=='glass'&&b!=='torch'&&b!=='flower'){ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(c*16,r*16+15,16,1)}}
+  if(night){const dk=ctx.createLinearGradient(0,0,0,VH);dk.addColorStop(0,'rgba(5,4,20,.35)');dk.addColorStop(1,'rgba(5,4,20,.5)');ctx.fillStyle=dk;ctx.fillRect(0,0,VW,VH);ctx.globalCompositeOperation='lighter';
+    for(let r=0;r<BH;r++)for(let c=0;c<BW;c++)if(D.base[r][c]==='torch'){const x=c*16+8,y=r*16+5,rr=40+Math.sin(now*8+c)*2;const lg=ctx.createRadialGradient(x,y,1,x,y,rr);lg.addColorStop(0,'rgba(255,160,70,.45)');lg.addColorStop(1,'rgba(255,160,70,0)');ctx.fillStyle=lg;ctx.fillRect(x-rr,y-rr,rr*2,rr*2)}
+    ctx.globalCompositeOperation='source-over'}
+  if(hoverCell){ctx.strokeStyle=eraseMode?'#F2687B':'#FFC94D';ctx.lineWidth=1;ctx.strokeRect(hoverCell.c*16+.5,hoverCell.r*16+.5,15,15)}
+  const bx=10,by=VH-60+Math.round(Math.sin(now*3)*2);ctx.drawImage(boltSprite(),bx,by);drawParts()}
+let hoverCell=null,painting=false,paintAction=null;
+function cellAt(e){const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*VW,y=(e.clientY-r.top)/r.height*VH;return{c:clamp(Math.floor(x/16),0,BW-1),r:clamp(Math.floor(y/16),0,BH-1)}}
+function applyCell(cell){const cur=D.base[cell.r][cell.c];
+  if(paintAction==='erase'){if(cur&&cur!=='bedrock'){const back=cur==='grass'?'dirt':cur;D.inv[back]=(D.inv[back]||0)+1;D.base[cell.r][cell.c]=null;sfx('erase');for(let i=0;i<5;i++)parts.push({x:cell.c*16+8,y:cell.r*16+8,vx:(rnd()-.5)*80,vy:-rnd()*60,g:200,life:.4,max:.4,tex:TX[cur],sx:rnd()*12|0,sy:rnd()*12|0})}}
+  else if(!cur&&(D.inv[selBlock]||0)>0){D.base[cell.r][cell.c]=selBlock;D.inv[selBlock]--;sfx('place')}
+  renderHotbar();save()}
+cv.addEventListener('pointerdown',e=>{if(mode!=='build')return;audioInit();e.preventDefault();const cell=cellAt(e);painting=true;paintAction=eraseMode||(D.base[cell.r][cell.c]&&D.base[cell.r][cell.c]!=='bedrock'&&(D.inv[selBlock]||0)===0&&false)?'erase':'place';
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}hoverCell=cell;applyCell(cell)});
+cv.addEventListener('pointermove',e=>{if(mode!=='build')return;const cell=cellAt(e);const changed=!hoverCell||cell.c!==hoverCell.c||cell.r!==hoverCell.r;hoverCell=cell;if(painting&&changed)applyCell(cell)});
+['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{painting=false}));
+cv.addEventListener('pointerleave',()=>{if(!painting)hoverCell=null});
+function iconCanvas(b){const c=document.createElement('canvas');c.width=16;c.height=16;c.getContext('2d').drawImage(TX[b],0,0);return c}
+function renderHotbar(){const hb=$('#hotbar');hb.innerHTML='';BLOCKS.forEach(b=>{const n=D.inv[b]||0;const s=document.createElement('button');s.className='slot'+(b===selBlock&&!eraseMode?' sel':'');s.disabled=n===0&&b!==selBlock;
+  s.setAttribute('aria-label',BNAME[b]+', '+n+' left');s.appendChild(iconCanvas(b));s.insertAdjacentHTML('beforeend',`<b>${n}</b>${BNAME[b]}`);s.onclick=()=>{selBlock=b;eraseMode=false;$('#eraseBtn').classList.remove('on');renderHotbar()};hb.appendChild(s)})}
+
+/* ================= spelling console ================= */
+let Q=null,input='',phase='ask',busy=false;
+const ansEl=$('#answer'),fixEl=$('#fix'),clueEl=$('#clue'),plabel=$('#plabel');
+function renderAnswer(cls){ansEl.className='answer'+(cls?' '+cls:'');ansEl.innerHTML=input?`<span>${esc(input)}</span><span class="caret"></span>`:`<span class="ph">${phase==='fix'?'Type it the right way to keep digging':'Type the word you hear'}</span><span class="caret"></span>`;
+  crack=phase==='ask'&&Q?Math.min(4,Math.ceil(input.length/Math.max(1,Q.w.length)*4)):0}
+function blanked(){return Q.s.replace(new RegExp('\\b'+Q.w+'\\b','i'),'_____')}
+function renderPrompt(){if(!Q)return;$('#hearW').hidden=!ttsOK;$('#hearS').hidden=!ttsOK;
+  if(!ttsOK){clueEl.hidden=false;clueEl.innerHTML=`<b>Fill the blank:</b> ${esc(blanked())} <span class="hint">(${Q.w.length} letters)</span>`}else clueEl.hidden=true;
+  if(D.survey){const s=D.survey;plabel.innerHTML=`Survey · <b>${s.log.length+1}</b>`}else{const t=TIERS[tierOf(focusF())];plabel.innerHTML=`<b>${t.n}</b>${Q.review?' · review':''}`}}
+function nextWord(){fixEl.hidden=true;phase='ask';input='';
+  if(D.survey){const s=D.survey;const it=s.words[s.res.length];Q={f:s.fi,w:it[0],s:it[1],survey:true}}else Q=chooseWord();
+  renderPrompt();renderAnswer();setTimeout(()=>{if(mode==='mine')saySentence()},250)}
+function typeKey(k){if(busy||mode!=='mine'||!Q)return;audioInit();if(k==='back'){input=input.slice(0,-1);sfx('key')}else if(k==='enter'){submit();return}else if(/^[a-z]$/.test(k)&&input.length<16){input+=k;sfx('key');if(phase==='ask')sfx('tick')}renderAnswer()}
+function lcsMarks(a,b){const n=a.length,m=b.length,dp=Array.from({length:n+1},()=>Array(m+1).fill(0));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  const ka=Array(n).fill(false),kb=Array(m).fill(false);let i=0,j=0;while(i<n&&j<m){if(a[i]===b[j]){ka[i]=kb[j]=true;i++;j++}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++}return[ka,kb]}
+function submit(){if(!input||busy)return;const typed=input.trim().toLowerCase();
+  if(phase==='fix'){if(typed===Q.w){busy=true;phase='done';renderAnswer('ok');swing(true,1);sfx('soft');setTimeout(()=>{busy=false;nextWord()},700)}else{renderAnswer('bad');sfx('clank');swing(false);input='';setTimeout(()=>renderAnswer(),400)}return}
+  const ok=typed===Q.w;busy=true;
+  if(Q.survey){renderAnswer(ok?'ok':'');swing(true,0);sfx(ok?'gem':'soft');boltLine(ok?pick(['Got it!','Nice!','Mapped!','Clean swing!']):pick(['Noted. On to the next one!','That one helps me map the mine. Next!','Good try. Keep going!']),1.4);
+    const done=surveyAnswer(ok,typed,Q.w);setTimeout(()=>{busy=false;if(done)showPlacement();else nextWord()},800);return}
+  const tierBefore=curTier();grade(Q,ok);
+  if(ok){D.streak++;D.best=Math.max(D.best,D.streak);renderAnswer('ok');swing(true,1);const t=TIERS[tierOf(Q.f)];const rew=t.reward;D.inv[rew]=(D.inv[rew]||0)+2;sfx('gem');ftext('+2 '+'',150,D.depth*16-20,'#FFC94D');
+    if(D.streak%3===0){const b=pick(['planks','glass','torch','flower','brick']);D.inv[b]=(D.inv[b]||0)+3;setTimeout(()=>boltLine(`${D.streak} in a row! Bonus: 3 ${BNAME[b].toLowerCase()} blocks for your base.`,2.6),400)}
+    save();updateTop();setTimeout(()=>{busy=false;const tAfter=curTier();if(tAfter>tierBefore)newTier(tAfter);nextWord()},850)}
+  else{D.streak=0;renderAnswer('bad');swing(false);sfx('clank');flashT=.5;updateTop();
+    const [ka,kb]=lcsMarks(typed,Q.w);const yours=[...typed].map((ch,i)=>ka[i]?esc(ch):`<i>${esc(ch)}</i>`).join('');const right=[...Q.w].map((ch,j)=>kb[j]?esc(ch):`<u>${esc(ch)}</u>`).join('');
+    fixEl.innerHTML=`<div class="row"><small>You wrote</small><span class="w">${yours}</span></div><div class="row"><small>The word is</small><span class="w">${right}</span></div><div class="tip"><b>${esc(FEATS[Q.f].n)}.</b> ${esc(FEATS[Q.f].tip)}</div>`;
+    fixEl.hidden=false;phase='fix';input='';setTimeout(()=>{busy=false;renderAnswer();speak([Q.w])},500)}}
+function swing(breakIt,reward){miner.swingT=.32;setTimeout(()=>{if(!breakIt){sfx('clank');for(let i=0;i<6;i++)parts.push({x:128,y:D.depth*16,vx:(rnd()-.5)*90,vy:-rnd()*70,g:200,life:.3,max:.3,col:'#FFE27A',size:1});return}
+  sfx('break');shake=2.5;shatter(D.depth);crack=0;digDown(1)},180)}
+function newTier(t){sfx('tier');banner('Now entering',TIERS[t].n);if(D.depth<TIER_START[t])setTimeout(()=>dropTo(TIER_START[t]),600);D.lastTier=t;save()}
+let boltT=0;function boltLine(t,dur){const b=$('#bolt');b.innerHTML='<b>Bolt</b>'+esc(t);b.hidden=false;boltT=dur||3}
+function banner(small,big){const b=$('#banner');b.innerHTML=`<small>${esc(small)}</small>${esc(big)}`;b.hidden=false;b.style.animation='none';void b.offsetWidth;b.style.animation='';clearTimeout(banner.t);banner.t=setTimeout(()=>b.hidden=true,2900)}
+function updateTop(){$('#depthN').textContent=D.depth*3;$('#streakN').textContent=D.streak}
+/* keyboard */
+const ROWS=['qwertyuiop','asdfghjkl','zxcvbnm'];
+function buildKB(){const kb=$('#kb');kb.innerHTML='';ROWS.forEach((row,i)=>{const r=document.createElement('div');r.className='kr';
+  if(i===2){const b=document.createElement('button');b.className='key wide';b.textContent='⌫';b.setAttribute('aria-label','Backspace');b.dataset.k='back';r.appendChild(b)}
+  [...row].forEach(ch=>{const b=document.createElement('button');b.className='key';b.textContent=ch;b.dataset.k=ch;r.appendChild(b)});
+  if(i===2){const b=document.createElement('button');b.className='key go';b.textContent='Mine!';b.dataset.k='enter';r.appendChild(b)}kb.appendChild(r)});
+  kb.addEventListener('pointerdown',e=>{const b=e.target.closest('.key');if(!b)return;e.preventDefault();b.classList.add('down');setTimeout(()=>b.classList.remove('down'),120);typeKey(b.dataset.k)})}
+addEventListener('keydown',e=>{if(!$('#titleOv').hidden||!$('#msgOv').hidden||!$('#repOv').hidden){return}const k=e.key;
+  if(k==='Backspace'){e.preventDefault();typeKey('back')}else if(k==='Enter'){e.preventDefault();typeKey('enter')}else if(/^[a-zA-Z]$/.test(k)&&!e.metaKey&&!e.ctrlKey)typeKey(k.toLowerCase());else if(k===' '){e.preventDefault();sayWord()}});
+$('#hearW').onclick=()=>{audioInit();sayWord()};$('#hearS').onclick=()=>{audioInit();saySentence()};
+
+/* ================= screens ================= */
+function boltCanvas(){const c=document.createElement('canvas');c.width=18;c.height=18;c.getContext('2d').drawImage(boltSprite(),0,0);return c}
+function showMsg(html,btns){const card=$('#msgCard');card.innerHTML=html;const row=document.createElement('div');row.className='center';btns.forEach(([label,fn,ghost])=>{const b=document.createElement('button');b.className='btn'+(ghost?' ghost':'');b.textContent=label;b.onclick=()=>{$('#msgOv').hidden=true;fn()};row.appendChild(b)});card.appendChild(row);
+  card.querySelectorAll('.boltslot').forEach(s=>s.replaceWith(boltCanvas()));$('#msgOv').hidden=false}
+function nm(){return esc(D.name||'Miner')}
+function startFlow(){audioInit();const v=$('#nameIn').value.trim().slice(0,12);if(v)D.name=v;save();$('#titleOv').hidden=true;
+  if(!D.placed&&!D.survey){showMsg(`<h2>Map the mine first</h2><div class="boltline"><span class="boltslot"></span><p>Hi ${nm()}! Before we dig, I need to map this mine. I'll say a word and use it in a sentence. You spell it. The words get harder as we go, and some will be <b>too</b> hard. That's on purpose. It shows me exactly where you should start digging.</p></div><p class="sub">About 5 to 10 minutes. ${ttsOK?'Turn the sound up so you can hear the words.':'This device can\'t read words aloud, so you\'ll get a sentence clue instead.'}</p>`,[['Start the survey',()=>{surveyStart();enterMine()}]])}
+  else enterMine()}
+function showPlacement(){const p=D.placement,f=focusF(),t=tierOf(f);const strong=FEATS.filter((x,i)=>D.m[i]>=MASTER).map(x=>x.n);
+  showMsg(`<h2>Survey complete!</h2><div class="boltline"><span class="boltslot"></span><p>Great work, ${nm()}! You spelled <b>${p.correct} of ${p.words}</b> words. I've found your perfect digging spot: the <b>${TIERS[t].n}</b>.</p></div>
+    <div class="res"><div><small>Starting layer</small><b>${TIERS[t].n}</b></div><div><small>Patterns mastered</small><b>${strong.length} of ${FEATS.length}</b></div><div><small>First target</small><b>${esc(FEATS[f].n)}</b></div></div>
+    <p class="sub">The words will stay just hard enough. Get a bunch right and we dig faster. Miss a few and I'll mix in easier ones and bring back the tricky words later.</p>`,
+    [['Drop to my layer!',()=>{D.lastTier=t;save();dropTo(TIER_START[t]);banner('Now entering',TIERS[t].n);sfx('tier');nextWord()}]])}
+function enterMine(){mode='mine';$('#console').hidden=false;$('#buildbar').hidden=true;$('#modeBtn').textContent='Base';miner.y=D.depth;layout();
+  if(D.survey||D.placed){nextWord()}updateTop()}
+function enterBuild(){mode='build';baseInit();try{speechSynthesis.cancel()}catch(e){}$('#console').hidden=true;$('#buildbar').hidden=false;$('#modeBtn').textContent='Mine';renderHotbar();layout()}
+$('#modeBtn').onclick=()=>{audioInit();if(!D.placed){boltLine('Finish the survey first, then you can build!',2.5);return}if(mode==='mine')enterBuild();else enterMine()};
+$('#backBtn').onclick=enterMine;
+$('#eraseBtn').onclick=()=>{eraseMode=!eraseMode;$('#eraseBtn').classList.toggle('on',eraseMode);renderHotbar()};
+$('#nightBtn').onclick=()=>{night=!night;$('#nightBtn').textContent=night?'Day':'Night'};
+$('#sndBtn').onclick=()=>{D.sound=!D.sound;audioInit();if(sfxG)sfxG.gain.value=D.sound?.5:0;$('#sndWave').style.display=D.sound?'':'none';$('#sndBtn').setAttribute('aria-label',D.sound?'Sound on':'Sound off');save()};
+$('#goBtn').onclick=startFlow;$('#nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')startFlow()});
+$('#repBtn').onclick=openReport;$('#titleRep').onclick=openReport;
+
+function openReport(){const card=$('#repCard');const st=D.stats;const acc=st.words?Math.round(st.correct/st.words*100):0;const f=focusF();
+  const days=Object.entries(st.days).sort((a,b)=>b[0].localeCompare(a[0]));const mins=Math.round(days.reduce((a,[,d])=>a+d.sec,0)/60);
+  const fRow=(x,i)=>{const m=D.m[i],cls=m>=MASTER?'m':i===f?'w':D.n[i]?'w':'n',lab=m>=MASTER?'Mastered':i===f?'Working on':D.n[i]?'Practicing':'Not yet';
+    return`<div class="feat"><b>${esc(x.n)}</b><span class="st ${cls}">${lab}</span><div class="bar"><i style="width:${Math.round(m*100)}%"></i></div><small>${D.c[i]} of ${D.n[i]} right</small></div>`};
+  let feats='';STAGES.forEach((sn,si)=>{feats+=`<div class="stagehead">${sn} stage</div>`+FEATS.map((x,i)=>x.st===si?fRow(x,i):'').join('')});
+  const missed=Object.entries(D.missed).sort((a,b)=>b[1]-a[1]).slice(0,16).map(([w])=>w);
+  const pl=D.placement;const stage=STAGES[FEATS[f].st];
+  const log=`Echo Mines spelling log (${D.name||'student'})\n`+days.slice(0,14).map(([d,v])=>`${d}: ${v.w} words, ${v.w?Math.round(v.c/v.w*100):0}% correct, ${Math.round(v.sec/60)} min`).join('\n')+
+    `\nCurrent stage: ${stage}. Working on: ${FEATS[f].n}. Patterns mastered: ${D.m.filter(m=>m>=MASTER).length} of ${FEATS.length}.`+(pl?`\nPlacement survey ${pl.date}: ${pl.correct}/${pl.words} correct.`:'');
+  card.innerHTML=`<h2>Grown-ups report</h2><p class="sub">${esc(D.name||'Your miner')} · spelling, measured in the game itself.</p>
+  <div class="res"><div><small>Spelling stage</small><b>${D.placed?stage:'Survey not done'}</b></div><div><small>Working on</small><b>${D.placed?esc(FEATS[f].n):'—'}</b></div><div><small>Words · accuracy</small><b class="num">${st.words} · ${acc}%</b></div></div>
+  ${pl?`<p class="sub">Placement survey on ${pl.date}: ${pl.correct} of ${pl.words} correct. Total time practicing: ${mins} min.</p>`:''}
+  ${feats}
+  <div class="stagehead">Words to practice</div><div class="words">${missed.length?missed.map(w=>`<span>${esc(w)}</span>`).join(''):'<span style="border-color:var(--line)">None yet</span>'}</div>
+  <div class="stagehead">Portfolio log</div><textarea class="log" id="logTxt" readonly>${esc(log)}</textarea>
+  <div class="center" style="margin-top:12px"><button class="btn small" id="copyLog">Copy log</button><button class="btn ghost small" id="redo">Redo placement</button><button class="btn ghost small" id="closeRep">Close</button></div>
+  <p class="sub" style="margin-top:12px;font-size:14px">How it adapts: a placement survey finds the first spelling pattern he hasn't mastered. After that, about 7 in 10 words come from that pattern, the rest review older patterns or preview the next one. Missed words come back a few words later and must be spelled right twice. If accuracy drops below about 65%, it mixes in easier review until he's back on track.</p>`;
+  card.querySelector('#closeRep').onclick=()=>{$('#repOv').hidden=true};
+  card.querySelector('#copyLog').onclick=e=>{const ta=card.querySelector('#logTxt');const done=()=>{e.target.textContent='Copied'};try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();})}catch(_){ta.focus();ta.select()}};
+  const rb=card.querySelector('#redo');rb.onclick=()=>{if(!rb.dataset.sure){rb.dataset.sure=1;rb.textContent='Tap again to redo';return}const keep={name:D.name,inv:D.inv,base:D.base,stats:D.stats,sound:D.sound};D=Object.assign(fresh(),keep);save();$('#repOv').hidden=true;$('#titleOv').hidden=true;
+    miner.y=0;camY=-200;updateTop();startFlow()};
+  $('#repOv').hidden=false}
+
+/* ================= loop / layout ================= */
+function layout(){const app=$('#app');const W=app.clientWidth;const H=app.clientHeight;const consoleH=mode==='mine'?(innerHeight<560?250:Math.min(360,Math.max(300,H*.46))):(innerHeight<560?150:200);
+  let w=Math.min(W,(H-consoleH-60)*1.6);w=Math.max(220,Math.floor(w));const st=$('#stage');st.style.width=w+'px';st.style.height=Math.floor(w/1.6)+'px'}
+addEventListener('resize',layout);
+let last=performance.now(),activeT=0;
+['pointerdown','keydown'].forEach(t=>addEventListener(t,()=>activeT=60,true));
+function frame(t){const dt=Math.min(.05,(t-last)/1000);last=t;now+=dt;
+  try{if(miner.fallT>0)miner.fallT=Math.max(0,miner.fallT-dt);if(miner.swingT>0)miner.swingT-=dt;if(flashT>0)flashT-=dt;if(shake>0)shake=Math.max(0,shake-dt*12);updParts(dt);
+    if(boltT>0){boltT-=dt;if(boltT<=0)$('#bolt').hidden=true}
+    if(activeT>0&&!document.hidden&&$('#titleOv').hidden){activeT-=dt;const ds=dayStat();ds.sec+=dt;if((now|0)%10===0&&((now-dt)|0)%10!==0)save()}
+    ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;if(mode==='build')drawBase();else drawMine()}catch(e){console.error(e)}
+  requestAnimationFrame(frame)}
+buildTex();load();buildKB();$('#nameIn').value=D.name||'';$('#goBtn').textContent=D.placed?'Keep digging':D.survey?'Finish the survey':'Start';$('#sndWave').style.display=D.sound?'':'none';
+miner.y=D.depth;camY=D.depth*16-VH*.58;updateTop();layout();renderAnswer();requestAnimationFrame(frame);
+window.__em={get D(){return D},get Q(){return Q},typeKey,submit,get phase(){return phase},focusF,enterBuild,enterMine,openReport,startFlow};
+})();
+</script>
+
+</body></html>

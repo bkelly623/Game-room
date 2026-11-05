@@ -1,0 +1,1066 @@
+<!doctype html><html><head><script src="../_kid.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Hero of Snortwood</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--ink:#2B1D0E;--paper:#FFF6E3;--paper2:#F6E7C6;--edge:#8A5A2A;--gold:#E9A93B;--green:#3F8A3A;--red:#C8473A;--magic:#7B4FD6;--bg:#1A1426}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#1A1426}}
+:root[data-theme="dark"]{--bg:#1A1426}
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+#touch{position:fixed;inset:0;z-index:2}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.tag3{position:absolute;left:0;top:0;text-align:center;white-space:nowrap}
+.tag3 span{display:inline-block;font:600 13px Fredoka,sans-serif;color:#fff;background:rgba(30,20,40,.62);padding:2px 8px;border-radius:9px}
+.bub{font:500 15px "Atkinson Hyperlegible",sans-serif;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:12px;padding:5px 10px;margin-bottom:4px;max-width:220px;white-space:normal;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.ftxt{position:absolute;left:0;top:0;font:700 18px Fredoka,sans-serif;text-shadow:0 2px 0 #000,0 0 4px #000;white-space:nowrap}
+#hud{position:fixed;inset:0;z-index:4;pointer-events:none}
+#hud button{pointer-events:auto}
+#hudTop{position:absolute;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));display:flex;gap:8px;align-items:flex-start}
+.stat{background:rgba(255,246,227,.94);border:2px solid var(--edge);border-radius:12px;padding:5px 8px;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+#hpBox{width:150px}
+.hp{height:13px;background:#5A2A2A;border-radius:7px;overflow:hidden}.hp i{display:block;height:100%;background:linear-gradient(#FF6B7A,#D8384A);transition:width .25s}
+.row1{display:flex;justify-content:space-between;align-items:center;font:600 14px Fredoka,sans-serif;margin-bottom:3px}
+.xp{height:6px;background:#D9C9A0;border-radius:4px;overflow:hidden;margin-top:4px}.xp i{display:block;height:100%;background:#5AB0E8}
+#alignBox{display:flex;align-items:center;gap:5px;font-size:18px}
+.ameter{position:relative;width:46px;height:8px;border-radius:4px;background:linear-gradient(90deg,#8A1A2A,#BBB 50%,#FFD447)}.ameter b{position:absolute;top:-3px;width:4px;height:14px;background:var(--ink);border-radius:2px;transform:translateX(-2px)}
+#gold{font:700 16px Fredoka,sans-serif}
+#menuBtn{margin-left:auto;width:46px;height:46px;border-radius:12px;border:2px solid var(--edge);background:var(--paper);font-size:22px;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+#tracker{position:absolute;left:50%;transform:translateX(-50%);top:calc(max(10px,env(safe-area-inset-top)) + 58px);max-width:min(92vw,560px);display:flex;align-items:center;gap:8px;background:rgba(43,29,14,.82);color:#FFF6E3;border:2px solid #E9A93B;border-radius:14px;padding:6px 12px;font:600 15px Fredoka,sans-serif;text-align:left;line-height:1.25}
+#trkArrow{display:inline-block;width:22px;text-align:center;color:#FFD447;font-size:20px;flex:none}
+#trkDist{flex:none;font-size:13px;color:#E9C98F}
+#toast{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 118px);transform:translate(-50%,-10px);max-width:min(90vw,520px);background:#FFF6E3;border:2px solid var(--magic);color:var(--ink);border-radius:14px;padding:9px 14px;font:600 16px "Atkinson Hyperlegible",sans-serif;opacity:0;transition:all .25s;text-align:center;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#joy{position:fixed;width:120px;height:120px;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);z-index:3;pointer-events:none;opacity:0;transition:opacity .15s}
+#joy.on{opacity:1}#joyKnob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.75)}
+#btns{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:200px;height:200px}
+.cb{position:absolute;border-radius:50%;border:3px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 13px Fredoka,sans-serif;color:var(--ink);box-shadow:0 5px 0 rgba(0,0,0,.35);touch-action:none}
+.cb .ic{font-size:30px;line-height:1}.cb.down{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+#bSword{right:0;bottom:0;width:92px;height:92px;background:#F2D06A}
+#bMagic{right:98px;bottom:4px;width:72px;height:72px;background:#C8A8FF}#bMagic.locked{filter:grayscale(1) opacity(.6)}
+#bAct{right:6px;bottom:100px;width:78px;height:78px;background:#FFF6E3}#bAct.hot{background:#8AE08A;animation:pulse 1s infinite}
+#bActL{font-size:12px;max-width:70px;text-align:center;line-height:1.05}
+#bPot{right:112px;bottom:90px;width:54px;height:54px;background:#FF9AA8}#bPot .ic{font-size:22px}#potN{font-size:12px}
+@keyframes pulse{50%{box-shadow:0 5px 0 rgba(0,0,0,.35),0 0 0 6px rgba(138,224,138,.45)}}
+#dlg{position:fixed;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));width:min(94vw,640px);z-index:6;background:var(--paper);border:3px solid var(--edge);border-radius:18px;padding:14px 16px 12px;box-shadow:0 6px 0 rgba(0,0,0,.3);max-height:62vh;overflow-y:auto;touch-action:pan-y}
+#dName{display:inline-block;font:700 15px Fredoka,sans-serif;color:#fff;background:var(--magic);padding:3px 10px;border-radius:9px;margin-bottom:6px}
+#dText{font-size:19px;line-height:1.45;min-height:2.9em}
+#dNext{text-align:right;color:var(--edge);font-size:15px;animation:bob 1s infinite;font-family:Fredoka}
+@keyframes bob{50%{transform:translateY(3px)}}
+#dCh{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.ov{position:fixed;inset:0;z-index:7;background:rgba(20,12,30,.55);display:flex;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
+.ov[hidden]{display:none}
+.card{background:var(--paper);border:3px solid var(--edge);border-radius:20px;width:min(100%,620px);max-height:100%;overflow-y:auto;padding:0 16px 18px;box-shadow:0 8px 0 rgba(0,0,0,.3);touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;user-select:text;-webkit-user-select:text}
+.chead{position:sticky;top:0;z-index:2;background:var(--paper);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px 0 8px;border-bottom:2px dashed #E3CFA2;margin-bottom:10px}
+.chead h2{margin:0;font:700 22px Fredoka,sans-serif;color:var(--ink)}
+.x{flex:none;width:42px;height:42px;border-radius:12px;border:2px solid var(--edge);background:#fff;font-size:18px;font-weight:700;color:var(--ink)}
+.sub{font-size:15px;color:#6A5232;line-height:1.4}
+h3{font:600 18px Fredoka,sans-serif;margin:16px 0 6px}
+.btn{font:600 17px Fredoka,sans-serif;border:2px solid var(--ink);background:#FFE7A8;color:var(--ink);border-radius:13px;padding:10px 16px;box-shadow:0 4px 0 rgba(0,0,0,.25);cursor:pointer;touch-action:manipulation}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.25)}.btn:disabled{opacity:.45}
+.btn.big{font-size:20px;padding:12px 26px;background:#8AE08A}.btn.small{font-size:15px;padding:7px 12px}.btn.gold{background:#FFD447}.btn.danger{background:#FFB0A8}.btn.ghost{background:#fff}
+.btn.choice{text-align:left;font-size:17px;background:#fff}
+.center{text-align:center;margin-top:12px}
+.step{font:600 18px Fredoka,sans-serif;margin:4px 0 8px;color:var(--magic)}
+.sent{background:#fff;border:2px solid #E3CFA2;border-radius:14px;padding:12px;line-height:2.4;text-align:center}
+.tok{font:700 22px "Atkinson Hyperlegible",sans-serif;border:2px solid #CDB88A;background:#FFFDF6;border-radius:10px;padding:2px 7px;color:var(--ink);margin:2px 0;cursor:pointer;touch-action:manipulation}
+.tok.punct{min-width:36px;font-size:26px;padding:0 8px}
+.tok.nope{background:#FFE0DC;border-color:var(--red);animation:shk .3s}.tok.sel{background:#E8D8FF;border-color:var(--magic);box-shadow:0 0 0 3px #C8A8FF}.tok.fixed{background:#C8F0B8;border-color:var(--green)}
+.tok.hint{animation:glow 1s infinite}@keyframes glow{50%{box-shadow:0 0 0 5px #FFD447}}
+@keyframes shk{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.tip{min-height:1.3em;margin:8px 0 2px;font-size:16px;color:#7A4A2A;text-align:center}
+.opts{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px}.opts.col{flex-direction:column}
+.opt{font-size:20px;min-width:72px;background:#fff}.opts.col .opt{text-align:left;font:600 18px "Atkinson Hyperlegible",sans-serif}
+.opt.no{background:#FFD0C8;text-decoration:line-through}.opt.yes{background:#B8F0A8}
+.fb{margin-top:12px;font-size:17px;line-height:1.45;color:#2E5A2A;text-align:center}
+.note{background:#FFFDF2;border:2px solid #D9C08A;border-radius:12px;padding:12px 16px;font-size:19px;line-height:1.55;box-shadow:inset 0 0 0 4px #FFF6DA}
+.note p{margin:0 0 8px}.note mark{background:#FFE07A;padding:0 3px;border-radius:4px}
+.ntitle{font:600 15px Fredoka,sans-serif;color:#8A6A3A;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.qq{font:700 19px "Atkinson Hyperlegible",sans-serif;margin:14px 0 6px}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #E3CFA2;border-radius:12px;padding:10px}
+.rt{flex:1;min-width:0}.ra{flex:none}
+.tag{display:inline-block;font:600 12px Fredoka,sans-serif;background:#F0E2C0;border-radius:7px;padding:1px 7px;color:#6A5232}.tag.on{background:#B8F0A8}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.qbox{background:#fff;border:2px solid #E3CFA2;border-radius:12px;padding:10px;font-size:16px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}.tab{flex:1;font:600 15px Fredoka,sans-serif;border:2px solid var(--edge);background:#fff;border-radius:10px;padding:7px 4px;color:var(--ink)}.tab.on{background:#FFD447}
+.srow{display:flex;gap:10px;align-items:center;background:#fff;border:2px solid #E3CFA2;border-radius:12px;padding:8px 10px}.sk{flex:1;min-width:0;font-size:15px}
+.bar{width:90px;height:12px;background:#EEE2C4;border-radius:6px;overflow:hidden;flex:none}.bar i{display:block;height:100%}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border-radius:10px;overflow:hidden}.tbl td,.tbl th{padding:6px 8px;border-bottom:1px solid #EEE2C4;text-align:left}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .4s;z-index:9}#fade.on{opacity:1}
+#title{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(180deg,rgba(26,20,38,.15),rgba(26,20,38,.6))}
+.tcard{background:var(--paper);border:3px solid var(--edge);border-radius:24px;padding:22px 20px;width:min(100%,430px);text-align:center;box-shadow:0 10px 0 rgba(0,0,0,.35)}
+.logo{font:700 40px/1 Fredoka,sans-serif;color:#C8382A;text-shadow:0 3px 0 #6A1A12;letter-spacing:.01em;margin:4px 0}
+.logo small{display:block;font-size:19px;color:var(--magic);text-shadow:none;margin-bottom:4px}
+.tsub{font-size:16px;color:#6A5232;margin:8px 0 14px;line-height:1.4}
+#nameIn{font:600 20px Fredoka,sans-serif;width:100%;padding:10px 12px;border-radius:12px;border:2px solid var(--edge);text-align:center;margin-bottom:12px;background:#fff;color:var(--ink)}
+#nameIn.shake{animation:shk .3s;border-color:var(--red)}
+.tbtns{display:flex;flex-direction:column;gap:10px}
+.linkb{background:none;border:none;color:#6A5232;font:600 15px Fredoka,sans-serif;text-decoration:underline;margin-top:12px}
+#noGL{display:none;position:fixed;inset:0;z-index:20;background:var(--paper);padding:24px;font-size:18px;text-align:center}
+@media (max-width:420px){#hpBox{width:118px}.logo{font-size:34px}#tracker{font-size:14px}}
+@media (max-height:500px){#tracker{top:8px;left:auto;right:70px;transform:none;max-width:44vw}#toast{top:58px}}
+</style>
+<canvas id="gl"></canvas>
+<div id="touch" hidden></div>
+<div id="labels"></div>
+<div id="joy"><div id="joyKnob"></div></div>
+<div id="hud" hidden>
+ <div id="hudTop">
+  <div class="stat" id="hpBox"><div class="row1"><span id="lvlN">Lv 1</span><span id="hpTxt">♥ 10/10</span></div><div class="hp"><i id="hpFill" style="width:100%"></i></div><div class="xp"><i id="xpFill"></i></div></div>
+  <div class="stat" id="alignBox"><span id="alignI">🙂</span><div class="ameter"><b id="alignB" style="left:50%"></b></div></div>
+  <div class="stat" id="gold">🪙 0</div>
+  <button id="menuBtn" aria-label="Menu">☰</button>
+ </div>
+ <button id="tracker"><span id="trkArrow">⬆</span><span id="trkText"></span><span id="trkDist"></span></button>
+ <div id="toast"></div>
+ <div id="btns">
+  <button class="cb" id="bSword" aria-label="Sword"><span class="ic">⚔️</span>Sword</button>
+  <button class="cb" id="bMagic" aria-label="Word Magic"><span class="ic">✨</span>Magic</button>
+  <button class="cb" id="bAct" aria-label="Action"><span class="ic">✋</span><span id="bActL">Flex 💪</span></button>
+  <button class="cb" id="bPot" aria-label="Potion"><span class="ic">🧪</span><b id="potN">0</b></button>
+ </div>
+</div>
+<div id="dlg" hidden><div id="dName"></div><div id="dText"></div><div id="dCh"></div><div id="dNext">tap ▼</div></div>
+<div id="ov" class="ov" hidden><div id="card" class="card"></div></div>
+<div id="title"><div class="tcard">
+ <div class="logo"><small>⚔️ The Legend of the ⚔️</small>Hero of Snortwood</div>
+ <div class="tsub">Swing swords. Cast spells by fixing sentences. Read clues. Be a good hero… or a naughty one.</div>
+ <div id="nameRow"><input id="nameIn" maxlength="14" placeholder="Hero name" autocomplete="off" spellcheck="false"></div>
+ <div class="tbtns"><button class="btn big" id="contBtn" hidden>Continue ➜</button><button class="btn big" id="goBtn">Start the adventure!</button></div>
+ <div class="sub" id="saveInfo" style="margin-top:10px"></div>
+ <button class="linkb" id="titleRep">Grown-ups: progress report</button>
+</div></div>
+<div id="fade"></div>
+<div id="noGL">This game needs 3D graphics (WebGL), which this browser has turned off. Try Chrome or Safari, or another device.</div>
+
+<script>(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const rnd=Math.random,ri=(a,b)=>a+Math.floor(rnd()*(b-a+1)),pick=a=>a[Math.floor(rnd()*a.length)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ===================== learning content ===================== */
+const cap=w=>w?w[0].toUpperCase()+w.slice(1):w;
+const low1=w=>w?w[0].toLowerCase()+w.slice(1):w;
+const uniq=a=>[...new Set(a)];
+const toks=s=>s.split(' ').filter(Boolean);
+/* parse a sentence with one {slot} — returns tokens, slot index, slot word, trailing punctuation */
+function parseSlot(s){const t=toks(s);let idx=-1,word='',suf='',pre='';t.forEach((x,i)=>{const m=x.match(/^(.*)\{([^}]*)\}(.*)$/);if(m){idx=i;pre=m[1];word=m[2];suf=m[3];t[i]=pre+word+suf}});return{t,idx,word,suf,pre}}
+const sForm=b=>b==='go'?'goes':b==='do'?'does':/(s|sh|ch|x|z)$/.test(b)?b+'es':/[^aeiou]y$/.test(b)?b.slice(0,-1)+'ies':b+'s';
+const ingForm=b=>/ie$/.test(b)?b.slice(0,-2)+'ying':/[^e]e$/.test(b)?b.slice(0,-1)+'ing':/^[^aeiou]*[aeiou][^aeiouwxy]$/.test(b)?b+b.slice(-1)+'ing':b+'ing';
+
+/* ---------- grammar skills, easiest first (Fix It! Grammar style: find it, then fix it) ---------- */
+const GSK=[
+ {id:'capstart',n:`Capital letter to start a sentence`,g:'1'},
+ {id:'end',n:`End marks . ? !`,g:'1'},
+ {id:'capname',n:`Capitals for names, days & places`,g:'2'},
+ {id:'plural',n:`Tricky plurals (mice, geese)`,g:'2'},
+ {id:'past',n:`Tricky past tense (ran, ate)`,g:'2'},
+ {id:'agree',n:`Verbs that match (he runs / they run)`,g:'2–3'},
+ {id:'contract',n:`Contractions (don't, can't)`,g:'2–3'},
+ {id:'homo1',n:`Sound-alikes (to/too/two, hear/here)`,g:'3'},
+ {id:'pron',n:`"I" or "me"?`,g:'3'},
+ {id:'adv',n:`-ly words, good & well`,g:'3–4'},
+ {id:'comma',n:`Commas (lists, dates, Yes/No)`,g:'3–4'},
+ {id:'homo2',n:`their/there/they're, its/it's, your/you're`,g:'4'}];
+
+const SENT=[
+ ...[`The goat ate my homework and then asked for more.`,`Granny Pickles can lift a cow with one hand.`,`My sword is shaped like a loaf of bread.`,`A troll moved into the bathtub last week.`,`The mayor wears socks on his ears for good luck.`,`Every chicken in Snortwood knows karate.`,`The baker sneezed flour all over the king.`,`Our cat thinks she is a dragon.`,`This soup tastes like old boots.`,`The wizard lost his beard in the river.`,`A frog stole the mayor's hat.`,`Nobody knows why the well hums at night.`,`My helmet is actually a soup pot.`,`The blacksmith named his hammer Steve.`,`Three goblins are hiding in the pumpkin patch.`,`The dragon brushes his teeth with a tree.`].map(t=>({t,k:'.'})),
+ ...[`Why is the goat wearing pants?`,`Who put jelly in my boots?`,`Can a chicken become a knight?`,`Where did the mayor hide his socks?`,`How many pickles fit in a helmet?`,`Did the troll eat the bridge again?`,`What is that smell coming from the cave?`,`Is the wizard's beard on fire?`,`Do ogres like birthday cake?`,`Have you seen my left boot?`,`When will the dragon give back my lunch?`,`Would you like a pickle sandwich?`].map(t=>({t,k:'?'})),
+ ...[`Look out, the cheese is attacking!`,`Run, the chickens are angry!`,`Help, a goose stole my sword!`,`Wow, that troll can really dance!`,`Hooray, we beat the goblins!`,`Watch out for that flying pie!`,`Yikes, my cape is on fire!`,`Stop that runaway wheelbarrow!`,`Hurry, the bridge is falling!`,`Oh no, the goat ate the map!`].map(t=>({t,k:'!'}))];
+const NAMESENT=[`On ^Monday, the troll ate a mailbox.`,`My dog ^Biscuit can bark in French.`,`We sailed to ^Florida in a bathtub.`,`^Granny ^Pickles was born in ^March.`,`The king of ^France sent me a sock.`,`Every ^Friday, the goblins have a dance party.`,`My cousin ^{N} can juggle three geese.`,`In ^July, it rained frogs in ^Snortwood.`,`We visited ^Grandpa ^Joe in ^Ohio.`,`The dragon's name is ^Kevin.`,`On ^Saturday, ^Sir ^Reginald took a bath in pudding.`,`My uncle ^Brendan builds robots in ^Pennsylvania.`,`The ^Mississippi ^River is full of grumpy fish.`,`^Lady ^Cluckington laid a golden egg on ^Tuesday.`,`We drove to ^Texas to buy a giant hat.`,`My teacher, ^Mrs. ^Noodle, has a pet lobster.`,`In ^December, the ogre wears a scarf on his nose.`,`^Captain ^Bloop sailed across the ^Atlantic ^Ocean.`,`The wizard ^Mumbleton is older than ^England.`,`Last ^April, a goose became mayor of ^Burpville.`];
+const NOUNS=[['mouse','mice',['mouses','mices']],['goose','geese',['gooses','geeses']],['tooth','teeth',['tooths','teeths']],['foot','feet',['foots','feets']],['child','children',['childs','childrens']],['man','men',['mans','mens']],['woman','women',['womans','womens']],['sheep','sheep',['sheeps','sheepes']],['moose','moose',['mooses','meese']],['box','boxes',['boxs','boxies']],['fox','foxes',['foxs','foxies']],['wolf','wolves',['wolfs','wolfes']],['knife','knives',['knifes','knifies']],['leaf','leaves',['leafs','leafes']],['loaf','loaves',['loafs','loafes']],['baby','babies',['babys','babyes']],['pony','ponies',['ponys','ponyes']],['berry','berries',['berrys','berryes']],['dish','dishes',['dishs','dishies']],['ox','oxen',['oxes','oxs']],['deer','deer',['deers','deeres']],['bus','buses',['buss','busies']]];
+const PL_T=[`Three {P} danced on the castle roof.`,`The wizard keeps seven {P} in his hat.`,`Two {P} stole the mayor's pants.`,`I saw five {P} riding one tiny bicycle.`,`Nine {P} lined up to meet the king.`,`Four {P} were singing in the bathtub.`];
+const VERBS=[['eat','ate','eated','a whole wheel of cheese'],['run','ran','runned','around the castle backwards'],['go','went','goed','to the market in pajamas'],['see','saw','seed','a goat flying a kite'],['throw','threw','throwed','a pie at the moon'],['catch','caught','catched','a fish with a spoon'],['bring','brought','bringed','a cow to school'],['fly','flew','flied','over the village on a broom'],['swim','swam','swimmed','across the moat with a sandwich'],['sing','sang','singed','a song about socks'],['take','took','taked','a nap in the pumpkin patch'],['drink','drank','drinked','a bucket of pickle juice'],['buy','bought','buyed','a hat for a chicken'],['fall','fell','falled','into a giant pudding'],['hide','hid','hided','the treasure in a boot'],['write','wrote','writed','a letter to the moon'],['ride','rode','rided','a goose to the castle'],['dig','dug','digged','a hole to the other side of the world'],['blow','blew','blowed','out ninety candles'],['draw','drew','drawed','a mustache on the statue'],['sleep','slept','sleeped','inside a giant boot'],['think','thought','thinked','about cheese all day']];
+const PAST_SUBJ=[`the ogre`,`Granny Pickles`,`the wizard`,`my uncle`,`Sir Reginald`,`a troll`,`the mayor`,`the baker`];
+const AGV=[['dance','on the kitchen table'],['sing','to the pumpkins'],['sneeze','on the king'],['giggle','at the statue'],['snore','very loudly'],['juggle','flaming pickles'],['hop','around the well'],['chase','the goat'],['wash','the dragon’s toes'],['catch','flies with a spoon'],['fix','the broken bridge'],['fly','over the windmill'],['cry','when the onions win'],['push','the wheelbarrow uphill'],['watch','the clouds all day'],['wiggle','in the mud']];
+const AG_S=[['The goblin','The goblins'],['My cousin','My cousins'],['The chicken','The chickens'],['The troll','The trolls'],['The wizard','The wizards'],['The knight','The knights'],['That ogre','Those ogres'],['The baby dragon','The baby dragons']];
+const CONTR=[['dont',`don't`,`do'nt`,'do not',[`I {dont} want to wash the dragon.`,`We {dont} talk about the pudding incident.`]],['cant',`can't`,`ca'nt`,'can not',[`The troll {cant} find his other sock.`,`Goblins {cant} spell their own names.`]],['wont',`won't`,`wo'nt`,'will not',[`The goat {wont} give back my map.`]],['isnt',`isn't`,`is'nt`,'is not',[`The moon {isnt} made of cheese.`]],['didnt',`didn't`,`did'nt`,'did not',[`The wizard {didnt} mean to turn the cat purple.`]],['doesnt',`doesn't`,`does'nt`,'does not',[`Granny {doesnt} like spiders in her soup.`]],['Im',`I'm`,`Im'`,'I am',[`{Im} the bravest hero in Snortwood.`]],['wasnt',`wasn't`,`was'nt`,'was not',[`It {wasnt} me who ate the castle.`]],['couldnt',`couldn't`,`could'nt`,'could not',[`The ogre {couldnt} fit through the door.`]],['Shes',`She's`,`Shes'`,'she is',[`{Shes} riding a goose to school.`]]];
+const MEAN={to:`toward (go to the castle)`,too:`also, or very (too hot)`,two:`the number 2`,hear:`listen with your ears`,here:`this place`,ate:`the past of eat`,eight:`the number 8`,buy:`to pay for something`,by:`next to`,see:`look with your eyes`,sea:`the ocean`,knew:`the past of know`,new:`not old`,write:`put words on paper`,right:`a direction, or correct`,won:`the past of win`,one:`the number 1`,flour:`powder for baking`,flower:`a plant with petals`,their:`belongs to them`,there:`a place (over there)`,"they're":`they are`,its:`belongs to it`,"it's":`it is`,your:`belongs to you`,"you're":`you are`};
+const HOMO1=[[`I have {two} left boots.`,['to','too','two']],[`The goat wants to come {too}.`,['to','too','two']],[`We marched {to} the castle.`,['to','too','two']],[`That pie is {too} hot to eat.`,['to','too','two']],[`Did you {hear} the troll sing?`,['hear','here']],[`Put the dragon egg over {here}.`,['hear','here']],[`The ogre {ate} my lunch.`,['ate','eight']],[`A spider has {eight} legs.`,['ate','eight']],[`I want to {buy} a flying carpet.`,['buy','by']],[`The witch lives {by} the river.`,['buy','by']],[`The pirate sailed across the {sea}.`,['see','sea']],[`I can {see} the castle from here.`,['see','sea']],[`I {knew} the goat was lying.`,['knew','new']],[`The king got a {new} crown.`,['knew','new']],[`Please {write} a letter to the dragon.`,['write','right']],[`Turn {right} at the giant pickle.`,['write','right']],[`Our team {won} the mud race.`,['won','one']],[`I only have {one} sock left.`,['won','one']],[`The baker spilled {flour} on the cat.`,['flour','flower']],[`The princess picked a {flower} for the troll.`,['flour','flower']]];
+const H2A=['their','there',"they're"],H2B=['its',"it's"],H2C=['your',"you're"];
+const HOMO2=[[`The goblins lost {their} spoons.`,H2A],[`Put the treasure over {there}.`,H2A],[`{They're} coming to eat our cheese!`,H2A],[`{There} is a troll in the bathtub.`,H2A],[`The wizards forgot {their} beards.`,H2A],[`I think {they're} hiding in the mill.`,H2A],[`The dragon licked {its} toes.`,H2B],[`{It's} raining meatballs again.`,H2B],[`{It's} time to fight the goblins.`,H2B],[`The cat chased {its} own tail.`,H2B],[`Is this {your} smelly sock?`,H2C],[`{You're} the bravest hero ever.`,H2C],[`{You're} standing on my sandwich!`,H2C],[`Don't forget {your} sword.`,H2C]];
+const PRON_X=['Granny','Sir Reginald','Uncle Brendan','Mumbleton','the goat'];
+const PRON_ACT=['built a rocket out of spoons','went fishing for sea monsters','baked a cake out of mud','fought a giant crab','painted the statue purple'];
+const PRON_OBJ=['The wizard gave cookies to','The troll chased','Granny knitted sweaters for','The dragon waved at','A goose followed'];
+const ADV=[[`The snail ran {quickly} away from the salt.`,'quick','quicker'],[`The ogre sang {loudly} in the bath.`,'loud','louder'],[`Tiptoe {quietly} past the sleeping dragon.`,'quiet','quieter'],[`The knight fought {bravely} against the cheese monster.`,'brave','braver'],[`Granny dances {wildly} at parties.`,'wild','wilder'],[`The goblin {slowly} crept toward the pie.`,'slow','slower'],[`The wizard spoke {softly} to his turtle.`,'soft','softer'],[`The baby dragon breathed fire {happily}.`,'happy','happyly'],[`{N} plays chess really {well}.`,'good','goodly',1],[`The troll sings {badly} but proudly.`,'bad','badder',2],[`Sir Reginald did {well} on his knight test.`,'good','goodly',1],[`The goat {carefully} ate the map.`,'careful','carefuller']];
+const COMMA=[[`I packed socks| a sandwich, and a goat.`,'s'],[`The wizard's hat holds frogs, spoons| and a tiny horse.`,'s'],[`We saw a troll| a dragon, and a very confused cow.`,'s'],[`Granny likes pickles| prunes, and wrestling.`,'s'],[`The dragon was born on May 5| 1802.`,'d'],[`On June 1| 2026, the bridge fell into the river.`,'d'],[`Yes| I did eat the moon.`,'i'],[`No| the goat may not drive the wagon.`,'i'],[`Well| that was a strange day.`,'i'],[`The troll moved to Paris| France.`,'c'],[`We live in Broomall| Pennsylvania.`,'c'],[`Dear Mayor| your pants are on the roof.`,'l']];
+const COMMA_WHY={s:`Use commas to split up a list of three or more things.`,d:`Put a comma between the day and the year.`,i:`Put a comma after Yes, No, or Well at the start of a sentence.`,c:`Put a comma between a city and its state or country.`,l:`Put a comma after the greeting in a letter.`};
+const fixN=s=>s.replace(/\{N\}/g,()=>D.name||'Wert');
+const GTIP={comma:`Hint: a comma is missing after one word. Tap that word.`,end:`Hint: look at the very end.`};
+
+function gq(s,t,bad,fix,opts,why){return{subj:'gram',s,tokens:t,bad,fix,opts:shuffle(uniq(opts)),why,text:t.join(' ')}}
+const GEN={
+ capstart(){const x=pick(SENT),t=toks(x.t),w=t[0];t[0]=w.toLowerCase();return gq(0,t,0,w,[w,w.toUpperCase(),t[0]],`Every sentence starts with a capital letter.`)},
+ end(){const x=pick(SENT),body=x.t.slice(0,-1),k=x.k;const wrong=k==='?'?pick(['.','!']):'?';const t=toks(body).concat([wrong]);const opts=k==='?'?['?','.',',']:k==='!'?['!','?',',']:['.','?',','];
+  return gq(1,t,t.length-1,k,opts,k==='?'?`It asks a question, so it needs a question mark.`:k==='!'?`It shows strong feeling (like yelling "Help!"), so it needs an exclamation mark.`:`It just tells something, so it needs a period.`)},
+ capname(){const raw=fixN(pick(NAMESENT)),t=toks(raw),marked=[];t.forEach((w,i)=>{if(w[0]==='^'){t[i]=w.slice(1);if(i>0)marked.push(i)}});const i=pick(marked),w=t[i];t[i]=low1(w);
+  return gq(2,t,i,w,[w,t[i],w.toUpperCase()],`Names of people, pets, places, days, and months always start with a capital letter.`)},
+ plural(){const [s,p,wr]=pick(NOUNS),x=parseSlot(pick(PL_T).replace('{P}','{'+p+'}'));const bad=pick(wr);x.t[x.idx]=x.pre+bad+x.suf;return gq(3,x.t,x.idx,p+x.suf,[p,...wr].map(o=>o+x.suf),p===s?`One ${s}, two ${p} — this word stays the same!`:`One ${s}, two ${p}.`)},
+ past(){const [b,p,w,o]=pick(VERBS),sub=pick(PAST_SUBJ),x=parseSlot(`Yesterday, ${sub} {${p}} ${o}.`);x.t[x.idx]=w;return gq(4,x.t,x.idx,p,[p,w,sForm(b)],`The past of "${b}" is "${p}", not "${w}".`)},
+ agree(){const [S,P]=pick(AG_S),pl=rnd()<.5,subj=pl?P:S,r=rnd();let cor,wr,o3,rest;
+  if(r<.2){cor=pl?'are':'is';wr=pl?'is':'are';o3='be';rest=pick(['hiding in the barn','stuck in the chimney','late for the goat parade'])}
+  else if(r<.35){cor=pl?'have':'has';wr=pl?'has':'have';o3='haves';rest=pick(['a pet rock named Gary','forty-two spoons','a very loud sneeze'])}
+  else{const [b,rs]=pick(AGV);cor=pl?b:sForm(b);wr=pl?sForm(b):b;o3=ingForm(b);rest=rs}
+  const t=toks(subj+' '+wr+' '+rest+'.'),i=toks(subj).length;return gq(5,t,i,cor,[cor,wr,o3],pl?`More than one, so the verb has no -s: "the trolls dance", "the trolls are".`:`Just one, so the verb gets an -s: "the troll dances", "the troll is", "the troll has".`)},
+ contract(){const [w,c,x3,exp,ss]=pick(CONTR),x=parseSlot(pick(ss).replace('{'+w+'}','{'+c+'}'));x.t[x.idx]=x.pre+w+x.suf;return gq(6,x.t,x.idx,c+x.suf,[c,w,x3].map(o=>o+x.suf),`"${c}" is short for "${exp}". The apostrophe sits where the missing letter was.`)},
+ homo(list,s){const [sen,set]=pick(list),x=parseSlot(sen),ans=x.word,first=x.idx===0;const fx=o=>(first?cap(o):o)+x.suf;const wr=pick(set.filter(o=>o.toLowerCase()!==ans.toLowerCase()));x.t[x.idx]=x.pre+fx(wr);
+  const a=ans.toLowerCase();return gq(s,x.t,x.idx,fx(a),set.map(fx),`"${cap(a)}" means ${MEAN[a]}. "${cap(wr)}" means ${MEAN[wr]}.`)},
+ homo1(){return GEN.homo(HOMO1,7)},homo2(){return GEN.homo(HOMO2,11)},
+ pron(){const X=pick(PRON_X);if(rnd()<.5){const act=pick(PRON_ACT),t=toks(`${cap(X)} and me ${act}.`),i=toks(X).length+1;return gq(8,t,i,'I',['I','me','myself'],`Try it without ${X}: "I ${act}." So use "I".`)}
+  const ob=pick(PRON_OBJ),t=toks(`${ob} ${X} and I.`),i=t.length-1;t[i]='I.';return gq(8,t,i,'me.',['I.','me.','myself.'],`Try it without ${X}: "${ob} me." So use "me".`)},
+ adv(){const [sen,w,x3,gw]=pick(ADV),x=parseSlot(fixN(sen));const fx=o=>x.pre+o+x.suf;x.t[x.idx]=fx(w);
+  return gq(9,x.t,x.idx,fx(x.word),[x.word,w,x3].map(fx),gw===1?`"Well" tells HOW you do something. "Good" describes a thing, like a good pie.`:gw===2?`"Badly" tells HOW. "Bad" describes a thing, like a bad smell.`:`It tells HOW it was done, so it needs -ly: "${x.word}".`)},
+ comma(){const [sen,k]=pick(COMMA),t=toks(sen);let i=t.findIndex(w=>w.endsWith('|'));const w=t[i].slice(0,-1);t[i]=w;return gq(10,t,i,w+',',[w+',',w,w+'.'],COMMA_WHY[k])}};
+const GORDER=['capstart','end','capname','plural','past','agree','contract','homo1','pron','adv','comma','homo2'];
+function makeG(s){for(let k=0;k<6;k++){const q=GEN[GORDER[s]]();if(q.opts.length>=2&&q.opts.includes(q.fix))return q}return GEN.capstart()}
+
+/* ---------- reading skills ---------- */
+const RSK=[{id:'detail',n:`Finding details`,g:'1–2'},{id:'seq',n:`Order of events`,g:'2'},{id:'vocab',n:`Word meaning from clues`,g:'3–4'},{id:'infer',n:`Reading between the lines`,g:'3–4'},{id:'main',n:`Main idea`,g:'3–4'}];
+const LM={well:`the old well`,statue:`the statue of Sir Reginald`,mill:`the windmill`,oak:`the giant oak tree`,pumpkins:`the pumpkin patch`,scarecrow:`the scarecrow`,haystack:`the big haystack`};
+const LMS={well:`Old well`,statue:`Statue`,mill:`Windmill`,oak:`Giant oak`,pumpkins:`Pumpkin patch`,scarecrow:`Scarecrow`,haystack:`Haystack`};
+const ACTS=['feed the ducks','practice my yodeling','count the clouds','teach a frog to sing','do my morning stretches','argue with a pigeon','eat a pickle sandwich','read my favorite book'];
+const ITEMS=['lucky spoon','reading glasses','left boot','pet rock, Gary','harmonica','grandpa’s wooden leg','birthday crown','bag of marbles','squeaky rubber duck','favorite sock'];
+const GIVERS=['Old Man Pip','Tilly the milkmaid','Grandma Moss','Mags from the tavern','Bjorn the blacksmith','Little Fenwick'];
+function genDetail(o={}){const ids=shuffle(Object.keys(LM)),[A,B,C]=ids,item=o.item||pick(ITEMS),G=o.giver||pick(GIVERS),a1=pick(ACTS),a2=pick(ACTS.filter(x=>x!==a1));const T=o.tpl!=null?o.tpl:ri(0,4);let p,opts=[A,B,C];const pl=/glasses|teeth|marbles$/.test(item)&&!/^bag/.test(item),it=pl?'them':'it',was=pl?'were':'was',is=pl?'are':'is',must=pl?'they must':'it must';
+ if(T===0)p=`Dear Hero,\n\nI lost my ${item}! I am sure I dropped ${it} near ${LM[A]}. I never went near ${LM[B]} today. Please find ${it}!\n\n— ${G}`;
+ else if(T===1)p=`Dear Hero,\n\nThis morning I went to ${LM[B]} to ${a1}. Then I walked to ${LM[A]} to ${a2}. That is when I noticed my ${item} ${was} gone!\n\nI still had ${it} at ${LM[B]}, so ${must} be by ${LM[A]}.\n\n— ${G}`;
+ else if(T===2)p=`Hero!\n\nYesterday I sat by ${LM[B]} all day. But today I only went to ${LM[A]}, and that is where I lost my ${item}.\n\nDo NOT look by ${LM[C]}. I have not been there in years.\n\n— ${G}`;
+ else if(T===3)p=`Dear Hero,\n\nThe goat told me he saw my ${item} near ${LM[B]}. But the goat lies about everything. Last week he said he was a duck.\n\nThe mayor saw ${it} near ${LM[A]}, and the mayor never lies (except about his age).\n\n— ${G}`;
+ else p=`Hero,\n\nMy ${item} ${is} not near ${LM[B]}. ${pl?'They are':'It is'} not near ${LM[C]} either. I already looked in both places!\n\nBut I did walk past ${LM[A]} on my way home...\n\n— ${G}`;
+ return{subj:'read',s:0,title:`A note from ${G}`,passage:p,q:`Where should you look for the ${item}?`,ans:LMS[A],opts:shuffle(opts.map(k=>LMS[k])),lm:{ans:A,opts:shuffle(opts)},item,giver:G,why:`The note says the ${item} is by ${LM[A]}.`,text:p}}
+const SEQ_WHO=['Sir Reginald','The mayor','Bjorn the blacksmith','Hank the woodcutter','The troll'];
+const EVENTS=['put on his rubber boots','fed the angry goose','painted a cow blue','climbed the windmill','ate a pickle sandwich','had a pillow fight with a goblin','wrote a poem for the moon','took a bath in the well','taught the chickens to march','hid inside a pumpkin','baked a pie as big as a wagon','sang to the scarecrow','polished his helmet','chased a runaway cheese'];
+function genSeq(){const W=pick(SEQ_WHO),w=W.toLowerCase().startsWith('the')?low1(W):W,e=shuffle(EVENTS.slice()).slice(0,4),Cap=s=>cap(s)+'.';
+ if(rnd()<.5){const p=`First, ${w} ${e[0]}. Then he ${e[1]}. After that, he ${e[2]}. Finally, he ${e[3]}.`;const k=ri(0,2);
+  if(k===0)return{subj:'read',s:1,title:`${W}'s busy day`,passage:p,q:`What did ${w} do right after he ${e[1]}?`,ans:Cap('He '+e[2]),opts:shuffle([e[2],e[0],e[3]].map(x=>Cap('He '+x))),why:`"After that" comes right after "then": he ${e[2]}.`,text:p+k};
+  if(k===1)return{subj:'read',s:1,title:`${W}'s busy day`,passage:p,q:`What did ${w} do last?`,ans:Cap('He '+e[3]),opts:shuffle([e[3],e[0],e[2]].map(x=>Cap('He '+x))),why:`"Finally" tells you what happened last.`,text:p+k};
+  return{subj:'read',s:1,title:`${W}'s busy day`,passage:p,q:`What did ${w} do before he ${e[2]}?`,ans:Cap('He '+e[1]),opts:shuffle([e[1],e[3],e[2]].map(x=>Cap('He '+x))),why:`Right before "after that" came "then": he ${e[1]}.`,text:p+k}}
+ const p=`At lunch, ${w} ${e[1]}. After lunch, he ${e[2]}. But before lunch, he ${e[0]}.`,k=rnd()<.5;
+ return k?{subj:'read',s:1,title:`Lunchtime trouble`,passage:p,q:`What did ${w} do FIRST that day?`,ans:Cap('He '+e[0]),opts:shuffle([e[0],e[1],e[2]].map(x=>Cap('He '+x))),why:`"Before lunch" comes first, even though the story tells it last.`,text:p+'f'}
+  :{subj:'read',s:1,title:`Lunchtime trouble`,passage:p,q:`What did ${w} do LAST that day?`,ans:Cap('He '+e[2]),opts:shuffle([e[0],e[1],e[2]].map(x=>Cap('He '+x))),why:`"After lunch" is the latest time in the story.`,text:p+'l'}}
+const VOCAB=[[`The ogre was so famished that he ate the table, the chairs, and a lamp.`,'famished','very hungry',['very sleepy','very angry']],[`The enormous troll had to duck to fit under the clouds.`,'enormous','very big',['very loud','very smelly']],[`The timid knight hid behind his own shield whenever a butterfly flew by.`,'timid','shy and easily scared',['brave and strong','fast and sneaky']],[`When the goat ate her hat, Granny was furious. Her face turned red and steam came out of her ears.`,'furious','very angry',['very happy','very cold']],[`After dancing for nine hours, the exhausted troll fell asleep standing up.`,'exhausted','very tired',['very excited','very hungry']],[`The ancient wizard was so old that he remembered when the mountains were babies.`,'ancient','very old',['very wise','very short']],[`The mayor has a peculiar habit: he wears a fish as a necktie.`,'peculiar','strange or unusual',['boring','smelly']],[`The wizard snapped his fingers and the cake began to vanish, until nothing at all was left on the plate.`,'vanish','disappear',['grow bigger','turn green']],[`The warm sun made the guard drowsy. His eyes kept closing, and he yawned loudly.`,'drowsy','sleepy',['grumpy','sick']],[`Be careful with the dragon egg. It is fragile and will crack if you drop it.`,'fragile','easy to break',['very heavy','very hot']],[`The swift rabbit zoomed past the horse and won the race easily.`,'swift','fast',['fluffy','lazy']],[`The reluctant goblin dragged his feet and groaned all the way to bath time.`,'reluctant','not wanting to do something',['very excited','very dirty']],[`The gleeful baby dragon clapped and giggled when she saw the birthday cake.`,'gleeful','very happy',['very scared','very full']],[`The cautious hero checked under every bridge for trolls before crossing.`,'cautious','careful',['silly','lost']],[`The hungry wolves will devour the whole pie in one second.`,'devour','eat very fast',['throw away','cook slowly']],[`The fearless chicken walked right up to the dragon and pecked its nose.`,'fearless','not afraid',['not hungry','not awake']],[`A terrible stench came from the troll's boots. Everyone held their nose.`,'stench','a bad smell',['a loud noise','a bright light']],[`The bridge was sturdy enough to hold three elephants and a piano.`,'sturdy','strong and solid',['shaky and weak','long and thin']],[`The feeble old dragon could barely lift his own toothbrush.`,'feeble','weak',['mean','tall']],[`The curious cat opened every box in the castle to see what was inside.`,'curious','wanting to know or find out',['sleepy','afraid']],[`Nobody could see the bottom of the murky swamp water.`,'murky','dark and cloudy',['sparkly and clean','hot and bubbly']],[`The goblins tried to conceal the stolen pies under a blanket, but the smell gave them away.`,'conceal','hide',['eat','bake']]];
+const INFER=[[`Tom grabbed his umbrella and his rain boots before he walked out the door.`,`What is the weather probably like?`,`Rainy`,['Sunny and hot','Very windy'],`Umbrellas and rain boots are for rain.`],[`The troll's tummy rumbled loudly. He stared at the pie on the windowsill and licked his lips.`,`How does the troll feel?`,`Hungry`,['Sleepy','Scared'],`A rumbling tummy and licking lips mean he is hungry.`],[`Granny Pickles put on her helmet, grabbed her frying pan, and marched toward the goblin camp.`,`What is Granny about to do?`,`Fight the goblins`,['Cook dinner for the goblins','Take a nap'],`A helmet, a frying pan "weapon," and marching to their camp means a fight!`],[`When the knight saw the tiny mouse, he screamed, jumped onto a chair, and covered his eyes.`,`How does the knight feel about mice?`,`He is scared of them`,['He loves them','He wants to eat them'],`Screaming and jumping on a chair shows fear.`],[`The baker's apron was covered in white powder, and a warm, sweet smell came from the oven.`,`What was the baker doing?`,`Baking`,['Painting','Sleeping'],`Flour on the apron and a sweet smell from the oven mean baking.`],[`Every time the mayor told a joke, the crowd groaned and some people started walking home.`,`What did the crowd think of the jokes?`,`They were not funny`,['They were the best jokes ever','They were too scary'],`Groaning and leaving means they didn't like the jokes.`],[`The dragon looked at the empty cookie jar. Then he looked at the goat. The goat had crumbs all over its beard.`,`Who ate the cookies?`,`The goat`,['The dragon','The mayor'],`The crumbs on the goat's beard are the clue.`],[`Sir Reginald yawned, rubbed his eyes, and put on his pajamas with little swords on them.`,`What will Sir Reginald do next?`,`Go to sleep`,['Go to battle','Eat breakfast'],`Yawning, rubbing eyes, and pajamas mean bedtime.`],[`The ground was covered in white, the pond was frozen solid, and the snowman was wearing the mayor's hat.`,`What season is it?`,`Winter`,['Summer','Spring'],`Snow and a frozen pond mean winter.`],[`{N} ran into the house, slammed the door, and locked it. Outside, a huge angry goose honked and flapped its wings.`,`Why did {N} lock the door?`,`To get away from the goose`,['Because it was cold','To go to bed'],`The angry goose outside is why.`],[`The wizard's potion turned bright green, started to bubble, and then went BOOM. Now the wizard has no eyebrows.`,`What happened to the wizard's eyebrows?`,`The explosion burned them off`,['He shaved them','The goat ate them'],`The BOOM happened right before his eyebrows were gone.`],[`Lady Cluckington sat on her nest for weeks. One morning she heard a tiny crack, crack, crack under her.`,`What is happening?`,`Her eggs are hatching`,['Her nest is breaking','It is starting to rain'],`Sitting on a nest for weeks, then cracking sounds, means eggs hatching.`],[`The goblin smiled and said, "I would never steal your gold." His pockets were stuffed full and jingling.`,`Is the goblin telling the truth?`,`No, his pockets are full of gold`,['Yes, he is very honest','Yes, he has no pockets'],`Jingling, stuffed pockets give him away.`],[`The little troll held the trophy high over his head and grinned from ear to ear.`,`How does the little troll feel?`,`Proud and happy`,['Sad and lonely','Bored'],`Holding up a trophy and grinning shows pride.`],[`The castle cook dropped the soup, burned the cake, and the dog ate the turkey. The king sighed and ordered pizza.`,`Why did the king order pizza?`,`All the food was ruined`,['He hates soup','It was his birthday'],`Every dish went wrong, so there was nothing to eat.`],[`Every flower in the garden was drooping and brown, and the dirt was dry and cracked.`,`What does the garden need most?`,`Water`,['More sunshine','A tiny hat'],`Dry, cracked dirt and droopy flowers mean no water.`],[`The hero's sword was bent, his shield was dented, and his armor had teeth marks in it.`,`What happened to the hero?`,`He was in a big battle`,['He went shopping','He took a nap'],`Dents, bends, and bite marks come from a fight.`],[`Mumbleton squinted at the tiny letters, then pulled out his glasses and held the paper close to his nose.`,`Why did Mumbleton get out his glasses?`,`He could not read the small letters`,['The paper smelled nice','He wanted to look fancy'],`He was squinting at tiny letters.`]];
+const MAIN=[[`Gibberlings are small purple creatures made of scrambled words. They float around in the forest. They like to steal letters from signs. When a hero casts word magic, they pop like bubbles.`,`What Gibberlings are and what they do`,['How to make purple paint','A trip to the beach']],[`Trolls take their bridges very seriously. They sweep them every morning. They paint them on weekends. Some trolls even sing lullabies to their bridges at night.`,`Trolls care a lot about their bridges`,['Trolls are good singers','How to paint a house']],[`Chickens in Snortwood are not ordinary chickens. They wear tiny helmets. They march in lines. Once, they even chased away a whole goblin army.`,`Snortwood chickens are unusually brave and tough`,['What chickens like to eat','How to build a tiny helmet']],[`To make Granny's famous pickle pie, first you need forty pickles. Next, you mash them with a boot. Then you bake it for six days. Finally, you hide it from the goat.`,`How to make pickle pie`,['Why goats like pie','Where Granny buys boots']],[`Dragons sleep most of the day. They sleep on piles of gold, which are lumpy but shiny. A sleeping dragon snores so loud it can knock birds out of the sky.`,`How dragons sleep`,['How birds fly','Where to buy gold']],[`The Snortwood Fair happens every summer. There is a pie-eating contest, a goat race, and a parade of dancing trolls. Everyone in the village comes.`,`What happens at the Snortwood Fair`,['How goats race','Why trolls dance']],[`Lord Gibberish was once a librarian. He loved words so much that he wanted to keep all of them for himself. He stole the Big Book of Words and hid in a cave. Now all the signs in Snortwood are scrambled.`,`How Lord Gibberish caused the word trouble`,['What librarians do all day','How caves are made']],[`Knights need a lot of gear. A knight needs a sword to fight, a shield to block, and armor to stay safe. Some knights also bring a snack in case the battle runs long.`,`The gear a knight needs`,['How to eat a snack','A famous battle']],[`Wizards practice magic every single day. They read thick old books. They stir bubbling potions. Sometimes they turn their own cats into teapots by mistake.`,`What wizards do to practice magic`,['How to take care of a cat','How teapots are made']],[`Rain is important for Snortwood. It helps the pumpkins grow. It fills the well with water. It even washes the goblin mud off the statue.`,`Why rain matters to Snortwood`,['How pumpkins taste','The history of the statue']],[`Mumbleton has trained heroes for a hundred years. He teaches sword fighting in the morning. He teaches word magic in the afternoon. At night, he naps in a hammock made of old capes.`,`Mumbleton's job training heroes`,['How hammocks are made','The best kind of sword']],[`Goblins are terrible at hiding. They giggle when you get close. Their big ears stick out from behind trees. And they always leave a trail of cookie crumbs.`,`Goblins are bad at hiding`,['Goblins love cookies','How tall trees grow']]];
+function makeR(s){
+ if(s===0)return genDetail();if(s===1)return genSeq();
+ if(s===2){const [p,w,a,d]=pick(VOCAB);return{subj:'read',s,title:`Word clue: "${w}"`,passage:p,q:`In the story, what does "${w}" mean?`,ans:a,opts:shuffle([a,...d]),why:`The clues around "${w}" tell you it means "${a}".`,text:p,hl:w}}
+ if(s===3){const [p,q,a,d,why]=pick(INFER);return{subj:'read',s,title:`Read between the lines`,passage:fixN(p),q:fixN(q),ans:a,opts:shuffle([a,...d]),why,text:p}}
+ const [p,a,d]=pick(MAIN);return{subj:'read',s,title:`What's the big idea?`,passage:p,q:`What is this mostly about?`,ans:a,opts:shuffle([a,...d]),why:`Every sentence tells you something about this: ${low1(a)}.`,text:p}}
+
+/* ===================== save ===================== */
+const KEY='snortwood.v1';const MASTER=.8;
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function freshEng(n){return{m:Array(n).fill(0),n:Array(n).fill(0),c:Array(n).fill(0),counter:0,review:[],missed:{},recent:[],survey:null,placed:false,placement:null,q:0,ok:0}}
+function fresh(){return{v:1,name:'',started:false,sound:true,music:true,voice:true,gr:freshEng(GSK.length),rd:freshEng(RSK.length),days:{},
+ story:0,flags:{},errands:{},job:null,gold:25,xp:0,lvl:1,hp:10,pot:2,align:0,swords:{wood:1},sword:'wood',hats:{},hat:'',
+ pos:{zone:'world',x:-4,z:7,ry:.4},gates:{},signs:{},readlog:[],kills:0,savedAt:0}}
+let D=fresh();
+function migrate(o){const n=Object.assign(fresh(),o||{});['gr','rd'].forEach((k,i)=>{const L=i?RSK.length:GSK.length,E=n[k];['m','n','c'].forEach(f=>{while(E[f].length<L)E[f].push(0)})});return n}
+function load(){try{const s=localStorage.getItem(KEY);if(s)D=migrate(JSON.parse(s))}catch(e){}}
+function save(){if(!D.started)return;D.savedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}cloudSchedule()}
+function dayStat(){const k=today();if(!D.days[k])D.days[k]={gram:{q:0,c:0},read:{q:0,c:0},sec:0};return D.days[k]}
+const fmt=s=>String(s).replace(/\{N\}/g,D.name||'Hero');
+
+/* ===================== adaptive engines ===================== */
+const ENG={gram:{len:()=>GSK.length,E:()=>D.gr,name:i=>GSK[i].n,make:makeG},read:{len:()=>RSK.length,E:()=>D.rd,name:i=>RSK[i].n,make:makeR}};
+function focusOf(subj){const E=ENG[subj].E(),L=ENG[subj].len();for(let i=0;i<L;i++)if(E.m[i]<MASTER)return i;return L-1}
+function accOf(E){return E.recent.length?E.recent.reduce((a,b)=>a+b,0)/E.recent.length:.8}
+function masteredCount(subj){const E=ENG[subj].E();return E.m.filter(v=>v>=MASTER).length}
+function nextQ(subj,opt={}){const E=ENG[subj].E(),L=ENG[subj].len();if(E.survey){const q=ENG[subj].make(E.survey.fi);q.survey=true;return q}
+ E.counter++;const due=E.review.find(r=>r.due<=E.counter&&(!opt.noDetail||r.q.s!==0));if(due&&!(opt.only!=null&&due.q.s!==opt.only))return Object.assign({},due.q,{review:true});
+ if(opt.only!=null)return ENG[subj].make(opt.only);
+ const ff=focusOf(subj),acc=accOf(E),r=rnd(),pRev=acc<.65?.4:.15,pNext=acc>.88?.25:.1;let f=ff;
+ if(r<pRev&&ff>0)f=ri(Math.max(0,ff-3),ff-1);else if(r<pRev+pNext&&ff<L-1)f=ff+1;
+ if(opt.noDetail&&f===0&&subj==='read')f=ri(1,Math.max(1,Math.min(L-1,ff+1)));
+ return ENG[subj].make(f)}
+function tally(subj,ok){const E=ENG[subj].E();E.q++;if(ok)E.ok++;const ds=dayStat();ds[subj].q++;if(ok)ds[subj].c++}
+function grade(q,ok){const subj=q.subj,E=ENG[subj].E(),f=q.s;E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
+ E.recent.push(ok?1:0);if(E.recent.length>10)E.recent.shift();if(ok&&E.recent.length>=8&&accOf(E)>=.9)E.m[f]+=(1-E.m[f])*.12;tally(subj,ok);
+ const key=q.text,rv=E.review.find(r=>r.key===key);
+ if(!ok){E.missed[key.slice(0,80)]=(E.missed[key.slice(0,80)]||0)+1;if(rv){rv.need=2;rv.due=E.counter+ri(3,5)}else{const keep=Object.assign({},q);delete keep.review;delete keep.survey;E.review.push({key,q:keep,due:E.counter+ri(3,5),need:2})}}
+ else if(rv){rv.need--;if(rv.need<=0)E.review=E.review.filter(x=>x!==rv);else rv.due=E.counter+ri(6,10)}
+ if(E.review.length>30)E.review.splice(0,E.review.length-30);
+ if(subj==='read')logRead(q);save()}
+function logRead(q){D.readlog.push({d:today(),t:q.title||'Reading',s:q.s});if(D.readlog.length>400)D.readlog.splice(0,D.readlog.length-400)}
+function surveyStart(subj,from){const E=ENG[subj].E();E.survey={fi:from||0,start:from||0,tr:0,log:[],fails:0};save()}
+function surveyAnswer(q,ok){const subj=q.subj,E=ENG[subj].E(),s=E.survey,L=ENG[subj].len(),f=s.fi;s.log.push({f,ok});tally(subj,ok);E.n[f]++;if(ok)E.c[f]++;if(subj==='read')logRead(q);
+ let pass;if(s.tr===0){if(ok)pass=true;else{s.tr=1;save();return false}}else pass=false;
+ if(s.tr===0)E.m[f]=Math.max(E.m[f],.85);else E.m[f]=ok?.5:.15;
+ s.fails=pass?0:s.fails+1;const stop=s.fails>=2||(!ok&&s.tr===1&&f>=s.start+3)||f>=L-1||s.log.length>=30;
+ if(stop){for(let i=f+1;i<L;i++)if(E.m[i]<MASTER)E.m[i]=.05;for(let i=s.start;i<f-1;i++)if(E.m[i]<MASTER&&E.m[i+1]>=MASTER&&E.m[i+2]>=MASTER)E.m[i]=.7;
+  E.placed=true;E.placement={date:today(),focus:focusOf(subj),q:s.log.length,correct:s.log.filter(l=>l.ok).length,from:s.start};E.survey=null;save();return true}
+ s.fi++;s.tr=0;save();return false}
+
+/* ===================== audio ===================== */
+let AC=null,sfxG,musG,duck=0;
+function audioInit(){if(AC){if(AC.state==='suspended')AC.resume();return}try{AC=new(window.AudioContext||window.webkitAudioContext)();const m=AC.createGain();m.gain.value=.55;m.connect(AC.destination);sfxG=AC.createGain();sfxG.connect(m);musG=AC.createGain();musG.connect(m);applyVol();Music.next=AC.currentTime+.1}catch(e){AC=null}}
+function applyVol(){if(!AC)return;sfxG.gain.value=D.sound?1:0;musG.gain.value=D.music&&D.sound?(duck>0?.1:.38):0}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function tone(f,dur,o={}){if(!AC)return;const t0=(o.t0!=null?o.t0:AC.currentTime)+(o.at||0);const os=AC.createOscillator(),g=AC.createGain();os.type=o.type||'square';os.frequency.setValueAtTime(f,t0);if(o.slide)os.frequency.exponentialRampToValueAtTime(Math.max(30,f+o.slide),t0+dur);
+ g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(o.vol||.1,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);os.connect(g);g.connect(o.dest||sfxG);os.start(t0);os.stop(t0+dur+.03)}
+function noise(dur,vol,f,at,lp){if(!AC)return;const n=AC.sampleRate*dur|0,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(rnd()*2-1)*(1-i/n);const s=AC.createBufferSource();s.buffer=b;const fl=AC.createBiquadFilter();fl.type=lp?'lowpass':'highpass';fl.frequency.value=f;const g=AC.createGain();g.gain.value=vol;s.connect(fl);fl.connect(g);g.connect(sfxG);s.start(AC.currentTime+(at||0))}
+const SFX={tap(){tone(620,.04,{vol:.04,type:'triangle'})},
+ swing(){noise(.14,.12,1800);tone(300,.1,{vol:.04,type:'triangle',slide:300})},
+ hit(){noise(.16,.22,500);tone(180,.14,{vol:.14,slide:-100})},bonk(){tone(900,.06,{vol:.08,type:'square'});tone(500,.08,{vol:.06,at:.05})},
+ hurt(){tone(300,.2,{vol:.12,type:'sawtooth',slide:-180});noise(.15,.1,800)},
+ squawk(){[0,.08,.16].forEach((a,i)=>tone(900+i*200,.07,{vol:.07,type:'square',at:a,slide:300}))},
+ good(){[523,659,784].forEach((f,i)=>tone(f,.1,{vol:.07,at:i*.06}))},bad(){tone(330,.12,{vol:.08,type:'triangle',slide:-150});tone(220,.2,{vol:.07,type:'triangle',at:.1,slide:-100})},
+ cast(){[523,784,1047,1568].forEach((f,i)=>tone(f,.12,{vol:.06,at:i*.04,type:'triangle'}));noise(.4,.08,2000)},boom(){noise(.5,.35,200,0,1);tone(120,.4,{vol:.2,slide:-80,type:'sawtooth'})},
+ fizzle(){tone(500,.4,{vol:.06,slide:-420,type:'triangle'});noise(.3,.05,3000)},
+ coin(){tone(988,.06,{vol:.06});tone(1319,.12,{vol:.06,at:.06})},lvl(){[523,587,659,784,880,1047].forEach((f,i)=>tone(f,.11,{vol:.08,at:i*.07}))},
+ zap(){[1200,600,1200,500].forEach((f,i)=>tone(f,.05,{vol:.08,type:'sawtooth',at:i*.04}));noise(.2,.15,2500)},open(){[392,523,659,784,1047].forEach((f,i)=>tone(f,.16,{vol:.07,at:i*.08,type:'triangle'}))},
+ heal(){[659,784,988,1319].forEach((f,i)=>tone(f,.15,{vol:.07,at:i*.1,type:'triangle'}))},buy(){[784,988,1175,1568].forEach((f,i)=>tone(f,.1,{vol:.06,at:i*.05}))},
+ dig(){noise(.12,.15,400,0,1);noise(.12,.15,400,.15,1)},halo(){[1047,1319,1568,2093].forEach((f,i)=>tone(f,.25,{vol:.04,at:i*.08,type:'sine'}))},horn(){tone(110,.4,{vol:.12,type:'sawtooth',slide:-30});tone(116,.4,{vol:.08,type:'sawtooth'})},
+ cheer(){[0,.06,.12,.2,.26].forEach(a=>noise(.08,.06,3000,a))},pop(){tone(700,.08,{vol:.08,type:'triangle',slide:500})},
+ win(){[523,659,784,1047,0,1047,1319].forEach((f,i)=>f&&tone(f,.2,{vol:.08,at:i*.12}))},boss(){[110,104,98,92].forEach((f,i)=>tone(f,.3,{vol:.14,type:'sawtooth',at:i*.25}))}};
+const sfx=n=>{if(AC&&D.sound&&SFX[n])SFX[n]()};
+const SONGS={
+ village:{bpm:104,lt:'triangle',lv:.07,bt:'triangle',bv:.06,lead:[67,0,72,0,74,76,0,74,72,0,69,0,67,0,0,0,65,0,69,0,72,74,0,72,71,0,67,0,69,71,72,0,67,0,72,0,74,76,0,77,79,0,76,0,74,0,72,0,74,0,72,71,69,0,71,0,72,0,0,0,0,0,0,0],bass:[48,0,55,0,52,0,55,0,45,0,52,0,48,0,52,0,41,0,48,0,45,0,48,0,43,0,50,0,47,0,50,0]},
+ forest:{bpm:92,lt:'triangle',lv:.07,bt:'triangle',bv:.07,lead:[69,0,0,72,71,0,69,0,64,0,0,0,67,0,69,0,72,0,0,74,72,0,71,0,69,0,0,0,0,0,0,0],bass:[45,0,52,0,45,0,52,0,43,0,50,0,43,0,50,0,41,0,48,0,41,0,48,0,40,0,47,0,44,0,47,0]},
+ fight:{bpm:150,lt:'square',lv:.035,bt:'sawtooth',bv:.03,lead:[69,0,69,72,0,69,76,0,74,0,72,0,69,0,67,0,69,0,69,72,0,74,76,77,79,77,76,74,72,0,76,0],bass:[45,45,57,45,45,57,45,57,43,43,55,43,43,55,43,55,41,41,53,41,41,53,41,53,40,40,52,40,44,44,56,44]},
+ cave:{bpm:84,lt:'triangle',lv:.07,bt:'triangle',bv:.08,lead:[69,0,0,72,71,0,0,67,69,0,0,0,64,0,0,0,69,0,0,72,74,0,72,71,69,0,0,0,0,0,0,0],bass:[45,0,0,0,45,0,0,0,41,0,0,0,41,0,0,0,43,0,0,0,43,0,0,0,40,0,0,0,44,0,0,0]},
+ boss:{bpm:168,lt:'sawtooth',lv:.03,bt:'square',bv:.03,lead:[69,0,72,0,76,75,74,0,72,0,69,0,68,0,64,0,69,0,72,0,77,76,74,72,71,72,74,76,77,0,80,0],bass:[45,45,57,45,45,57,45,57,41,41,53,41,41,53,41,53,38,38,50,38,38,50,38,50,40,40,52,40,44,44,56,44]},
+ win:{bpm:132,lt:'square',lv:.05,bt:'triangle',bv:.08,once:1,lead:[72,72,72,0,79,0,77,76,77,79,0,0,84,0,0,0],bass:[48,0,55,0,48,0,55,0,53,0,57,0,48,0,0,0]}};
+const Music={cur:null,step:0,next:0};
+function setMusic(id){if(Music.cur===id)return;Music.cur=id;Music.step=0;if(AC)Music.next=AC.currentTime+.08}
+function musicTick(){if(!AC||!Music.cur)return;const s=SONGS[Music.cur];const spb=60/s.bpm/2;if(Music.next<AC.currentTime-.5)Music.next=AC.currentTime+.05;
+ while(Music.next<AC.currentTime+.18){const i=Music.step%s.lead.length,l=s.lead[i],b=s.bass[Music.step%s.bass.length];if(l)tone(mtof(l),spb*.9,{type:s.lt,vol:s.lv,dest:musG,t0:Music.next});if(b)tone(mtof(b),spb*.85,{type:s.bt,vol:s.bv,dest:musG,t0:Music.next});
+  Music.next+=spb;Music.step++;if(s.once&&Music.step>=s.lead.length){Music.cur=null;break}}}
+/* character voices */
+const TTS=('speechSynthesis' in window)&&typeof SpeechSynthesisUtterance!=='undefined';let voice=null,ttsOK=TTS;
+function pickVoice(){if(!TTS)return;const vs=speechSynthesis.getVoices();if(!vs.length)return;const en=vs.filter(v=>/^en[-_]/i.test(v.lang));voice=en.find(v=>/samantha|google us english|aria|jenny|allison|ava|daniel/i.test(v.name))||en.find(v=>/en[-_](us|gb)/i.test(v.lang))||en[0]||null}
+if(TTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;setTimeout(()=>{pickVoice();if(!speechSynthesis.getVoices().length)ttsOK=false},1500)}
+function speak(text,pitch=1,rate=.95){if(!ttsOK||!D.voice)return;try{speechSynthesis.cancel();duck=1+text.length*.06;applyVol();const u=new SpeechSynthesisUtterance(String(text).replace(/[—–]/g,', ').replace(/\*/g,''));u.rate=rate;u.pitch=pitch;if(voice)u.voice=voice;u.lang=voice?voice.lang:'en-US';speechSynthesis.speak(u)}catch(e){ttsOK=false}}
+function hush(){try{if(TTS)speechSynthesis.cancel()}catch(e){}}
+
+/* ===================== online save ===================== */
+const cloud={ref:null,ok:false,busy:false,dirty:false,t:null};
+function summary(){const g=D.gr,r=D.rd;return{lvl:D.lvl,story:D.story,align:D.align,gold:D.gold,gramFocus:GSK[focusOf('gram')].n,readFocus:RSK[focusOf('read')].n,gramMastered:masteredCount('gram'),readMastered:masteredCount('read'),gramQ:g.q,gramOK:g.ok,readQ:r.q,readOK:r.ok,days:Object.keys(D.days).length}}
+function cloudSchedule(){if(!cloud.ok)return;cloud.dirty=true;if(!cloud.t)cloud.t=setTimeout(cloudFlush,4000)}
+async function cloudFlush(){cloud.t=null;if(!cloud.ok||!cloud.dirty)return;if(cloud.busy){cloud.t=setTimeout(cloudFlush,2000);return}cloud.busy=true;cloud.dirty=false;
+ try{await cloud.ref.set({name:D.name||'',updatedAt:new Date().toISOString(),summary:summary(),save:JSON.stringify(D)})}
+ catch(e){const c=e&&e.code;if(['invalid_argument','revoked','not_granted','capability_disabled','quota_exceeded'].includes(c))cloud.ok=false;else cloud.dirty=true}cloud.busy=false;if(cloud.ok&&cloud.dirty)cloudSchedule()}
+async function cloudInit(){try{if(!window.claude||!window.claude.use)return;const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);if(!db||!user)return;const id=await user.id();if(!id)return;
+ cloud.ref=db.doc('players/'+id);const snap=await cloud.ref.get();if(snap.exists){const r=snap.data();if(r&&typeof r.save==='string'){try{const rs=JSON.parse(r.save);if((rs.savedAt||0)>(D.savedAt||0)&&mode==='title'){D=migrate(rs);try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}titleRefresh()}}catch(e){}}}
+ cloud.ok=true;if(D.started)cloudSchedule()}catch(e){cloud.ok=false}}
+addEventListener('pagehide',()=>{if(D.started&&mode==='play')savePos();if(cloud.ok&&cloud.dirty){clearTimeout(cloud.t);cloudFlush()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&D.started&&mode==='play')savePos();if(document.hidden&&cloud.ok&&cloud.dirty){clearTimeout(cloud.t);cloudFlush()}if(AC){if(document.hidden)AC.suspend();else AC.resume()}});
+
+/* ===================== 3D world ===================== */
+const DX=1000; // dungeon lives far east of the overworld
+let R,scene,cam,hemi,sun,lantern,arenaLight;
+const ANIM=[]; // per-frame animated bits {f(t,dt)}
+const MATS={};
+function M(col,o={}){const k=col+JSON.stringify(o);if(MATS[k])return MATS[k];const m=o.basic?new THREE.MeshBasicMaterial(Object.assign({color:col},o.p||{})):new THREE.MeshLambertMaterial(Object.assign({color:col,flatShading:true},o.p||{}));if(o.e)m.emissive=new THREE.Color(o.e);return MATS[k]=m}
+function mesh(geo,mat,x=0,y=0,z=0,par){const m=new THREE.Mesh(geo,typeof mat==='number'?M(mat):mat);m.position.set(x,y,z);(par||scene).add(m);return m}
+const GEO={};const G=(k,f)=>GEO[k]||(GEO[k]=f());
+const box=(w,h,d,c,x,y,z,p)=>mesh(G('b'+w+h+d,()=>new THREE.BoxGeometry(w,h,d)),c,x,y,z,p);
+const cyl=(rt,rb,h,seg,c,x,y,z,p)=>mesh(G('c'+rt+rb+h+seg,()=>new THREE.CylinderGeometry(rt,rb,h,seg)),c,x,y,z,p);
+const sph=(r,c,x,y,z,p,ws=10,hs=8)=>mesh(G('s'+r+ws+hs,()=>new THREE.SphereGeometry(r,ws,hs)),c,x,y,z,p);
+const cone=(r,h,seg,c,x,y,z,p)=>mesh(G('k'+r+h+seg,()=>new THREE.ConeGeometry(r,h,seg)),c,x,y,z,p);
+const ico=(r,c,x,y,z,p,det=0)=>mesh(G('i'+r+det,()=>new THREE.IcosahedronGeometry(r,det)),c,x,y,z,p);
+function grp(x=0,y=0,z=0,p){const g=new THREE.Group();g.position.set(x,y,z);(p||scene).add(g);return g}
+function prismGeo(w,d,h){const s=new THREE.Shape();s.moveTo(-d/2,0);s.lineTo(d/2,0);s.lineTo(0,h);s.lineTo(-d/2,0);const g=new THREE.ExtrudeGeometry(s,{depth:w,bevelEnabled:false});g.translate(0,0,-w/2);g.rotateY(Math.PI/2);return g}
+/* text on a canvas texture */
+function textTex(lines,o={}){const w=o.w||512,h=o.h||256,c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+ x.fillStyle=o.bg||'#E9C98F';x.fillRect(0,0,w,h);if(o.border!==false){x.strokeStyle=o.bc||'#6B4423';x.lineWidth=14;x.strokeRect(7,7,w-14,h-14)}
+ x.fillStyle=o.fg||'#3A230F';x.textAlign='center';x.textBaseline='middle';let fs=o.fs||64;const font=f=>`700 ${f}px Fredoka, "Atkinson Hyperlegible", sans-serif`;
+ const wrap=(txt,f)=>{x.font=font(f);const ws=String(txt).split(' '),out=[];let cur='';ws.forEach(word=>{const t=cur?cur+' '+word:word;if(x.measureText(t).width>w-48&&cur){out.push(cur);cur=word}else cur=t});if(cur)out.push(cur);return out};
+ let ls=[];const src=Array.isArray(lines)?lines:[lines];for(;fs>18;fs-=4){ls=[];src.forEach(l=>ls.push(...wrap(l,fs)));if(ls.length*fs*1.12<h-36&&ls.every(l=>{x.font=font(fs);return x.measureText(l).width<=w-40}))break}
+ x.font=font(fs);ls.forEach((l,i)=>x.fillText(l,w/2,h/2+(i-(ls.length-1)/2)*fs*1.12));const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
+function textPlane(lines,w,h,o={}){const tex=textTex(lines,o);const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide,transparent:!!o.transparent}));return m}
+function setPlaneText(m,lines,o){if(m.material.map)m.material.map.dispose();m.material.map=textTex(lines,o);m.material.needsUpdate=true}
+function sprite(txt,col='#FFD447',size=1.1){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.font='700 104px Fredoka, sans-serif';x.textAlign='center';x.textBaseline='middle';x.lineWidth=14;x.strokeStyle='#3A230F';x.strokeText(txt,64,70);x.fillStyle=col;x.fillText(txt,64,70);
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));s.scale.set(size,size,1);s.renderOrder=10;return s}
+
+/* ---------- draw-call savers: bake many small meshes into one vertex-coloured mesh ---------- */
+const VCM=new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true});
+function bakeInto(list,par,matFn){if(!list.length)return null;let n=0;const gs=list.map(m=>{let g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();g.applyMatrix4(matFn(m));n+=g.attributes.position.count;return[g,m.material.color]});
+ const P=new Float32Array(n*3),N=new Float32Array(n*3),C=new Float32Array(n*3);let o=0;gs.forEach(([g,c])=>{const p=g.attributes.position.array,nn=g.attributes.normal.array;P.set(p,o*3);N.set(nn,o*3);for(let i=0;i<g.attributes.position.count;i++){C[(o+i)*3]=c.r;C[(o+i)*3+1]=c.g;C[(o+i)*3+2]=c.b}o+=g.attributes.position.count;g.dispose()});
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('normal',new THREE.BufferAttribute(N,3));geo.setAttribute('color',new THREE.BufferAttribute(C,3));geo.computeBoundingSphere();const m=new THREE.Mesh(geo,VCM);par.add(m);return m}
+const bakeable=m=>m.isMesh&&!m.isInstancedMesh&&m.material&&m.material.isMeshLambertMaterial&&!m.material.map&&!m.material.transparent&&!m.material.vertexColors&&m.geometry.attributes.normal;
+function bakeGroup(g){const list=g.children.filter(bakeable);list.forEach(m=>m.updateMatrix());const r=bakeInto(list,g,m=>m.matrix);list.forEach(m=>g.remove(m));return r}
+function mergeStatic(){scene.updateMatrixWorld(true);const chunks=new Map(),kill=[];scene.traverse(o=>{if(!bakeable(o))return;for(let p=o;p;p=p.parent)if(p.userData.dyn)return;const v=new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);const k=Math.floor(v.x/40)+'_'+Math.floor(v.z/40);if(!chunks.has(k))chunks.set(k,[]);chunks.get(k).push(o)});
+ chunks.forEach(list=>{bakeInto(list,scene,m=>m.matrixWorld);list.forEach(m=>kill.push(m))});kill.forEach(m=>m.parent.remove(m))}
+/* camera: don't let it sink into a building or through dungeon walls */
+function camOK(x,z){if(x>DX/2){const lx=x-DX;if(z>-58.5)return Math.abs(lx)<9.3&&z<3.3;const d=Math.hypot(lx,z+74);return d<13.6||(z>-61&&Math.abs(lx)<2.4)}return Math.hypot(x,z)>2.2&&!BLD.some(b=>x>b.x0-.4&&x<b.x1+.4&&z>b.z0-.4&&z<b.z1+.4)}
+
+/* ---------- collision ---------- */
+const COL={cells:new Map(),dyn:[]};const CS=8;
+const ck=(cx,cz)=>cx*7919+cz;
+function addCol(c){const x0=Math.floor((c.x0??c.x-c.r)/CS),x1=Math.floor((c.x1??c.x+c.r)/CS),z0=Math.floor((c.z0??c.z-c.r)/CS),z1=Math.floor((c.z1??c.z+c.r)/CS);for(let i=x0;i<=x1;i++)for(let j=z0;j<=z1;j++){const k=ck(i,j);if(!COL.cells.has(k))COL.cells.set(k,[]);COL.cells.get(k).push(c)}return c}
+const colCircle=(x,z,r)=>addCol({x,z,r});
+const colBox=(x0,x1,z0,z1,o={})=>addCol(Object.assign({x0,x1,z0,z1,box:1},o));
+function pushOut(e,r){const near=new Set();const cx=Math.floor(e.x/CS),cz=Math.floor(e.z/CS);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=COL.cells.get(ck(cx+i,cz+j));if(l)l.forEach(c=>near.add(c))}
+ COL.dyn.forEach(c=>near.add(c));
+ for(const c of near){if(c.on&&!c.on())continue;if(c.box){const px=clamp(e.x,c.x0,c.x1),pz=clamp(e.z,c.z0,c.z1);let dx=e.x-px,dz=e.z-pz,d=Math.hypot(dx,dz);
+   if(d<r){if(d<1e-4){const l=e.x-c.x0,rr=c.x1-e.x,t=e.z-c.z0,b=c.z1-e.z,m=Math.min(l,rr,t,b);if(m===l)e.x=c.x0-r;else if(m===rr)e.x=c.x1+r;else if(m===t)e.z=c.z0-r;else e.z=c.z1+r}else{e.x=px+dx/d*r;e.z=pz+dz/d*r}if(c.hit)c.hit(e)}}
+  else{const dx=e.x-c.x,dz=e.z-c.z,d=Math.hypot(dx,dz),m=r+c.r;if(d<m&&d>1e-4){e.x=c.x+dx/d*m;e.z=c.z+dz/d*m}}}
+ zoneBounds(e,r)}
+function zoneBounds(e,r){if(e.x<DX/2){e.x=clamp(e.x,-74,74);e.z=clamp(e.z,-158,50);
+  if(e.z<-35.4+r&&e.z>-40.6-r&&Math.abs(e.x)>2.1-r*.2){if(e.z>-38)e.z=-35.4+r;else e.z=-40.6-r}
+  if(D.story<4&&e.z<-34.6&&e.z>-36&&e===hero)e.z=-34.6}
+ else{const lx=e.x-DX;if(e.z>-58.5){e.x=DX+clamp(lx,-9.4+r,9.4-r);e.z=Math.min(e.z,3.4)}else if(e.z>-60.8){e.x=DX+clamp(lx,-2.6+r,2.6-r)}else{const dx=lx,dz=e.z+74,d=Math.hypot(dx,dz);if(d>13.2-r){e.x=DX+dx/d*(13.2-r);e.z=-74+dz/d*(13.2-r)}}}}
+
+/* ---------- scene ---------- */
+function initGL(){R=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true,powerPreference:'high-performance'});R.setPixelRatio(Math.min(devicePixelRatio||1,1.75));
+ scene=new THREE.Scene();scene.background=new THREE.Color(0xBFE3FF);scene.fog=new THREE.Fog(0xBFE3FF,45,135);
+ cam=new THREE.PerspectiveCamera(60,1,.1,320);hemi=new THREE.HemisphereLight(0xE4F3FF,0x587A3A,.95);scene.add(hemi);
+ sun=new THREE.DirectionalLight(0xFFF1D6,.7);sun.position.set(30,60,25);scene.add(sun);
+ lantern=new THREE.PointLight(0xFFB060,0,22,1.4);scene.add(lantern);
+ buildOverworld();buildDungeon();mergeStatic()}
+
+/* paths drive ground colour and keep trees off the road */
+const PATHS=[[[0,0],[0,13]],[[0,0],[10,3]],[[0,0],[-10,3]],[[0,0],[-9,-8]],[[0,0],[11,-10]],[[0,0],[8,-16]],[[0,0],[-11,-15]],[[-10,3],[-24,12]],[[-9,-8],[-24,-12]],[[11,-10],[22,-18]],[[10,3],[20,11]],[[-10,3],[-18,20]],
+ [[0,0],[0,-38],[0,-42],[-4,-55],[0,-68],[0,-76],[10,-85],[4,-96],[0,-108],[0,-116],[-5,-130],[0,-148]],[[4,-96],[-20,-92]]];
+function segD(px,pz,ax,az,bx,bz){const vx=bx-ax,vz=bz-az,l=vx*vx+vz*vz;let t=l?((px-ax)*vx+(pz-az)*vz)/l:0;t=clamp(t,0,1);return Math.hypot(px-(ax+t*vx),pz-(az+t*vz))}
+function pathD(x,z){let m=1e9;PATHS.forEach(p=>{for(let i=0;i<p.length-1;i++)m=Math.min(m,segD(x,z,p[i][0],p[i][1],p[i+1][0],p[i+1][1]))});return m}
+const hash2=(x,z)=>{const s=Math.sin(x*12.9898+z*78.233)*43758.5453;return s-Math.floor(s)};
+function vnoise(x,z){const xi=Math.floor(x),zi=Math.floor(z),xf=x-xi,zf=z-zi,u=xf*xf*(3-2*xf),v=zf*zf*(3-2*zf);const a=hash2(xi,zi),b=hash2(xi+1,zi),c=hash2(xi,zi+1),d=hash2(xi+1,zi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+
+const LMPOS={well:{x:7,z:-6,dx:8.9,dz:-4.1},statue:{x:0,z:0,dx:1.6,dz:-2.6},mill:{x:-28,z:-12,dx:-24.4,dz:-12.6},oak:{x:26,z:-20,dx:23.4,dz:-17.4},pumpkins:{x:-27,z:2,dx:-24.6,dz:2},scarecrow:{x:22,z:12,dx:20.2,dz:10.4},haystack:{x:-20,z:22,dx:-17.5,dz:20.6}};
+const SIGNPOS=[[3.2,-11],[-3.2,10],[13,9],[-12.5,-3],[18,-4.5],[-19,-6],[3.4,-30]];
+const BOARD={x:5.5,z:6.5};
+let TREES=[];
+function buildOverworld(){
+ /* ground */
+ const W=160,H=220,gw=96,gh=132,geo=new THREE.PlaneGeometry(W,H,gw,gh);geo.rotateX(-Math.PI/2);geo.translate(0,0,-56);const pos=geo.attributes.position,cols=new Float32Array(pos.count*3);const c=new THREE.Color();
+ for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),n=vnoise(x*.15,z*.15),n2=vnoise(x*.6,z*.6);const fz=clamp((-z-36)/30,0,1);
+  c.setRGB(.42+.1*n-.12*fz,.72+.1*n-.2*fz,.30+.06*n2-.06*fz);
+  const pd=pathD(x,z)+(n2-.5)*.8;if(pd<1.7){const k=clamp((1.7-pd)/.6,0,1);c.lerp(new THREE.Color(fz>.3?0x9C7E52:0xCDAA6C),k)}
+  const pr=Math.hypot(x,z);if(pr<8.6){c.setRGB(.72+.08*n2,.69+.08*n2,.63+.08*n2)}
+  if(Math.abs(z+38)<3.4)c.lerp(new THREE.Color(0x8C7A55),.6);
+  let y=0;if(Math.abs(x)>66||z>44||z<-154)y=Math.min(6,(Math.max(Math.abs(x)-66,z-44,-154-z))*.7)*(.6+n);pos.setY(i,y);
+  cols[i*3]=c.r;cols[i*3+1]=c.g;cols[i*3+2]=c.b}
+ geo.setAttribute('color',new THREE.BufferAttribute(cols,3));geo.computeVertexNormals();mesh(geo,new THREE.MeshLambertMaterial({vertexColors:true}));
+ /* stream + bridge */
+ const water=mesh(new THREE.PlaneGeometry(160,5.2),new THREE.MeshLambertMaterial({color:0x3E8EE0,transparent:true,opacity:.88,emissive:new THREE.Color(0x0A2A55)}),0,.06,-38);water.rotation.x=-Math.PI/2;
+ ANIM.push({f:t=>{water.material.emissive.setRGB(.04,.16+.04*Math.sin(t*2),.33)}});
+ box(4.6,.3,7.6,0x9A6A3A,0,.32,-38);for(const s of[-1,1]){box(.25,.9,7.6,0x7A4E28,s*2.2,.8,-38);for(let k=-3;k<=3;k+=1.5)box(.3,1.1,.3,0x6A4020,s*2.2,.6,-38+k)}
+ /* plaza + statue */
+ box(2.4,1.2,2.4,0xA9A39A,0,.6,0);colCircle(0,0,1.7);const st=makeRig({skin:0x9A9A9A,shirt:0x8E8E8E,pants:0x858585,hair:'short',hairCol:0x8A8A8A,beard:0x8A8A8A,stone:true,scale:1.35});st.g.position.set(0,1.2,0);scene.add(st.g);st.armR.rotation.x=-2.7;setSword(st,'iron',true);
+ const ch=makeChicken();ch.scale.setScalar(.7);st.g.add(ch);ch.position.set(0,1.95,0);
+ const plq=textPlane([`SIR REGINALD`,`He tried his best`],2.2,1.1,{bg:'#C9C2B5',bc:'#7A746A',fs:52});plq.position.set(0,.65,1.22);scene.add(plq);
+ /* buildings */
+ house(0,17,12,8,4.2,0xEFE2C8,0x8E3B2E,'n',`HERO GUILD`);house(15,4,7,6,3.4,0x8C7B6B,0x4A4A52,'w',`BLACKSMITH`);house(-15,4,8,7,3.6,0xE8D4B0,0x6A4A9A,'e',`THE SOGGY BOOT`);
+ house(-14,-9,7,6,3.2,0xF2C9D9,0x7A3A6A,'e',`FROU-FROU'S HATS`);house(16,-12,6,6,3,0xDDE6C8,0x3E7A5A,'w',null);house(8,-20,6,6,3.2,0xFFF0D0,0xC07A2A,'n',`BUN'S BAKERY`);
+ house(-12,-21,8,7,4,0xD9D9E6,0x2E4A8E,'n',`TOWN HALL`);house(-30,14,8,6,3.2,0xE6CFA0,0x9E4A2A,'e',null);
+ for(const [x,z,r] of [[22,-2,0],[-24,-24,1],[24,4,1],[-6,30,0],[10,28,1],[-26,30,0]])house(x,z,5,5,2.8,[0xF0E0C0,0xE0D0F0,0xD0E8E0][(x+z+99)%3],[0x8E3B2E,0x3E5A8E,0x5A7A3A][(x*7+99)%3],r?'w':'n',null);
+ /* training yard */
+ DUMMIES.length=0;[[-9,11],[-11.5,14],[-8,15.5]].forEach(([x,z])=>DUMMIES.push(makeDummy(x,z)));box(.2,1,9,0x8A5A2A,-13.6,.5,13);box(6,1,.2,0x8A5A2A,-10.6,.5,8.6);
+ /* landmarks */
+ const wl=grp(7,0,-6);cyl(1.3,1.4,1,10,0x9A948A,0,.5,0,wl);cyl(1.05,1.05,.1,10,0x2A5A8A,0,.95,0,wl);box(.2,2.6,.2,0x6A4020,-1.1,1.3,0,wl);box(.2,2.6,.2,0x6A4020,1.1,1.3,0,wl);const wr=mesh(G('wroof',()=>prismGeo(2.8,2,1)),0x8E3B2E,0,2.55,0,wl);wr.rotation.y=Math.PI/2;box(.5,.5,.5,0x8A5A2A,0,1.6,0,wl);colCircle(7,-6,1.5);
+ const ml=grp(-28,0,-12);cyl(2.2,2.8,7,8,0xEDE3CC,0,3.5,0,ml);cone(3,2.6,8,0x7A3A2A,0,8.3,0,ml);box(1.2,2,.2,0x5A3A1A,0,1,2.75,ml);const bl=grp(0,6.3,3,ml);for(let k=0;k<4;k++){const a=grp(0,0,0,bl);a.rotation.z=k*Math.PI/2;box(.5,4.4,.12,0xF2F0E6,0,2.4,0,a);box(.12,4.4,.1,0x6A4020,0,2.4,.05,a)}
+ bl.userData.dyn=1;ANIM.push({f:(t,dt)=>{bl.rotation.z+=dt*.6}});ml.rotation.y=Math.PI/2;colCircle(-28,-12,3);
+ const ok=grp(26,0,-20);cyl(1,1.5,6,7,0x6A4424,0,3,0,ok);[[0,7.5,0,3.6],[2,6.5,1,2.6],[-2,6.4,-1,2.8],[.6,6.2,-2.2,2.4],[-1,8.8,.6,2.4]].forEach(([x,y,z,r])=>ico(r,0x3F8A3A,x,y,z,ok,1));colCircle(26,-20,1.6);
+ const pp=grp(-27,0,2);for(let i=0;i<4;i++)for(let j=0;j<3;j++){const p=sph(.55+rnd()*.25,0xF08A24,(i-1.5)*1.6,.4,(j-1)*1.6,pp,9,6);p.scale.y=.72;cyl(.07,.07,.35,5,0x4A7A2A,(i-1.5)*1.6,.85,(j-1)*1.6,pp)}
+ for(const s of[-1,1]){box(7.4,.6,.15,0xA87A4A,0,.4,s*2.7,pp);}box(.15,.6,5.4,0xA87A4A,-3.7,.4,0,pp);
+ const sc=grp(22,0,12);box(.2,3,.2,0x7A5A3A,0,1.5,0,sc);box(2.6,.18,.18,0x7A5A3A,0,2.2,0,sc);box(1,1.1,.5,0x4A6A9A,0,2,0,sc);sph(.42,0xE8C88A,0,3.2,0,sc);cone(.6,.7,8,0x8A6A3A,0,3.75,0,sc);box(.5,.08,.05,0x2A2A2A,0,3.15,.4,sc);colCircle(22,12,.6);
+ const hs=grp(-20,0,22);cyl(1.8,2.1,1.6,9,0xE8C860,0,.8,0,hs);cone(1.85,1.6,9,0xF0D070,0,2.4,0,hs);colCircle(-20,22,2.1);
+ /* notice board */
+ const nb=grp(BOARD.x,0,BOARD.z);nb.rotation.y=Math.atan2(-BOARD.x,-BOARD.z);box(.2,2.6,.2,0x6A4020,-1.2,1.3,0,nb);box(.2,2.6,.2,0x6A4020,1.2,1.3,0,nb);const nbp=textPlane([`NOTICE BOARD`,`Jobs for heroes!`],2.6,1.5,{fs:60});nbp.position.set(0,1.8,.12);nb.add(nbp);const nbb=nbp.clone();nbb.position.z=-.12;nbb.rotation.y=Math.PI;nb.add(nbb);colCircle(BOARD.x,BOARD.z,1.1);
+ SIGNS.length=0;SIGNPOS.forEach((p,i)=>SIGNS.push(makeSign(i,p[0],p[1])));
+ /* fences + flowers */
+ for(let i=0;i<60;i++){const a=rnd()*6.28,r=10+rnd()*22,x=Math.cos(a)*r,z=Math.sin(a)*r;if(pathD(x,z)<2||nearBuilding(x,z))continue;const f=sph(.13,[0xFF6B9A,0xFFD447,0xFFFFFF,0x9A7BFF][i%4],x,.2,z,null,5,4);f.scale.y=.6}
+ /* trees */
+ const pts=[];const ok2=(x,z,m)=>pathD(x,z)>m&&!nearBuilding(x,z)&&!nearSpecial(x,z)&&pts.every(p=>Math.hypot(p.x-x,p.z-z)>p.s*1.6);
+ for(let i=0;i<2600&&pts.length<520;i++){const x=-72+rnd()*144,z=-156+rnd()*204;const forest=z<-41;const rv=Math.hypot(x,z);if(!forest&&rv<34)continue;if(Math.abs(z+38)<4.5)continue;if(!ok2(x,z,forest?3.6:4))continue;pts.push({x,z,s:forest?1+rnd()*.7:.9+rnd()*.5,pine:forest?rnd()<.55:rnd()<.25,forest})}
+ TREES=pts;makeTreeInstances(pts);pts.forEach(p=>colCircle(p.x,p.z,.55*p.s));
+ /* forest dressing */
+ for(let i=0;i<70;i++){const x=-60+rnd()*120,z=-44-rnd()*108;if(pathD(x,z)<2.4)continue;if(rnd()<.5){const m=grp(x,0,z);cyl(.08,.1,.35,5,0xEEE6D2,0,.17,0,m);const cp=sph(.25,0xD8423A,0,.38,0,m,7,5);cp.scale.y=.55}else{const r=ico(.5+rnd()*.6,0x8A8E92,x,.2,z);r.scale.y=.6;r.rotation.y=rnd()*6}}
+ /* riddle gates */
+ GATES.length=0;GATES.push(makeGate('g1',0,-72,74,'world'),makeGate('g2',0,-112,74,'world'));
+ /* woodcutter camp */
+ const cp=grp(-24,0,-92);cyl(.5,.6,.5,7,0x6A4424,2.5,.25,2,cp);for(let k=0;k<5;k++){const l=cyl(.22,.22,1.6,6,0x7A5A3A,-2.6+k*.15,.25+k*.0,-2.4+(k%2)*.5,cp);l.rotation.z=Math.PI/2}
+ const fire=grp(1,0,-1,cp);fire.userData.dyn=1;for(let k=0;k<3;k++){const f=cone(.35-k*.08,.9-k*.2,6,[0xFF7A1A,0xFFB020,0xFFE070][k],0,.45+k*.1,0,fire);f.material=M([0xFF7A1A,0xFFB020,0xFFE070][k],{basic:1})}ANIM.push({f:t=>{fire.scale.y=1+.2*Math.sin(t*14);fire.rotation.y=t*3}});
+ /* cave */
+ const cv=grp(0,0,-152);[[0,3,0,6],[-4.5,2,1,3.6],[4.5,2,1,3.6],[-2,5,-1,3.5],[2.5,5.5,-1,3]].forEach(([x,y,z,r])=>{const r2=ico(r,0x6E6A72,x,y,z,cv);r2.scale.y=.8});const mouth=mesh(new THREE.CircleGeometry(2.4,12),M(0x07050C,{basic:1}),0,2,2.95,cv);mouth.scale.y=1.2;
+ const cs=textPlane([`MUMBLING CAVE`,`Keep out (please)`],3.4,1.3,{fs:50});cs.position.set(-4.6,2.2,4.4);cs.rotation.y=.3;cv.add(cs);box(.2,2.6,.2,0x6A4020,-4.6,1,4.3,cv);
+ colBox(-9,-2.7,-158,-150);colBox(2.7,9,-158,-150);
+ /* clouds */
+ for(let i=0;i<14;i++){const c2=grp(-90+rnd()*180,38+rnd()*12,-150+rnd()*200);for(let k=0;k<3;k++){const p=ico(3+rnd()*2.5,M(0xFFFFFF,{p:{fog:false}}),k*3.5-3.5,rnd(),rnd()*2,c2);p.scale.y=.55}c2.userData.dyn=1;ANIM.push({f:(t,dt)=>{c2.position.x+=dt*.8;if(c2.position.x>100)c2.position.x=-100}})}
+ /* things the quest system hides/shows */
+ makeLoreStones();}
+const BLD=[];function nearBuilding(x,z){return BLD.some(b=>x>b.x0-2.5&&x<b.x1+2.5&&z>b.z0-2.5&&z<b.z1+2.5)}
+function nearSpecial(x,z){return Object.values(LMPOS).some(p=>Math.hypot(p.x-x,p.z-z)<5)||Math.hypot(x+24,z+92)<9||Math.hypot(x,z+150)<9||Math.abs(z+72)<5||Math.abs(z+112)<5||LORE.some(l=>Math.hypot(l.x-x,l.z-z)<3)}
+function house(x,z,w,d,h,wc,rc,face,sign){const g=grp(x,0,z);const rot={s:0,e:Math.PI/2,n:Math.PI,w:-Math.PI/2}[face];g.rotation.y=rot;
+ box(w,h,d,wc,0,h/2,0,g);box(w+.1,.35,d+.1,0x8A6A4A,0,.17,0,g);const rf=mesh(G('roof'+w+d,()=>prismGeo(w+.8,d+1,2.2)),rc,0,h,0,g);
+ box(1.3,2.1,.12,0x5A3A1A,0,1.05,d/2+.02,g);box(.12,.12,.05,0xE8C860,.4,1.05,d/2+.1,g);
+ for(const s of[-1,1]){if(w>4.5){box(.95,.85,.1,0xFFE9A0,s*(w/2-1.3),h*.6,d/2+.02,g);box(1.1,.12,.12,0x5A3A1A,s*(w/2-1.3),h*.6-.5,d/2+.08,g)}box(.1,.85,.95,0xFFE9A0,s*(w/2+.02),h*.6,0,g)}
+ box(.7,1.4,.7,0x8A5A4A,w/4,h+1.4,-d/5,g);
+ if(sign){const sp=textPlane(sign,2.8,.9,{fs:70,h:200});sp.position.set(0,2.65,d/2+.08);g.add(sp)}
+ const hw=(face==='e'||face==='w')?d/2:w/2,hd=(face==='e'||face==='w')?w/2:d/2;BLD.push({x0:x-hw,x1:x+hw,z0:z-hd,z1:z+hd});colBox(x-hw,x+hw,z-hd,z+hd);return g}
+function makeTreeInstances(pts){const n=pts.length,dummy=new THREE.Object3D(),col=new THREE.Color();
+ const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.22,.32,1.6,5),M(0x6A4424),n);const crown=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.5,0),new THREE.MeshLambertMaterial({flatShading:true}),n);const pine=new THREE.InstancedMesh(new THREE.ConeGeometry(1.4,3.6,6),new THREE.MeshLambertMaterial({flatShading:true}),n);
+ let ci=0,pi=0;pts.forEach((p,i)=>{dummy.position.set(p.x,.8*p.s,p.z);dummy.rotation.set(0,rnd()*6,0);dummy.scale.setScalar(p.s);dummy.updateMatrix();trunk.setMatrixAt(i,dummy.matrix);
+  if(p.pine){dummy.position.set(p.x,(1.6+1.6)*p.s,p.z);dummy.scale.set(p.s,p.s*(1+rnd()*.4),p.s);dummy.updateMatrix();pine.setMatrixAt(pi,dummy.matrix);col.setHSL(.33+rnd()*.05,.45,p.forest?.22+rnd()*.08:.3+rnd()*.08);pine.setColorAt(pi++,col)}
+  else{dummy.position.set(p.x,(1.6+1)*p.s,p.z);dummy.scale.set(p.s*(1+rnd()*.3),p.s*(.9+rnd()*.3),p.s*(1+rnd()*.3));dummy.updateMatrix();crown.setMatrixAt(ci,dummy.matrix);col.setHSL(.26+rnd()*.08,.5,p.forest?.25+rnd()*.08:.34+rnd()*.1);crown.setColorAt(ci++,col)}});
+ crown.count=ci;pine.count=pi;[trunk,crown,pine].forEach(m=>{if(m.instanceColor)m.instanceColor.needsUpdate=true;scene.add(m)})}
+
+/* ---------- training dummies, signs, lore stones ---------- */
+const DUMMIES=[],SIGNS=[],LORE=[{id:'l1',x:-12,z:-58},{id:'l2',x:15,z:-80},{id:'l3',x:-30,z:-104},{id:'l4',x:14,z:-126}];
+function makeDummy(x,z){const g=grp(x,0,z);g.userData.dyn=1;box(.2,1.2,.2,0x8A5A2A,0,.6,0,g);const b=grp(0,1.2,0,g);cyl(.35,.4,1,8,0xD9B87A,0,.5,0,b);sph(.3,0xD9B87A,0,1.3,0,b);box(1.3,.15,.15,0x8A5A2A,0,.7,0,b);box(.4,.06,.05,0x3A2A1A,0,1.35,.29,b);colCircle(x,z,.5);return{g,b,x,z,wob:0,hp:1,dead:false}}
+function makeSign(i,x,z){const g=grp(x,0,z);box(.18,2,.18,0x6A4020,0,1,0,g);const p=textPlane(['???'],1.8,1,{fs:60});p.position.set(0,2,.1);g.add(p);const pb=p.clone();pb.position.z=-.1;pb.rotation.y=Math.PI;g.add(pb);g.rotation.y=Math.atan2(-x,-z);colCircle(x,z,.35);return{i,g,p,x,z}}
+function makeLoreStones(){LORE.forEach(l=>{const g=grp(l.x,0,l.z);const s=box(1.2,2,.6,0x7A7E86,0,1,0,g);s.rotation.y=.2;const glow=box(.7,.9,.05,M(0x8AE0FF,{basic:1}),0,1.2,.32,g);glow.rotation.y=.2;l.g=g;l.glow=glow;colCircle(l.x,l.z,.8)})}
+
+/* ---------- riddle gates (3 arches; the answers are on the arches) ---------- */
+const GATES=[];
+function makeGate(id,cx,z,half,zone){const g=grp(cx,0,z);const ax=[-6,0,6],gap=1.6;const edges=[-half,...ax.flatMap(a=>[a-gap,a+gap]),half];
+ for(let i=0;i<edges.length;i+=2){const x0=edges[i],x1=edges[i+1],w=x1-x0;if(w<=0)continue;box(w,2.4,1.4,0x2E5A2A,(x0+x1)/2,1.2,0,g);for(let k=0;k<w;k+=1.2){const sp=cone(.18,.7,4,0x4A3A2A,x0+k+.5,2.5,(rnd()-.5)*.8,g);sp.rotation.z=(rnd()-.5)*.8}colBox(cx+x0,cx+x1,z-.7,z+.7)}
+ const G2={id,cx,z,zone,arches:[],q:null,stone:null};
+ ax.forEach((a,k)=>{const ag=grp(a,0,0,g);box(.5,4,.7,0x9A948A,-1.85,2,0,ag);box(.5,4,.7,0x9A948A,1.85,2,0,ag);box(4.4,.6,.8,0x9A948A,0,4.2,0,ag);
+  const sign=textPlane(['?'],3.6,1.5,{fs:56});sign.position.set(0,5.3,.45);ag.add(sign);const back=sign.clone();back.position.z=-.45;back.rotation.y=Math.PI;ag.add(back);
+  const bar=mesh(new THREE.PlaneGeometry(3.2,3.9),new THREE.MeshBasicMaterial({color:0xB36BFF,transparent:true,opacity:.45,side:THREE.DoubleSide,depthWrite:false}),0,1.95,0,ag);
+  const col=colBox(cx+a-1.65,cx+a+1.65,z-.2,z+.2,{on:()=>!G2.open});G2.arches.push({x:cx+a,sign,back,bar,col,wrong:false})});
+ const st=grp(cx+3,0,z+5.5);const s=box(1.2,1.1,.9,0x8A8E96,0,.55,0,st);const top=box(1.3,.12,1,0x6A6E76,0,1.15,0,st);top.rotation.x=-.3;const qm=sprite('?','#8AE0FF',1);qm.position.set(0,2.1,0);st.add(qm);colCircle(cx+3,z+5.5,.8);G2.stone={x:cx+3,z:z+5.5,qm};
+ ANIM.push({f:t=>{G2.arches.forEach(a=>{a.bar.material.opacity=G2.open?0:.32+.12*Math.sin(t*4+a.x)});qm.position.y=2.1+Math.sin(t*3)*.15;qm.visible=!G2.open}});
+ G2.setOpen=v=>{G2.open=v;G2.arches.forEach(a=>{a.bar.visible=!v})};return G2}
+function gateSigns(G2,opts,marks){G2.arches.forEach((a,k)=>{const t=opts?[opts[k]]:['?'];const o=marks&&marks[k]==='x'?{bg:'#E8A0A0',bc:'#8A2A2A',fs:52}:marks&&marks[k]==='ok'?{bg:'#A8E8A0',bc:'#2A7A2A',fs:52}:{fs:52};setPlaneText(a.sign,t,o);a.back.material.map=a.sign.material.map;a.back.material.needsUpdate=true})}
+
+/* ---------- dungeon ---------- */
+function buildDungeon(){const fl=mesh(new THREE.PlaneGeometry(22,70),M(0x3A3448),DX,0,-27);fl.rotation.x=-Math.PI/2;
+ const ar=mesh(new THREE.CircleGeometry(14.5,24),M(0x2E2840),DX,.01,-74);ar.rotation.x=-Math.PI/2;const rune=mesh(new THREE.RingGeometry(6,6.6,24),M(0x9A6BFF,{basic:1}),DX,.03,-74);rune.rotation.x=-Math.PI/2;
+ for(const s of[-1,1]){box(1,5,64,0x4E4660,DX+s*10,2.5,-27)}box(22,5,1,0x4E4660,DX,2.5,4);box(7.4,5,1,0x4E4660,DX-6.4,2.5,-58.6);box(7.4,5,1,0x4E4660,DX+6.4,2.5,-58.6);
+ for(const s of[-1,1])box(1,5,2.4,0x4E4660,DX+s*3.2,2.5,-59.8);
+ for(let i=0;i<20;i++){const a=-Math.PI/2+.32+i*(2*Math.PI-.64)/19;const x=Math.cos(a)*14.4,z=Math.sin(a)*14.4;const w=box(4.8,6,1.2,0x4E4660,DX+x,3,-74-z);w.rotation.y=-a+Math.PI/2}
+ for(let z=0;z>-56;z-=9)for(const s of[-1,1]){const tg=grp(DX+s*9.4,0,z);cyl(.1,.1,.6,5,0x5A3A1A,0,2.4,0,tg);const fl2=cone(.18,.45,5,M(0xFFA030,{basic:1}),0,2.9,0,tg);ANIM.push({f:t=>{fl2.scale.y=1+.25*Math.sin(t*12+z)}})}
+ for(const [x,z] of [[-6,-8],[6,-8],[-6,-27],[6,-27],[-6,-48],[6,-48]]){cyl(.7,.8,5,8,0x5A5270,DX+x,2.5,z);colCircle(DX+x,z,.8)}
+ GATES.push(makeGate('d1',DX,-16,9.5,'dungeon'),makeGate('d2',DX,-38,9.5,'dungeon'));
+ const portal=mesh(new THREE.TorusGeometry(1.4,.25,8,20),M(0x8AE0FF,{basic:1}),DX,1.7,3.2);ANIM.push({f:t=>portal.rotation.z=t});
+ arenaLight=new THREE.PointLight(0x9A6BFF,0,40,1.2);arenaLight.position.set(DX,6,-74);scene.add(arenaLight)}
+
+/* ---------- characters ---------- */
+function makeRig(o){const g=new THREE.Group(),body=new THREE.Group();g.add(body);const mat=c=>o.stone?M(c):M(c);
+ const legs=[-1,1].map(s=>{const p=grp(s*.17,.64,0,body);box(.22,.64,.24,o.pants,0,-.32,0,p);box(.26,.14,.34,o.boots||0x4A3220,0,-.6,.05,p);return p});
+ const torso=box(.66,.72,.4,o.shirt,0,.99,0,body);if(o.belly){const b=sph(.36,o.shirt,0,.92,.12,body,8,6);b.scale.set(1,1,.9)}
+ if(o.apron)box(.5,.6,.05,o.apron,0,.88,.23,body);box(.68,.1,.42,o.belt||0x4A3220,0,.68,0,body);
+ const head=grp(0,1.62,0,body);sph(.3,o.skin,0,0,0,head,10,8);
+ for(const s of[-1,1]){box(.07,.09,.03,o.eye||0x1A1410,s*.11,.03,.28,head);if(o.ears){const e=cone(.12,.4,4,o.skin,s*.36,.05,0,head);e.rotation.z=-s*Math.PI/2.4}}
+ sph(.07,o.nose||o.skin,0,-.05,.3,head,6,5);
+ if(o.hair==='short'){const h=mesh(G('hairS',()=>new THREE.SphereGeometry(.32,10,6,0,Math.PI*2,0,Math.PI/2.2)),o.hairCol,0,.02,-.02,head)}
+ else if(o.hair==='bun'){mesh(G('hairS',()=>new THREE.SphereGeometry(.32,10,6,0,Math.PI*2,0,Math.PI/2.2)),o.hairCol,0,.02,-.02,head);sph(.16,o.hairCol,0,.22,-.22,head,8,6)}
+ else if(o.hair==='long'){mesh(G('hairS',()=>new THREE.SphereGeometry(.32,10,6,0,Math.PI*2,0,Math.PI/2.2)),o.hairCol,0,.02,-.02,head);box(.56,.5,.15,o.hairCol,0,-.15,-.2,head)}
+ else if(o.hair==='spiky'){mesh(G('hairS',()=>new THREE.SphereGeometry(.32,10,6,0,Math.PI*2,0,Math.PI/2.2)),o.hairCol,0,.02,-.02,head);for(let k=0;k<5;k++){const c2=cone(.09,.28,4,o.hairCol,-.18+k*.09,.3,-.02-(k%2)*.08,head);c2.rotation.z=(k-2)*.25}}
+ if(o.beard){const b=box(.44,.36,.18,o.beard,0,-.24,.2,head);if(o.longBeard)b.scale.y=2.2,b.position.y=-.42}
+ if(o.mustache)box(.36,.07,.06,o.mustache,0,-.12,.3,head);if(o.glasses){for(const s of[-1,1]){const r=mesh(G('gl',()=>new THREE.TorusGeometry(.075,.018,5,10)),0x2A2A2A,s*.11,.03,.31,head)}}
+ const arms=[-1,1].map(s=>{const p=grp(s*.43,1.3,0,body);box(.18,.6,.2,o.sleeve||o.shirt,0,-.28,0,p);sph(.1,o.skin,0,-.62,0,p,6,5);return p});
+ const hand=grp(0,-.62,0,arms[1]);
+ [body,head,...legs,...arms].forEach(bakeGroup);const r={g,body,head,legL:legs[0],legR:legs[1],armL:arms[0],armR:arms[1],hand,hatG:grp(0,.18,0,head),t:rnd()*9,o};if(o.scale)g.scale.setScalar(o.scale);if(o.hat)setHat(r,o.hat);return r}
+function setHat(r,id){while(r.hatG.children.length)r.hatG.remove(r.hatG.children[0]);const h=r.hatG;r.hatId=id;setHatRaw(h,id);bakeGroup(h)}
+function setHatRaw(h,id){
+ if(id==='pot'){cyl(.36,.33,.32,10,0x8A8E96,0,.12,0,h);const hd=box(.5,.06,.08,0x2A2A2A,.45,.2,0,h)}
+ else if(id==='wizard'){const c2=cone(.36,.95,10,0x5A3AB0,0,.5,0,h);c2.rotation.x=-.15;cyl(.5,.5,.05,12,0x5A3AB0,0,.05,0,h);sph(.07,0xFFD447,0,.55,.3,h,6,5)}
+ else if(id==='chicken'){const ch=makeChicken();ch.scale.setScalar(.75);ch.position.set(0,.12,0);h.add(ch)}
+ else if(id==='crown'){cyl(.3,.3,.22,10,0xF2C230,0,.15,0,h);for(let k=0;k<6;k++){const a=k/6*6.28;cone(.06,.2,4,0xF2C230,Math.cos(a)*.27,.35,Math.sin(a)*.27,h)}}
+ else if(id==='party'){const c2=cone(.22,.7,10,0xFF5AA8,0,.4,0,h);sph(.08,0xFFD447,0,.78,0,h,6,5)}
+ else if(id==='chef'){cyl(.3,.27,.4,10,0xFFFFFF,0,.18,0,h);sph(.36,0xFFFFFF,0,.45,0,h,8,6).scale.y=.6}
+ else if(id==='straw'){cyl(.6,.6,.04,12,0xE8C860,0,.04,0,h);cyl(.3,.32,.25,10,0xE8C860,0,.16,0,h)}
+ else if(id==='top'){cyl(.5,.5,.04,12,0x1A1A22,0,.04,0,h);cyl(.3,.3,.55,10,0x1A1A22,0,.32,0,h)}
+ else if(id==='helmet'){const hm=sph(.36,0x9AA0AA,0,-.02,0,h,10,6);hm.scale.y=.8;box(.06,.3,.1,0x9AA0AA,0,-.15,.33,h)}
+ else if(id==='fancy'){cyl(.45,.45,.04,12,0x8A3AB0,0,.04,0,h);cyl(.26,.3,.4,10,0x8A3AB0,0,.24,0,h);const f=cone(.06,.6,5,0xFF7AD0,.2,.6,-.1,h);f.rotation.z=-.5}}
+const SWORDS={wood:{n:`Wooden Sword`,dmg:1,cost:0,col:0xB07A42,d:`Splintery. Smells like a fence.`},iron:{n:`Iron Sword`,dmg:2,cost:60,col:0xC8D0DA,d:`A real sword! Bjorn only hit himself twice making it.`},bacon:{n:`Bacon Blade`,dmg:3,cost:160,col:0xD8584A,d:`Sizzles when it hits. Goblins find it distracting.`},baguette:{n:`Legendary Baguette`,dmg:5,cost:380,col:0xE0B060,d:`Crusty. Mighty. Slightly stale. The finest weapon ever baked.`}};
+function setSword(r,id,stone){if(r.sword)r.hand.remove(r.sword);const s=new THREE.Group();const sw=SWORDS[id]||SWORDS.wood,c=stone?0x9A9A9A:sw.col;
+ if(id==='baguette'){const b=cyl(.11,.13,1.5,7,c,0,0,.75,s);b.rotation.x=Math.PI/2;for(let k=0;k<4;k++)box(.04,.05,.18,0xB07A30,0,.11,.25+k*.32,s)}
+ else{box(.07,.07,.32,stone?c:0x5A3A1A,0,0,-.05,s);box(.4,.08,.08,stone?c:0xD8B040,0,0,.13,s);box(.12,.04,1.15,c,0,0,.72,s);if(id==='bacon'){for(let k=0;k<4;k++)box(.13,.05,.12,0xFFD0C0,0,0,.35+k*.25,s)}}
+ bakeGroup(s);r.hand.add(s);r.sword=s;r.swordId=id}
+function makeChicken(){const g=new THREE.Group();const b=sph(.32,0xFFFFFF,0,.42,0,g,8,6);b.scale.set(.9,.85,1.15);sph(.2,0xFFFFFF,0,.75,.28,g,8,6);const bk=cone(.07,.16,4,0xF0A020,0,.73,.5,g);bk.rotation.x=Math.PI/2;box(.06,.16,.18,0xE0302A,0,.95,.26,g);
+ for(const s of[-1,1]){box(.04,.06,.03,0x111111,s*.1,.79,.44,g);box(.05,.25,.05,0xF0A020,s*.12,.12,0,g)}const tail=box(.22,.28,.1,0xF2F2F2,0,.6,-.38,g);tail.rotation.x=-.5;bakeGroup(g);return g}
+function animRig(r,dt,spd,atk){r.t+=dt*(4+spd*7);const sw=Math.min(1,spd)*.75,s=Math.sin(r.t);r.legL.rotation.x=s*sw;r.legR.rotation.x=-s*sw;
+ r.armL.rotation.x=-s*sw*.8;if(atk==null)r.armR.rotation.x=s*sw*.8;r.body.position.y=spd>.1?Math.abs(Math.cos(r.t))*.07:Math.sin(r.t*.35)*.015}
+
+/* ===================== hero ===================== */
+const hero={x:0,z:7,ry:Math.PI,r:.42,rig:null,atk:0,hitDone:false,inv:0,kbx:0,kbz:0,spd:0,flex:0,dead:false};
+let halo,horns,cape;
+function makeHero(){const r=makeRig({skin:0xF2C29B,shirt:0x2E6AC8,pants:0x5A4632,hair:'spiky',hairCol:0x6A3A1A,belt:0x3A2410,boots:0x3A2A1A});scene.add(r.g);hero.rig=r;
+ cape=mesh(new THREE.PlaneGeometry(.66,1.05),new THREE.MeshLambertMaterial({color:0xC8382A,side:THREE.DoubleSide}),0,.85,-.24,r.body);cape.geometry.translate(0,-.45,0);cape.position.y=1.32;
+ halo=mesh(new THREE.TorusGeometry(.3,.05,6,18),M(0xFFE070,{basic:1}),0,.62,0,r.head);halo.rotation.x=Math.PI/2;
+ horns=grp(0,.2,0,r.head);for(const s of[-1,1]){const h=cone(.08,.32,5,0xB0202A,s*.18,.12,.05,horns);h.rotation.z=-s*.5}
+ setSword(r,D.sword);setHat(r,D.hat||'');heroLooks()}
+function heroLooks(){const a=D.align;halo.visible=a>=25;halo.scale.setScalar(a>=60?1.35:1);horns.visible=a<=-25;horns.scale.setScalar(a<=-60?1.5:1);}
+function alignBy(v,why){const before=D.align;D.align=clamp(D.align+v,-100,100);heroLooks();
+ if(v>0){floatText(hero.x,2.4,hero.z,`+${v} good`,'#FFE070');if(before<25&&D.align>=25){sfx('halo');toast(`✨ A glowing halo appeared over your head! Villagers love you.`)}}
+ else{floatText(hero.x,2.4,hero.z,`${v} good`,'#FF7A7A');if(before>-25&&D.align<=-25){sfx('horn');toast(`😈 Little horns sprouted from your head! Villagers are nervous.`)}}updateHUD()}
+function heroMaxHP(){return 8+D.lvl*2}
+function heroDmg(){return SWORDS[D.sword].dmg*(1+(D.lvl-1)*.12)}
+function addXP(n){D.xp+=n;let need=xpNeed(D.lvl);while(D.xp>=need){D.xp-=need;D.lvl++;need=xpNeed(D.lvl);D.hp=heroMaxHP();sfx('lvl');burst(hero.x,1.5,hero.z,0xFFE070,24);toast(`⭐ LEVEL UP! You are now level ${D.lvl}. More hearts, stronger swings!`)}updateHUD()}
+const xpNeed=l=>30+l*25;
+function addGold(n,x,z){D.gold+=n;if(x!=null)floatText(x,2,z,`+${n} gold`,'#FFD447');sfx('coin');updateHUD()}
+function hurtHero(d,fx,fz){if(hero.inv>0||hero.dead||busy())return;D.hp=Math.max(0,D.hp-d);hero.inv=.9;sfx('hurt');shake=.25;const l=Math.hypot(hero.x-fx,hero.z-fz)||1;hero.kbx=(hero.x-fx)/l*9;hero.kbz=(hero.z-fz)/l*9;flashRig(hero.rig);updateHUD();if(D.hp<=0)heroDown()}
+async function heroDown(){hero.dead=true;cutscene++;D.gold=Math.floor(D.gold*.9);await fadeOut();const inD=D.pos.zone==='dungeon';if(inD){setZone('world');hero.x=0;hero.z=-144}else{hero.x=0;hero.z=11}D.hp=heroMaxHP();hero.dead=false;hero.inv=2;killAllEnemies();if(boss)endBossFight(false);save();await fadeIn();cutscene--;say('Guildmaster Mumbleton',`You got knocked out! Don't worry, ${D.name}, heroes always get back up. I only charged you a few coins for the bandages.`,{pitch:.7})}
+
+/* ===================== NPCs ===================== */
+const NPCDEF={
+ mumbleton:{n:'Guildmaster Mumbleton',x:2.5,z:11.2,o:{skin:0xF0C8A0,shirt:0x5A3AB0,pants:0x5A3AB0,beard:0xF2F2F2,longBeard:1,hat:'wizard',glasses:1},pitch:.7},
+ granny:{n:'Granny Pickles',x:12,z:-9.6,o:{skin:0xF2C8A8,shirt:0xD87AA8,pants:0xD87AA8,hair:'bun',hairCol:0xD8D8D8,glasses:1,scale:.85},pitch:1.5},
+ bun:{n:'Baker Bun',x:8,z:-15.6,o:{skin:0xF0C09A,shirt:0xF2F2F2,apron:0xFFFFFF,pants:0x7A7A8A,hat:'chef',belly:1,mustache:0x6A3A1A},pitch:1.15},
+ gristle:{n:'Chef Gristle',x:-9.4,z:8.6,o:{skin:0xD8A880,shirt:0x2A2A2A,apron:0x1A1A1A,pants:0x2A2A2A,mustache:0x1A1A1A,hair:'short',hairCol:0x1A1A1A},pitch:.6},
+ dougal:{n:'Farmer Dougal',x:-24,z:9.5,o:{skin:0xE8B080,shirt:0xD84A3A,pants:0x3A5AA0,hat:'straw',beard:0xC07A3A},pitch:.85},
+ bjorn:{n:'Bjorn the Blacksmith',x:10.2,z:4.5,o:{skin:0xE8B890,shirt:0x7A5A3A,apron:0x4A3220,pants:0x3A3A3A,beard:0xD8A030,hair:'short',hairCol:0xD8A030,scale:1.22,belly:1},pitch:.5,shop:'sword'},
+ frou:{n:'Madame Frou-Frou',x:-9.4,z:-9.2,o:{skin:0xF8D8C8,shirt:0xB04AD8,pants:0xB04AD8,hat:'fancy',hair:'long',hairCol:0x2A1A3A},pitch:1.6,shop:'hat'},
+ mags:{n:'Mags',x:-10,z:2.6,o:{skin:0xE0A880,shirt:0x3A8A4A,apron:0xEEE6D2,pants:0x5A4632,hair:'bun',hairCol:0xC0502A},pitch:1.2,shop:'pot'},
+ mayor:{n:'Mayor Mortimer',x:-12,z:-15.4,o:{skin:0xF0C8B0,shirt:0x2A2A6A,pants:0x2A2A3A,hat:'top',mustache:0x8A8A8A,belly:1},pitch:.9},
+ pudding:{n:'Sergeant Pudding',x:3.2,z:-33.6,o:{skin:0xF0C09A,shirt:0x8A8E96,pants:0x6A6A7A,hat:'helmet',belly:1,scale:1.1},pitch:.8},
+ hank:{n:'Hank the Woodcutter',x:-24,z:-89.6,o:{skin:0xE0A070,shirt:0xC03A2A,pants:0x3A3A5A,beard:0x5A3A1A,hair:'short',hairCol:0x5A3A1A,scale:1.15},pitch:.7},
+ pip:{n:'Old Man Pip',x:-4,z:-6,o:{skin:0xE8C0A0,shirt:0x7A8A5A,pants:0x5A4A3A,beard:0xDDDDDD,hair:'short',hairCol:0xDDDDDD},pitch:.75,wander:7,gen:1},
+ tilly:{n:'Tilly',x:4,z:-4,o:{skin:0x8A5A3A,shirt:0xF0A030,pants:0x6A3A8A,hair:'long',hairCol:0x1A1A1A},pitch:1.4,wander:8,gen:1},
+ fenwick:{n:'Little Fenwick',x:-6,z:-2,o:{skin:0xF8D0B0,shirt:0x3AB0D8,pants:0x3A3A5A,hair:'spiky',hairCol:0xE8C040,scale:.7},pitch:1.8,wander:10,gen:1},
+ gert:{n:'Gertrude',x:14,z:-4,o:{skin:0xC8906A,shirt:0xD84A6A,pants:0x5A3A3A,hair:'bun',hairCol:0x5A3A2A,belly:1},pitch:1.3,wander:6,gen:1},
+ barnaby:{n:'Barnaby',x:-16,z:-2,o:{skin:0xF0C8A0,shirt:0x5A6AD8,pants:0x3A3A3A,hat:'party',mustache:0xA05A2A},pitch:1,wander:7,gen:1}};
+const NPCS={};
+function makeNPCs(){Object.entries(NPCDEF).forEach(([id,d])=>{const r=makeRig(d.o);scene.add(r.g);const n={id,d,rig:r,x:d.x,z:d.z,hx:d.x,hz:d.z,ry:0,tx:d.x,tz:d.z,wait:rnd()*4,r:.45,bark:null,barkT:0,mark:sprite('!','#FFD447',1)};n.mark.visible=false;n.mark.position.y=2.75;r.g.add(n.mark);r.g.position.set(n.x,0,n.z);NPCS[id]=n;COL.dyn.push({r:.45,get x(){return n.x},get z(){return n.z},npc:n,on:()=>n.rig.g.visible})})}
+const BARK={n:[`Lovely day for a sword fight!`,`Have you seen my goat? He owes me money.`,`I once ate a whole pumpkin. No regrets.`,`The signs are all scrambled! I went to buy bread and came home with a llama.`,`My cousin married a turnip. Happiest day of his life.`,`Watch out for Gibberlings. They steal your vowels!`],
+ g:[`Look, it's {N}! My hero!`,`{N}! Sign my forehead! Please!`,`Ooh, a halo! Very fancy.`,`Mom! Mom! It's the good hero!`,`I named my pig after you, {N}.`],
+ e:[`Eek! Don't hurt me, I'm mostly bones!`,`Hide the chickens, it's {N}!`,`Are those... horns? I'll just be over here.`,`I didn't see anything! I'm a bush!`,`Please don't kick me. I'm not a chicken.`],
+ flexG:[`Wow! Look at those muscles!`,`Do it again! Do it again!`,`I fainted. I'm fine.`,`Mighty!`],flexE:[`Please stop flexing at me.`,`That's... terrifying.`,`I'm giving you my lunch money. Take it.`],flexN:[`Nice arms!`,`Is that a muscle or a potato?`,`Ooooh.`]};
+function npcBark(n,t){n.bark=fmt(t);n.barkT=3.2}
+
+/* ===================== chickens ===================== */
+const CHICKS=[];
+function makeChickens(){for(let i=0;i<9;i++){const g=makeChicken();scene.add(g);const a=rnd()*6.28,r=6+rnd()*16;CHICKS.push({g,x:Math.cos(a)*r,z:Math.sin(a)*r,y:0,vy:0,vx:0,vz:0,ry:0,t:rnd()*3,panic:0,hugT:0,kickT:0})}}
+function updChicks(dt){CHICKS.forEach(c=>{if(c.y>0||c.vy>0){c.vy-=22*dt;c.y+=c.vy*dt;c.x+=c.vx*dt;c.z+=c.vz*dt;c.g.rotation.x+=dt*12;if(c.y<=0){c.y=0;c.vy=0;c.vx=c.vz=0;c.g.rotation.x=0;c.panic=2.5}}
+  else{c.t-=dt;if(c.panic>0){c.panic-=dt;const a=Math.atan2(c.x-hero.x,c.z-hero.z);c.vx=Math.sin(a)*4.5;c.vz=Math.cos(a)*4.5}else if(c.t<=0){c.t=1+rnd()*3;const a=rnd()*6.28,s=rnd()<.5?0:1.1;c.vx=Math.sin(a)*s;c.vz=Math.cos(a)*s}
+   c.x+=c.vx*dt;c.z+=c.vz*dt;if(Math.hypot(c.x,c.z)>30){c.vx=-c.x*.05;c.vz=-c.z*.05}if(c.vx||c.vz)c.ry=Math.atan2(c.vx,c.vz);const e={x:c.x,z:c.z};pushOut(e,.3);c.x=e.x;c.z=e.z}
+  c.hugT=Math.max(0,c.hugT-dt);c.kickT=Math.max(0,c.kickT-dt);c.g.position.set(c.x,c.y+(Math.abs(c.vx)+Math.abs(c.vz)>.1&&c.y===0?Math.abs(Math.sin(performance.now()/90))*.08:0),c.z);c.g.rotation.y=c.ry})}
+function kickChicken(c){const a=Math.atan2(c.x-hero.x,c.z-hero.z);c.vy=9;c.vx=Math.sin(a)*7;c.vz=Math.cos(a)*7;c.y=.01;sfx('squawk');burst(c.x,.6,c.z,0xFFFFFF,10,.6);
+ if(c.kickT<=0){c.kickT=6;alignBy(-3);const w=nearestNPC(14,n=>n.d.gen);if(w)npcBark(w,pick([`HEY! Leave that chicken alone!`,`You monster! That was Lady Cluckington's cousin!`,`I'm telling Mumbleton!`,`Chicken kicker! CHICKEN KICKER!`]))}}
+
+/* ===================== particles + floating text ===================== */
+const PARTS=[];let pGeo;
+function burst(x,y,z,col,n=12,size=.22,spd=6){if(!pGeo)pGeo=new THREE.BoxGeometry(1,1,1);for(let i=0;i<n;i++){if(PARTS.length>220)break;const m=new THREE.Mesh(pGeo,M(col,{basic:1}));m.scale.setScalar(size*(.6+rnd()*.8));m.position.set(x,y,z);scene.add(m);const a=rnd()*6.28,u=rnd();PARTS.push({m,vx:Math.cos(a)*spd*u,vy:2+rnd()*spd*.8,vz:Math.sin(a)*spd*u,life:.6+rnd()*.5,g:14})}}
+function updParts(dt){for(let i=PARTS.length-1;i>=0;i--){const p=PARTS[i];p.life-=dt;p.vy-=p.g*dt;p.m.position.x+=p.vx*dt;p.m.position.y=Math.max(.05,p.m.position.y+p.vy*dt);p.m.position.z+=p.vz*dt;p.m.rotation.x+=dt*6;p.m.scale.multiplyScalar(1-dt*1.2);if(p.life<=0){scene.remove(p.m);PARTS.splice(i,1)}}}
+const FLOAT=[];function floatText(x,y,z,txt,col){const el=document.createElement('div');el.className='ftxt';el.textContent=txt;el.style.color=col||'#fff';$('#labels').appendChild(el);FLOAT.push({el,p:new THREE.Vector3(x,y,z),t:0})}
+function flashRig(r){r.flash=.15}
+
+/* ===================== enemies ===================== */
+const ETYPE={grump:{n:'Grumpling',hp:4,spd:2.7,dmg:1,r:.45,xp:6,gold:[2,5]},brute:{n:'Grumpling Brute',hp:13,spd:2.1,dmg:2,r:.75,xp:15,gold:[6,12]},gib:{n:'Gibberling',hp:5,spd:2.3,dmg:1,r:.6,xp:9,gold:[3,7],shield:1}};
+const SPAWNS=[['grump',-8,-52],['grump',10,-60],['grump',-15,-64],['gib',12,-82],['grump',18,-90],['gib',-6,-100],['brute',8,-104],['grump',6,-120],['gib',-10,-123],['gib',10,-133],['brute',-6,-140],['grump',-14,-136],
+ ['grump',-22,-87,'camp'],['grump',-28,-94,'camp'],['grump',-20,-96,'camp'],
+ ['grump',DX-4,-24,'d1'],['gib',DX+4,-28,'d1'],['grump',DX,-33,'d1'],['gib',DX-5,-46,'d2'],['brute',DX+3,-50,'d2'],['gib',DX+5,-44,'d2']].map(([t,x,z,tag])=>({t,x,z,tag,e:null,cd:0}));
+const ENEMIES=[];
+function letterCube(ch,col){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.fillStyle=col;x.fillRect(0,0,64,64);x.fillStyle='#fff';x.font='700 48px Fredoka, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(ch,32,36);return new THREE.Mesh(G('lc',()=>new THREE.BoxGeometry(.32,.32,.32)),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}))}
+function makeEnemyModel(t){if(t==='gib'){const g=new THREE.Group();const b=sph(.55,0x8A4AD8,0,1.1,0,g,10,8);for(const s of[-1,1]){sph(.17,0xFFFFFF,s*.2,1.25,.42,g,8,6);sph(.08,0x1A1A1A,s*.2,1.25,.56,g,6,5)}const m=box(.3,.08,.05,0x3A1A5A,0,.9,.52,g);
+  const ring=grp(0,1.1,0,g);[...'GIBRSH'].forEach((ch,i)=>{const c=letterCube(ch,'#6A2AB8');const a=i/6*6.28;c.position.set(Math.cos(a)*1,Math.sin(i)*.3,Math.sin(a)*1);ring.add(c)});return{g,ring,body:b}}
+ const big=t==='brute';const r=makeRig({skin:big?0x4E8A3A:0x6AB04A,shirt:0x7A5A3A,pants:0x6A4A2A,ears:1,eye:0xD8202A,hat:big?'pot':'',scale:big?1.35:.8,belly:big});
+ if(big){const c=grp(0,0,0,r.hand);cyl(.12,.22,1.3,6,0x6A4424,0,0,.6,c).rotation.x=Math.PI/2}else{const s=grp(0,0,0,r.hand);const h=cyl(.04,.04,.7,5,0xB07A42,0,0,.3,s);h.rotation.x=Math.PI/2;sph(.13,0xB07A42,0,0,.7,s,6,5)}
+ return{g:r.g,rig:r}}
+function spawnEnemy(sp){const T=ETYPE[sp.t],m=makeEnemyModel(sp.t);scene.add(m.g);const e={sp,t:sp.t,T,x:sp.x,z:sp.z,ry:0,hp:T.hp,max:T.hp,shield:T.shield?1:0,bonks:0,state:'idle',st:0,wx:sp.x,wz:sp.z,kbx:0,kbz:0,stun:0,g:m.g,rig:m.rig,ring:m.ring,body:m.body,r:T.r,dying:0,aggro:false};e.g.position.set(e.x,0,e.z);sp.e=e;ENEMIES.push(e);return e}
+function killAllEnemies(){ENEMIES.forEach(e=>{scene.remove(e.g);e.sp.e=null;e.sp.cd=0});ENEMIES.length=0}
+function spawnTick(dt){SPAWNS.forEach(sp=>{if(sp.e)return;if(sp.cd>0){sp.cd-=dt;return}const inD=sp.x>DX/2;if(inD!==(D.pos.zone==='dungeon'))return;
+  if(sp.tag==='camp'&&D.story!==5)return;if(sp.tag&&sp.tag[0]==='d'&&sp.used)return;if(D.story<4&&!inD)return;const d=Math.hypot(hero.x-sp.x,hero.z-sp.z);if(d<44&&(d>12||sp.tag))spawnEnemy(sp)})}
+function updEnemies(dt){let fighting=false;for(let i=ENEMIES.length-1;i>=0;i--){const e=ENEMIES[i];
+  if(e.dying){e.dying-=dt;e.g.scale.setScalar(Math.max(.01,e.dying/.4));e.g.rotation.y+=dt*15;if(e.dying<=0){scene.remove(e.g);ENEMIES.splice(i,1);e.sp.e=null;e.sp.cd=e.sp.tag?999999:45}continue}
+  const dx=hero.x-e.x,dz=hero.z-e.z,d=Math.hypot(dx,dz);if(d>60){scene.remove(e.g);ENEMIES.splice(i,1);e.sp.e=null;continue}
+  if(e.stun>0)e.stun-=dt;e.x+=e.kbx*dt;e.z+=e.kbz*dt;e.kbx*=Math.pow(.02,dt);e.kbz*=Math.pow(.02,dt);
+  if(!hero.dead&&(d<9||e.aggro&&d<20)){e.aggro=true}else if(d>22)e.aggro=false;let spd=0;
+  if(e.aggro&&e.stun<=0){fighting=true;const want=Math.atan2(dx,dz);e.ry=lerpA(e.ry,want,dt*8);
+   if(e.state==='wind'){e.st-=dt;if(e.st<=0){e.state='cool';e.st=1.1;if(d<e.r+1.5&&Math.abs(angDiff(e.ry,want))<1.2){hurtHero(e.T.dmg,e.x,e.z)}if(e.rig)e.rig.armR.rotation.x=-.2}}
+   else if(e.state==='cool'){e.st-=dt;if(e.st<=0)e.state='chase'}
+   else{e.state='chase';if(d>e.r+1.1){const s=e.T.spd*dt;e.x+=dx/d*s;e.z+=dz/d*s;spd=1}else{e.state='wind';e.st=.6;if(e.rig)e.rig.armR.rotation.x=-2.6}}}
+  else if(!e.aggro){e.st-=dt;if(e.st<=0){e.st=2+rnd()*3;e.wx=e.sp.x+(rnd()-.5)*8;e.wz=e.sp.z+(rnd()-.5)*8}const wx=e.wx-e.x,wz=e.wz-e.z,wd=Math.hypot(wx,wz);if(wd>.5){e.x+=wx/wd*dt*1.2;e.z+=wz/wd*dt*1.2;e.ry=lerpA(e.ry,Math.atan2(wx,wz),dt*5);spd=.5}}
+  const p={x:e.x,z:e.z};pushOut(p,e.r);e.x=p.x;e.z=p.z;
+  ENEMIES.forEach(o=>{if(o!==e&&!o.dying){const ox=e.x-o.x,oz=e.z-o.z,od=Math.hypot(ox,oz),m=e.r+o.r;if(od<m&&od>.01){e.x+=ox/od*(m-od)*.5;e.z+=oz/od*(m-od)*.5}}});
+  e.g.position.set(e.x,e.t==='gib'?Math.sin(performance.now()/300+i)*.15+.1:0,e.z);e.g.rotation.y=e.ry;
+  if(e.rig){if(e.state!=='wind'&&e.state!=='cool')animRig(e.rig,dt,spd);else animRig(e.rig,dt,0,1);tickFlash(e.rig,dt,0x6AB04A)}
+  if(e.ring){e.ring.visible=e.shield>0;e.ring.rotation.y+=dt*2.5;if(e.flash>0){e.flash-=dt;e.body.material=M(e.flash>0?0xFFFFFF:0x8A4AD8)}}}
+ return fighting}
+function tickFlash(r,dt){if(r.flash>0){r.flash-=dt;r.g.traverse(o=>{if(o.isMesh&&o.material.emissive){if(!o.userData.em)o.userData.em=o.material;o.material=M(o.userData.em.color.getHex(),{e:0x884444})}});if(r.flash<=0)r.g.traverse(o=>{if(o.userData.em){o.material=o.userData.em;delete o.userData.em}})}}
+function damageEnemy(e,dmg,src){if(e.dying)return;if(e.shield>0&&src==='sword'){e.bonks++;sfx('bonk');floatText(e.x,2,e.z,e.bonks>=5?'CRACK!':'BONK!','#C8A0FF');e.kbx=(e.x-hero.x)*2;e.kbz=(e.z-hero.z)*2;
+  if(e.bonks>=5){e.shield=0;burst(e.x,1.1,e.z,0xB36BFF,14)}else if(!D.flags.tipShield){D.flags.tipShield=1;toast(`🛡️ That Gibberling has a LETTER SHIELD. Word Magic ✨ pops it! (Or bonk it 5 times.)`)}return}
+ if(src==='spell'&&e.shield>0){e.shield=0;burst(e.x,1.1,e.z,0xB36BFF,16);floatText(e.x,2.6,e.z,'SHIELD POPPED!','#E0B0FF')}
+ e.hp-=dmg;e.aggro=true;e.stun=.3;e.state='chase';const l=Math.hypot(e.x-hero.x,e.z-hero.z)||1;e.kbx=(e.x-hero.x)/l*(src==='spell'?12:7);e.kbz=(e.z-hero.z)/l*(src==='spell'?12:7);
+ if(e.rig)flashRig(e.rig);else e.flash=.15;sfx('hit');floatText(e.x,2.2,e.z,String(Math.round(dmg*10)/10),'#FFFFFF');burst(e.x,1,e.z,e.t==='gib'?0xB36BFF:0x6AB04A,6,.15);
+ if(e.hp<=0){e.dying=.4;D.kills++;const g=ri(...e.T.gold);addGold(g,e.x,e.z);addXP(e.T.xp);burst(e.x,1,e.z,0xFFD447,10,.18);if(e.sp.tag)e.sp.used=1;onEnemyDown(e)}}
+
+/* ===================== boss: Lord Gibberish ===================== */
+let boss=null;
+function makeBoss(){const g=grp(DX,0,-80);const head=grp(0,4,0,g);sph(2.1,0xE8D8F0,0,0,0,head,14,10);for(const s of[-1,1]){sph(.55,0xFFFFFF,s*.75,.4,1.75,head,10,8);sph(.25,0x1A1A1A,s*.75,.4,2.25,head,8,6);const br=box(.9,.18,.2,0x3A2A4A,s*.75,1.1,1.9,head);br.rotation.z=s*.35}
+ const mu=grp(0,-.45,2,head);for(const s of[-1,1]){const m=cyl(.18,.05,1.2,6,0x3A2A4A,s*.55,0,0,mu);m.rotation.z=s*1.2}const mono=mesh(new THREE.TorusGeometry(.62,.07,6,16),M(0xF2C230),.75,.4,2.1,head);
+ const mouth=box(1,.25,.2,0x3A1A2A,0,-.95,1.85,head);
+ for(let k=0;k<7;k++){const a=k/7*6.28,pc=grp(Math.cos(a)*1.3,1.8,Math.sin(a)*1.3,head);cyl(.18,.18,1.3,6,0xF2C230,0,.65,0,pc);cone(.18,.4,6,0xF0D0A0,0,1.5,0,pc);cone(.06,.13,5,0x2A2A2A,0,1.73,0,pc);pc.rotation.z=Math.cos(a)*-.2;pc.rotation.x=Math.sin(a)*.2}
+ const hands=[-1,1].map(s=>{const h=sph(.6,0xFFFFFF,s*3.2,2.5,1,g,10,8);return h});
+ const ring=grp(0,4,0,g);[...'GIBBERISHQZX'].forEach((ch,i)=>{const c=letterCube(ch,'#5A1AA8');c.scale.setScalar(2.2);const a=i/12*6.28;c.position.set(Math.cos(a)*3.4,Math.sin(i*1.7)*1.2,Math.sin(a)*3.4);ring.add(c)});
+ return{g,head,hands,ring,mouth}}
+function startBossFight(){if(boss)return;const m=makeBoss();boss=Object.assign(m,{phase:1,shield:2,hp:10,vul:0,t:0,shootT:3,a:Math.PI/2,x:DX,z:-80,y:4,dead:false,summoned:0});setMusic('boss');sfx('boss');arenaLight.intensity=1.2;
+ say('Lord Gibberish',`BLORP! Who dares enter my cave? Ah, a tiny hero. I shall scramble you like an egg! Your words are MINE! Fnargle!`,{pitch:.5}).then(()=>toast(`💡 His LETTER SHIELD only breaks with Word Magic ✨. When he's dizzy, hit him with your sword!`))}
+function endBossFight(won){if(!boss)return;scene.remove(boss.g);boss=null;arenaLight.intensity=0;if(!won)return}
+const BOLTS=[];
+function updBoss(dt){const b=boss;if(!b||b.dead)return;b.t+=dt;
+ if(b.vul>0){b.vul-=dt;b.y=lerp(b.y,1.6,dt*4);b.head.rotation.z=Math.sin(b.t*8)*.25;if(b.vul<=0){b.shield=b.phase+1;toast(`He recovered! Pop his shield again ✨`);sfx('boss')}}
+ else{b.a+=dt*(.35+b.phase*.12);b.y=lerp(b.y,4+Math.sin(b.t*1.5)*.6,dt*3);b.head.rotation.z=Math.sin(b.t)*.1;
+  b.shootT-=dt;if(b.shootT<=0){b.shootT=Math.max(1.2,2.6-b.phase*.45);const from=new THREE.Vector3(b.x,b.y,b.z);const dx=hero.x-b.x,dz=hero.z-b.z,d=Math.hypot(dx,dz)||1;const word=pick(['BLORP','FNARG','ZOOP','GLIB','WUBBA','SPLONK','NURF']);
+   const s=sprite(word,'#E0B0FF',1.6);s.position.copy(from);scene.add(s);BOLTS.push({s,x:b.x,z:b.z,y:b.y,vx:dx/d*9,vz:dz/d*9,life:4});sfx('pop')}}
+ b.x=DX+Math.cos(b.a)*7;b.z=-74+Math.sin(b.a)*7;b.g.position.set(b.x,b.y-4,b.z);b.g.rotation.y=Math.atan2(hero.x-b.x,hero.z-b.z);
+ b.ring.visible=b.shield>0;b.ring.rotation.y+=dt*1.8;b.hands.forEach((h,i)=>{h.position.y=2.5+Math.sin(b.t*3+i*3)*.4});
+ for(let i=BOLTS.length-1;i>=0;i--){const o=BOLTS[i];o.life-=dt;o.x+=o.vx*dt;o.z+=o.vz*dt;o.y=lerp(o.y,1.2,dt*2);o.s.position.set(o.x,o.y,o.z);if(Math.hypot(o.x-hero.x,o.z-hero.z)<1){hurtHero(2,o.x,o.z);o.life=0;burst(o.x,1,o.z,0xB36BFF,8)}if(o.life<=0){scene.remove(o.s);BOLTS.splice(i,1)}}
+ const live=ENEMIES.filter(e=>!e.dying).length;if(b.summoned<b.phase-1&&live<2){b.summoned++;for(let k=0;k<2;k++){const sp={t:'gib',x:DX+(k?4:-4),z:-70,tag:'boss',used:1,cd:0};const e=spawnEnemy(sp);e.aggro=true;burst(e.x,1,e.z,0xB36BFF,12)}}}
+function bossSpellHit(){const b=boss;if(!b||b.vul>0||b.dead)return false;b.shield--;burst(b.x,b.y,b.z,0xB36BFF,16,.3);sfx('boom');
+ if(b.shield<=0){b.vul=7;floatText(b.x,b.y+3,b.z,'DIZZY!','#FFE070');toast(`⚔️ He's DIZZY! Hit him with your sword, fast!`)}else floatText(b.x,b.y+3,b.z,`Shield cracked! ${b.shield} more`,'#E0B0FF');return true}
+function bossSwordHit(){const b=boss;if(!b||b.dead)return;if(b.vul<=0){sfx('bonk');floatText(b.x,b.y+2,b.z,'BONK! (shield)','#C8A0FF');return}
+ const dmg=heroDmg();b.hp-=dmg;sfx('hit');floatText(b.x,b.y+2,b.z,String(Math.round(dmg*10)/10),'#fff');burst(b.x,b.y,b.z,0xE8D8F0,6);
+ if(b.hp<=0){if(b.phase>=3){bossDefeated();return}b.phase++;b.hp=10;b.vul=0;b.shield=b.phase+1;sfx('boss');toast(`Lord Gibberish is FURIOUS! Phase ${b.phase} of 3.`);say('Lord Gibberish',pick([`Ow! My monocle! You'll pay for that, you... you... wordy person!`,`Impossible! Nobody fixes sentences THAT fast! Snorkel-bonk!`]),{pitch:.5})}}
+
+/* ===================== state ===================== */
+let camD=8,slowT=0,mode='title',shake=0,cyaw=0,cdist=8,tPlay=0,saveT=0,lastZoneMusic='';
+const lerp=(a,b,t)=>a+(b-a)*clamp(t,0,1);
+const angDiff=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d};
+const lerpA=(a,b,t)=>a+angDiff(a,b)*clamp(t,0,1);
+let dlgOpen=false,cardOpen=false,cutscene=0;
+const busy=()=>dlgOpen||cardOpen||cutscene>0||mode!=='play';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function savePos(){D.pos.x=hero.x;D.pos.z=hero.z;D.pos.ry=hero.ry;save()}
+
+/* ===================== zones ===================== */
+function setZone(z){D.pos.zone=z;killAllEnemies();BOLTS.forEach(o=>scene.remove(o.s));BOLTS.length=0;
+ if(z==='dungeon'){scene.fog.color.set(0x0B0812);scene.fog.near=5;scene.fog.far=34;scene.background.set(0x0B0812);hemi.intensity=.35;sun.intensity=.15;lantern.intensity=1.4}
+ else{hemi.intensity=.95;sun.intensity=.7;lantern.intensity=0}}
+const FOGV=new THREE.Color(0xC8E6FF),FOGF=new THREE.Color(0x7FA88A);
+function zoneAmbience(){if(D.pos.zone!=='world')return;const k=clamp((-hero.z-32)/18,0,1);scene.fog.color.copy(FOGV).lerp(FOGF,k);scene.background.copy(scene.fog.color);scene.fog.near=lerp(45,16,k);scene.fog.far=lerp(135,70,k);hemi.intensity=lerp(.95,.72,k)}
+
+/* ===================== jobs (lost & found notes) ===================== */
+const SPOT={};let spotGroup;
+function makeSpots(){spotGroup=grp();Object.entries(LMPOS).forEach(([id,p])=>{const g=grp(p.dx,0,p.dz,spotGroup);const m=sph(.55,0x8A6A3A,0,0,0,g,8,5);m.scale.y=.45;const q=sprite('?','#FFE070',1.1);q.position.y=1.6;g.add(q);g.visible=false;SPOT[id]={g,q,x:p.dx,z:p.dz};ANIM.push({f:t=>{q.position.y=1.6+Math.sin(t*3+p.dx)*.15}})})}
+function refreshSpots(){Object.entries(SPOT).forEach(([id,s])=>{const j=D.job;s.g.visible=!!(j&&!j.found&&j.spots.includes(id)&&!(j.searched||[]).includes(id))})}
+const ERR={granny:{item:'false teeth',intro:`Oh, {N}! My false teeth ran away again! They do that when they're bored. I wrote down where I went today so I wouldn't forget. Here, read my note!`,thanks:`My teeth! And they're still chattering! Thank you, dearie. Here's some gold. Don't spend it all on pickles.`,found:`You found Granny's false teeth! They bite your thumb. Rude.`},
+ bun:{item:'secret recipe',intro:`Disaster! My secret Pickle Pie recipe is gone! I hid it somewhere and wrote myself a note... but I can't read my own handwriting when I'm panicking. Can you read it for me?`,thanks:`My recipe! You're a true hero! Here's gold AND a free health potion. It's pie-flavored.`,found:`You found the secret recipe! It's mostly just the word "PICKLES" written forty times.`},
+ dougal:{item:'chicken, Lady Cluckington',intro:`Lady Cluckington escaped! She's my best chicken. She can do a backflip! My boy saw where she went and wrote it down. Read his note and fetch her, would ya?`,thanks:`Lady Cluckington! You're home! ...She says thank you. In chicken. Here's some gold, hero.`,found:`You found Lady Cluckington! She does a backflip and lands in your arms.`}};
+function startJob(giver,q,extra){D.job=Object.assign({giver,q,spots:q.lm.opts,searched:[],found:false,graded:false,misses:0},extra||{});if(giver!=='board')D.errands[giver]='active';refreshSpots();save()}
+async function searchSpot(id){const j=D.job;if(!j||j.found)return;sfx('dig');burst(SPOT[id].x,.4,SPOT[id].z,0x8A6A3A,10,.2);j.searched.push(id);const ok=id===j.q.lm.ans;
+ if(!j.graded){j.graded=true;grade(j.q,ok)}refreshSpots();
+ if(ok){j.found=true;sfx('good');refreshSpots();const it=j.giver==='board'?`the ${j.q.item}`:'';
+  if(j.giver==='board'){D.job=null;refreshSpots();addGold(15,hero.x,hero.z);addXP(12);await say('',`You found ${it}! You return it to ${j.q.giver}, who cries happy tears all over your boots. (+15 gold)`);alignBy(3);save();return}
+  await say('',ERR[j.giver].found);if(j.giver==='bun'){await gristleOffer()}else{D.errands[j.giver]='found';save()}return}
+ j.misses++;const prank=pick([`A grumpy mole pops out and bonks you on the nose. Nothing here!`,`Just an old sock full of pudding. Not it!`,`A goose was hiding here. It honks at you and leaves. Nothing else.`,`You find a note that says "NOT HERE, SILLY." Hmm.`]);sfx('bad');
+ if(j.misses>=2){await say('',prank+` Let's look at the note again together.`);await showNote(j.q,true)}else{await say('',prank+` Tap the quest at the top to read the note again.`)}save()}
+async function gristleOffer(){const c=await say('Chef Gristle',`Psssst! Over here, behind the bush! It's me, Chef Gristle. Give me that recipe and I'll pay you 50 shiny gold. Bun will never know. Hehehe.`,{pitch:.6,choices:[`No way! It belongs to Bun.`,`Deal. Give me the gold.`]});
+ if(c===0){await say('Chef Gristle',`Bah! Fine! Be all GOOD and HONEST. See if I care. (He cares a lot.)`,{pitch:.6});D.errands.bun='found';alignBy(10)}
+ else{D.errands.bun='sold';D.job=null;addGold(50,hero.x,hero.z);alignBy(-15);await say('Chef Gristle',`Pleasure doing business! Pickle Pie will be MINE! Mwahaha... (He hands you 50 gold.)`,{pitch:.6});errandCheck()}save()}
+function errandsDone(){return['granny','bun','dougal'].filter(k=>D.errands[k]==='done'||D.errands[k]==='sold').length}
+async function errandCheck(){if(D.story===3&&errandsDone()>=3){D.story=4;save();await sleep(300);await say('Guildmaster Mumbleton',`(Mumbleton's voice booms from across the village) ${D.name}! The whole village is talking about you! Come see me at once!`,{pitch:.7})}updateHUD()}
+
+/* ===================== objective / tracker ===================== */
+function target(){const N=k=>NPCS[k],s=D.story,inD=D.pos.zone==='dungeon';
+ if(inD){if(D.flags.bossBeat&&s===7)return{t:`Grab the Big Book of Words!`,x:DX,z:-74};if(s>=8)return{t:`Leave the cave through the glowing portal`,x:DX,z:3.2};const g=GATES.find(g=>g.zone==='dungeon'&&!D.gates[g.id]);if(g)return{t:`Solve the Riddle Gate`,x:g.stone.x,z:g.stone.z};return{t:`Defeat Lord Gibberish!`,x:DX,z:-74}}
+ if(D.job&&!D.job.found)return{t:D.job.giver==='board'?`Find the ${D.job.q.item}. Tap to re-read the note.`:`Find ${D.job.giver==='dougal'?'Lady Cluckington':'the '+ERR[D.job.giver].item}. Tap to re-read the note.`,note:true};
+ if(D.job&&D.job.found&&D.job.giver!=='board')return{t:`Bring it back to ${NPCDEF[D.job.giver].n}`,x:N(D.job.giver).x,z:N(D.job.giver).z};
+ if(s===0)return{t:`Talk to Guildmaster Mumbleton at the Hero Guild`,x:N('mumbleton').x,z:N('mumbleton').z};
+ if(s===1){const d=DUMMIES.find(d=>!d.dead);return{t:`Whack the training dummies with your sword ⚔️ (${D.flags.dum||0}/3)`,x:d?d.x:-9,z:d?d.z:12}}
+ if(s===2)return{t:`Talk to Mumbleton to start your Hero Trial`,x:N('mumbleton').x,z:N('mumbleton').z};
+ if(s===3){const k=['granny','bun','dougal'].find(k=>!D.errands[k]);if(k)return{t:`Help the villagers (${errandsDone()}/3): talk to ${NPCDEF[k].n}`,x:N(k).x,z:N(k).z};return{t:`Help the villagers (${errandsDone()}/3)`,x:null}}
+ if(s===4){if(!D.flags.toldGo)return{t:`Talk to Mumbleton`,x:N('mumbleton').x,z:N('mumbleton').z};if(!D.gates.g1){const g=GATES[0];return{t:`Cross the bridge into Gloomwood. Solve the Riddle Gate.`,x:g.stone.x,z:g.stone.z}}return{t:`Find Hank the woodcutter in Gloomwood`,x:N('hank').x,z:N('hank').z}}
+ if(s===5)return{t:`Save Hank from the Grumplings!`,x:N('hank').x,z:N('hank').z};
+ if(s===6){if(!D.gates.g2){const g=GATES[1];return{t:`Solve the second Riddle Gate`,x:g.stone.x,z:g.stone.z}}return{t:`Enter the Mumbling Cave`,x:0,z:-149}}
+ if(s===7)return{t:`Enter the Mumbling Cave and find Lord Gibberish`,x:0,z:-149};
+ if(s===8)return{t:`Bring the Big Book of Words to Mumbleton`,x:N('mumbleton').x,z:N('mumbleton').z};
+ return{t:`Free play! Notice Board jobs, signs, Riddle Stones & more`,x:BOARD.x,z:BOARD.z}}
+
+/* ===================== interactions ===================== */
+let nearAct=null;
+function findInteract(){let best=null,bd=1e9;const cand=(d,lim,o)=>{if(d<lim&&d<bd){bd=d;best=o}};const H=(x,z)=>Math.hypot(hero.x-x,hero.z-z);
+ const inD=D.pos.zone==='dungeon';
+ if(!inD){Object.values(NPCS).forEach(n=>{if(n.rig.g.visible)cand(H(n.x,n.z),2.5,{k:'npc',n,label:'Talk'})});
+  CHICKS.forEach(c=>{if(c.y===0)cand(H(c.x,c.z)+.3,1.5,{k:'chick',c,label:'Hug 🐔'})});
+  cand(H(BOARD.x,BOARD.z),2.6,{k:'board',label:'Read'});SIGNS.forEach(s=>cand(H(s.x,s.z),2.1,{k:'sign',s,label:signBroken(s.i)?'Fix sign':'Read'}));
+  LORE.forEach(l=>cand(H(l.x,l.z),2.3,{k:'lore',l,label:'Read'}));
+  if(D.job&&!D.job.found)Object.entries(SPOT).forEach(([id,s])=>{if(s.g.visible)cand(H(s.x,s.z),2,{k:'spot',id,label:'Search'})});
+  if(purse.visible)cand(H(8,-88),1.8,{k:'purse',label:'Pick up'})}
+ GATES.forEach(g=>{if((g.zone==='dungeon')===inD)cand(H(g.stone.x,g.stone.z),2.4,{k:'gate',g,label:'Read'})});
+ if(book&&book.visible)cand(H(book.position.x,book.position.z),2.2,{k:'book',label:'Take'});
+ return best}
+async function doAct(){if(busy()||hero.dead)return;audioInit();const a=nearAct;if(!a){flex();return}
+ if(a.k==='npc'){await talk(a.n)}else if(a.k==='chick'){hugChicken(a.c)}else if(a.k==='board'){await boardMenu()}else if(a.k==='sign'){await signAct(a.s)}else if(a.k==='lore'){await loreAct(a.l)}
+ else if(a.k==='gate'){await gateStone(a.g)}else if(a.k==='spot'){await searchSpot(a.id)}else if(a.k==='purse'){await purseAct()}else if(a.k==='book'){await takeBook()}updateHUD()}
+function flex(){if(hero.flex>0)return;hero.flex=1.4;sfx('cheer');const a=D.align,set=a>=25?BARK.flexG:a<=-25?BARK.flexE:BARK.flexN;Object.values(NPCS).forEach(n=>{if(Math.hypot(n.x-hero.x,n.z-hero.z)<7&&rnd()<.7)npcBark(n,pick(set))})}
+function hugChicken(c){if(c.hugT>0){floatText(c.x,1.4,c.z,'Bawk?','#fff');return}c.hugT=40;sfx('squawk');burst(c.x,1,c.z,0xFF7AA8,8,.15,3);floatText(c.x,1.6,c.z,'♥','#FF7AA8');if((D.flags.hugs||0)<15){D.flags.hugs=(D.flags.hugs||0)+1;alignBy(1)}}
+const purse={visible:false};let purseM,book=null;
+async function purseAct(){const c=await say('',`It's a fancy purse full of coins. The label says: "Property of Mayor Mortimer. If found, please return. If stolen, SHAME ON YOU."`,{choices:[`Return it to the Mayor later`,`Keep the 40 gold`]});
+ if(c===0){D.flags.purse='carry';toast(`👛 You're carrying the Mayor's purse. Return it in town.`)}else{D.flags.purse='kept';addGold(40,hero.x,hero.z);alignBy(-10)}purse.visible=false;purseM.visible=false;save()}
+
+/* ---------- signs ---------- */
+const SIGNQ=[];
+function signBroken(i){return D.story>=3&&!(D.signs[i]&&Date.now()-D.signs[i]<8*60000)}
+function refreshSigns(){SIGNS.forEach(s=>{const br=signBroken(s.i);if(br){if(!SIGNQ[s.i])SIGNQ[s.i]=null;setPlaneText(s.p,['~ SCRAMBLED ~','fix me!'],{bg:'#D8C0F0',bc:'#6A2AB8',fs:44})}else setPlaneText(s.p,D.story<3?['????','~glorb~']:[`FIXED! ✓`,`by ${D.name}`],D.story<3?{bg:'#D8C0F0',bc:'#6A2AB8',fs:48}:{bg:'#C8F0B8',bc:'#2A7A2A',fs:48});s.state=br})}
+async function signAct(s){if(D.story<3){await say('',`The sign is all scrambled: "teh bakry iz ovr thar!" Lord Gibberish's magic did this. Maybe Mumbleton can teach you to fix it.`);return}
+ if(!signBroken(s.i)){await say('',pick([`The sign says: "Welcome to Snortwood! Population: 212 people and 9 very proud chickens."`,`The sign says: "Please do not feed the troll. He is on a diet."`,`The sign says: "Bun's Bakery: try the Pickle Pie!"`,`The sign says: "Gloomwood Forest: north. Danger: medium. Snacks: none."`]));return}
+ const q=nextQ('gram');const ok=await askGram(q,{mode:'sign'});grade(q,ok);D.signs[s.i]=Date.now();refreshSigns();addGold(ok?6:2,s.x,s.z);addXP(ok?5:2);if(ok&&rnd()<.5)alignBy(1);save()}
+/* ---------- lore stones ---------- */
+async function loreAct(l){const k='lore_'+l.id;if(D.flags[k]&&Date.now()-D.flags[k]<5*60000){await say('',`The Riddle Stone is resting. Its glow will come back soon.`);return}
+ const q=nextQ('read',{noDetail:true});const ok=await askRead(q,{mode:'lore'});grade(q,ok);D.flags[k]=Date.now();addGold(ok?12:3,l.x,l.z);addXP(ok?12:4);l.glow.visible=false;save()}
+/* ---------- notice board ---------- */
+async function boardMenu(){if(D.story<3){await say('',`The notice board is empty except for a poster: "HEROES WANTED. Must be brave. Must be able to READ. Ask at the Hero Guild."`);return}
+ const broken=SIGNS.filter(s=>signBroken(s.i)).length;
+ const c=await say('Notice Board',`Jobs for heroes! Pick one:`,{choices:[D.job&&!D.job.found?`📜 Lost & Found (you already have a job)`:`📜 Lost & Found: read a note, find a lost thing`,`📖 Story Scroll: read and answer (10 gold)`,`🪧 Fix-a-Sign: ${broken} scrambled sign${broken===1?'':'s'} in town`,`Never mind`]});
+ if(c===0){if(D.job&&!D.job.found){await say('',`Finish your current job first. Tap the quest at the top to re-read the note.`);return}const q=nextQ('read',{only:0});startJob('board',q);await showNote(q)}
+ else if(c===1){const q=nextQ('read',{noDetail:true});const ok=await askRead(q,{mode:'scroll'});grade(q,ok);addGold(ok?10:2,hero.x,hero.z);addXP(ok?10:3);save()}
+ else if(c===2){await say('',broken?`Walk up to a purple scrambled sign and fix it with your Word Magic. Each sign pays gold!`:`All signs are fixed! The Gibberlings will scramble them again soon. They always do.`)}}
+
+/* ---------- riddle gates ---------- */
+let gateCD=0;
+async function gateStone(g){if(D.gates[g.id]){await say('',`The Riddle Stone glows happily. This gate is open.`);return}
+ if(!g.q){g.q=nextQ('read',{noDetail:true});g.marks=[null,null,null];g.wrong=0;g.graded=false;g.opts=shuffle(g.q.opts.slice())}
+ gateSigns(g,g.opts,g.marks);await showGateQ(g)}
+async function chooseArch(g,k){if(gateCD>0)return;gateCD=1.2;const right=g.opts[k]===g.q.ans;
+ if(right){if(!g.graded){g.graded=true;grade(g.q,true)}g.marks[k]='ok';gateSigns(g,g.opts,g.marks);D.gates[g.id]=1;g.setOpen(true);sfx('open');burst(g.arches[k].x,2,g.z,0xB36BFF,30,.3);addXP(15);addGold(10,hero.x,hero.z);
+  toast(`✨ The Riddle Gate opens! You read that like a true hero.`);g.q=null;save();return}
+ if(!g.graded){g.graded=true;grade(g.q,false)}g.marks[k]='x';g.wrong++;gateSigns(g,g.opts,g.marks);sfx('zap');burst(hero.x,1.2,hero.z,0xB36BFF,10);if(D.hp>2)hurtHero(1,hero.x,hero.z+2);hero.kbz=12;hero.kbx=0;
+ if(g.wrong>=2){const ri2=g.opts.indexOf(g.q.ans);await say('',`BZZT! The arch zaps you. The Riddle Stone whispers: "${g.q.why}"`)}else toast(`⚡ BZZT! Wrong arch. Tap the quest at the top to read the riddle again.`)}
+function checkArches(dt){gateCD=Math.max(0,gateCD-dt);if(busy())return;const inD=D.pos.zone==='dungeon';GATES.forEach(g=>{if(D.gates[g.id]||(g.zone==='dungeon')!==inD)return;if(Math.abs(hero.z-g.z)>1.05)return;
+  g.arches.forEach((a,k)=>{if(Math.abs(hero.x-a.x)<1.5){if(!g.q){if(gateCD<=0){gateCD=2;toast(`🔮 A magic barrier! Read the Riddle Stone first.`);hero.kbz=8}}else if(g.marks[k]!=='x')chooseArch(g,k);else if(gateCD<=0){gateCD=1;hero.kbz=8;toast(`That arch already zapped you. Try another!`)}}})})}
+
+/* ---------- cave + book ---------- */
+let zoneCD=0;
+async function zoneTriggers(dt){zoneCD=Math.max(0,zoneCD-dt);if(busy()||zoneCD>0)return;
+ if(D.pos.zone==='world'&&D.story===4&&Math.hypot(hero.x+24,hero.z+91)<15){D.story=5;save();updateHUD();say('Hank the Woodcutter',`HELP! Over here! Grumplings! They want to knit my beard into a sweater!`,{pitch:.7});return}
+ if(D.pos.zone==='world'&&Math.hypot(hero.x,hero.z+149.4)<2.2){if(D.story<6){hero.kbz=7;zoneCD=3;say('',D.story<5?`You hear someone yelling for help back in the forest, to the west. Better find out who it is first!`:`Hank still needs help! The Grumplings have him surrounded at his camp.`);return}zoneCD=2;cutscene++;await fadeOut();setZone('dungeon');hero.x=DX;hero.z=0;hero.ry=Math.PI;cyaw=0;if(D.story===6)D.story=7;savePos();await fadeIn();cutscene--;if(!D.flags.caveMsg){D.flags.caveMsg=1;await say('',`It's dark and drippy in here. Somewhere far away, a voice is mumbling nonsense: "Blorp... fnargle... my words... all MINE..."`)}}
+ else if(D.pos.zone==='dungeon'){if(Math.hypot(hero.x-DX,hero.z-3)<1.6&&D.pos.zone==='dungeon'){zoneCD=2;cutscene++;await fadeOut();if(boss)endBossFight(false);setZone('world');hero.x=0;hero.z=-144.5;hero.ry=0;cyaw=0;savePos();await fadeIn();cutscene--}
+  else if(hero.z<-63&&D.story===7&&!boss&&!D.flags.bossBeat)startBossFight()}}
+async function bossDefeated(){const b=boss;b.dead=true;cutscene++;sfx('boom');shake=.6;for(let i=0;i<5;i++){burst(b.x+(rnd()-.5)*4,b.y,b.z+(rnd()-.5)*4,[0xB36BFF,0xFFE070,0xFFFFFF][i%3],20,.35,9);await sleep(220)}
+ endBossFight(true);ENEMIES.forEach(e=>{if(!e.dying)e.dying=.4});setMusic('win');D.flags.bossBeat=1;
+ book=grp(DX,1,-74);box(1.4,.35,1.1,0xC8382A,0,0,0,book);box(1.3,.3,1.0,0xFFF6E0,.06,0,0,book);box(.3,.38,1.12,0xF2C230,-.5,0,0,book);ANIM.push({f:t=>{if(book){book.rotation.y=t;book.position.y=1+Math.sin(t*2)*.2}}});
+ cutscene--;const c=await say('Lord Gibberish',`Noooo! My beautiful words! (POOF! The giant head shrinks into a tiny, sad old man with a monocle.) I just... loved words so much. I wanted them all to myself. What will you do with me, hero?`,{pitch:.9,choices:[`Make him the village librarian. Words are for sharing!`,`Bonk him into the Sock Dimension!`]});
+ if(c===0){D.flags.gibSpared=1;alignBy(20);await say('Lord Gibberish',`A... librarian? Me? Oh, thank you! I'll share every word! Even "pickle"! ESPECIALLY "pickle"!`,{pitch:.9})}
+ else{D.flags.gibSpared=0;alignBy(-20);sfx('pop');await say('',`BONK! Lord Gibberish flies into the Sock Dimension, where every sock you have ever lost is waiting for him. He will be very busy.`)}
+ toast(`📕 The Big Book of Words is floating in the middle of the room. Grab it!`);addXP(80);save()}
+async function takeBook(){book.visible=false;scene.remove(book);book=null;D.story=8;sfx('win');addGold(100,hero.x,hero.z);await say('',`You got the BIG BOOK OF WORDS! Every word in the world is inside, even "flibbertigibbet." Take it back to Mumbleton!`);save()}
+
+/* ===================== conversations ===================== */
+async function talk(n){const id=n.id,d=n.d,P={pitch:d.pitch},s=D.story,S=(t,o)=>say(d.n,fmt(t),Object.assign({},P,o||{}));n.ry=Math.atan2(hero.x-n.x,hero.z-n.z);
+ if(id==='mumbleton')return talkMumbleton(n,S);
+ if(ERR[id]){const e=D.errands[id];
+  if(s<3){await S(pick([`Have you met Mumbleton? He's at the Hero Guild. He's older than dirt. Older than dirt's GRANDPA.`,`Hello, young one! Come back when you're a real hero. Mumbleton at the guild can help.`]));return}
+  if(!e){if(D.job&&!D.job.found){await S(`Oh, you're busy with another job. Come back after!`);return}await S(ERR[id].intro);const q=genDetail({giver:id==='dougal'?'Dougal Jr. (age 6)':d.n,item:ERR[id].item});q.s=0;startJob(id,q);await showNote(q);return}
+  if(e==='active'){await S(`Did you find it yet? Read the note again if you need to! (Tap the quest at the top.)`);return}
+  if(e==='found'){await S(ERR[id].thanks);D.errands[id]='done';D.job=null;refreshSpots();addGold(20,n.x,n.z);addXP(20);alignBy(5);if(id==='bun')D.pot++;await errandCheck();save();return}
+  if(e==='sold'){await S(`Someone is selling MY Pickle Pie in the tavern! It's Gristle, I just know it! *sob*`);return}
+  await S(pick(id==='granny'?[`My teeth haven't run away since you found them. They're scared of you.`,`Want a hard candy? It's from 1952.`]:id==='bun'?[`Fresh pie! Mind the pickles, they're spicy today.`,`I'm baking a cake shaped like you, ${D.name}!`]:[`Lady Cluckington's been practicing her backflips. She's up to three!`,`Ever milk a goat? Don't. Trust me.`]));return}
+ if(d.shop){if(id==='mags'){if(D.hp<heroMaxHP()){D.hp=heroMaxHP();sfx('heal');updateHUD();await S(`Sit down, have some soup. You look terrible! ...There, all your hearts are full.`)}return shopMenu(d.shop,n,S)}return shopMenu(d.shop,n,S)}
+ if(id==='mayor'){if(D.flags.purse==='carry'){D.flags.purse='returned';addGold(20,n.x,n.z);alignBy(12);await S(`My purse! You returned it with every coin! Honest heroes are rarer than dragons' teeth. Here's a reward!`);save();return}
+  await S(pick([`I am Mayor Mortimer! Vote for me! Wait, there's no election. Vote for me anyway!`,`This fish necktie? It's for luck. And for snacks.`,D.align<=-25?`P-please don't kick any more chickens. They're voters!`:`Snortwood is proud of you, ${D.name}!`]));return}
+ if(id==='pudding'){if(s<4){await S(`Halt! Nobody crosses into Gloomwood Forest without Mumbleton's permission. Also, I'm on my snack break.`);return}await S(pick([`Go on, hero. Watch out for Grumplings. They bite ankles.`,`Riddle Gates block the forest path. Read carefully, or ZAP!`,`I'd come with you, but I'm guarding this bridge. And this sandwich.`]));return}
+ if(id==='gristle'){await S(D.errands.bun==='sold'?`Pickle Pie! Now with 30% more pickle! Ha! Thanks again, partner.`:pick([`Psst. Want to buy a pie? Very fresh. Only slightly stolen.`,`Bun's pies are TERRIBLE. Mine are only slightly terrible.`]));return}
+ if(id==='hank'){if(s<5){await S(`Who's there? Oh, a hero! Shh, the Grumplings will hear us.`);return}
+  if(s===5&&!D.flags.hankSaved){const left=ENEMIES.filter(e=>e.sp.tag==='camp'&&!e.dying).length+SPAWNS.filter(p=>p.tag==='camp'&&!p.used&&!p.e).length;if(left>0){await S(`HELP! These Grumplings want to turn my beard into a sweater! Get 'em, hero!`);return}
+   D.flags.hankSaved=1;const c=await S(`You saved me! Those Grumplings were going to knit my beard into a sweater! How can I ever repay you?`,{choices:[`No charge. Helping is what heroes do.`,`Pay up. Heroes aren't free.`]});
+   if(c===0){alignBy(10);await S(`A true hero! Here, take my lucky axe-shaped cookie. (It heals you.) The cave is past the second Riddle Gate, to the north.`);D.pot++;D.hp=heroMaxHP()}else{addGold(30,n.x,n.z);alignBy(-6);await S(`Fair enough. Here's 30 gold. (He mutters something about "kids these days.") The cave is past the second Riddle Gate, north.`)}
+   D.story=6;save();updateHUD();return}
+  await S(pick([`Thanks again for saving my beard.`,`Lord Gibberish is in the Mumbling Cave. North, past the second gate.`,`Trees are like people. Except they're trees.`]));return}
+ if(d.gen){const set=D.align>=25?BARK.g:D.align<=-25?BARK.e:BARK.n;await S(pick(set));return}}
+async function talkMumbleton(n,S){const s=D.story;
+ if(s===0){await S(`Ah! A young visitor! I am Mumbleton, Guildmaster of the Hero Guild. I've trained heroes for a hundred years. Two hundred? I lost count after the first one.`);
+  await S(`Dreadful news, {N}. The wicked Lord Gibberish stole the Big Book of Words! Now his Gibberlings scramble every sign and sentence in the land. Gloomwood Forest is crawling with monsters.`);
+  await S(`We need a hero. YOU look like a hero. Or at least like someone who could hold a sword. First, show me your swing! Whack those three training dummies in the yard, over there.`);D.story=1;D.flags.dum=0;DUMMIES.forEach(d=>{d.dead=false;d.g.visible=true});save();return}
+ if(s===1){await S(`The dummies are in the yard, just west of the guild. Press the sword button ⚔️ when you're close. Really give 'em a whack!`);return}
+ if(s===2){if(!D.gr.placed||D.gr.survey||!D.rd.placed||D.rd.survey)return heroTrial(S);D.story=3;save();return}
+ if(s===3){await S(errandsDone()<3?`The villagers need help. Granny Pickles, Baker Bun, and Farmer Dougal. A hero listens, reads carefully, and helps. Go on! (${errandsDone()}/3 done)`:`Wonderful work!`);return}
+ if(s===4){if(!D.flags.toldGo){D.flags.toldGo=1;await S(`The whole village sings your name, {N}! ${D.align>=25?'And is that a HALO? Marvelous!':D.align<=-25?'Although... are those HORNS? Hmm. Be nicer, will you?':''}`);
+   await S(`Now for the real quest. Lord Gibberish hides in the Mumbling Cave, deep in Gloomwood Forest. His Riddle Gates block the path. Read the Riddle Stone, then walk through the arch with the right answer. Wrong arch? ZAP.`);
+   await S(`Hank the woodcutter went into the forest yesterday and never came back. Find him! I've told Sergeant Pudding at the bridge to let you pass. Go north!`);save();return}
+  await S(`North, across the bridge! Find Hank! Use your Word Magic ✨ on Gibberlings. Their letter shields hate good grammar.`);return}
+ if(s===8){await S(`Is that... THE BIG BOOK OF WORDS? You did it, {N}! Listen! The signs are unscrambling all over Snortwood!`);sfx('win');cheer();
+  const title=D.align>=25?'the Shining':D.align<=-25?'the Terrible':'the Pretty Okay';D.flags.title=title;
+  await S(`From this day on, you shall be known as... ${D.name} ${title}, Hero of Snortwood! ${D.align>=25?'Children will sing songs about your kindness.':D.align<=-25?'Children will hide behind their mothers. But you DID save us. Mostly.':'Not the best hero. Not the worst. Very solid.'}`);
+  D.story=9;addXP(50);save();await say('',`🏆 THE END... of Chapter One! You beat Lord Gibberish. Keep playing: Notice Board jobs, scrambled signs, Riddle Stones, and Gloomwood monsters are waiting. New lands are coming soon!`);return}
+ const c=await S(pick([`Ah, {N}! How goes the hero business?`,`Back for more training?`]),{choices:[`Test my skills again (Hero Trial)`,`Just saying hi`]});if(c===0){const E1=D.gr,E2=D.rd;surveyStart('gram',Math.max(0,focusOf('gram')-2));surveyStart('read',Math.max(0,focusOf('read')-1));await heroTrial(S,true)}}
+async function heroTrial(S,re){if(!re&&!D.flags.trialIntro){D.flags.trialIntro=1;await S(`Splendid whacking! Now, a true hero needs WORD MAGIC. When a sentence is broken, you find the mistake and fix it, and the fixed words become a SPELL.`);await S(`Let's see how sharp your brain is. Find the mistake, tap it, then pick the fix. Each one you fix blasts a dummy. Ready? Here we go!`)}
+ cutscene++;if(!D.gr.placed||D.gr.survey){if(!D.gr.survey)surveyStart('gram',0);while(D.gr.survey){const q=nextQ('gram');const ok=await askGram(q,{mode:'trial'});surveyAnswer(q,ok);await trialBlast(ok)}}
+ cutscene--;await S(`Ha! Wonderful! Now, a hero must READ. Notes, letters, and Riddle Stones will guide your quest. Read each one carefully and answer my questions.`);cutscene++;
+ if(!D.rd.placed||D.rd.survey){if(!D.rd.survey)surveyStart('read',0);while(D.rd.survey){const q=nextQ('read');const ok=await askRead(q,{mode:'trial'});surveyAnswer(q,ok)}}cutscene--;
+ const gm=masteredCount('gram'),rm=masteredCount('read');await S(`The trial is done! Your Word Magic is level ${1+Math.floor(gm/3)}. You already know ${gm} kinds of grammar spells and ${rm} reading skills. I'll train you from just the right spot.`);
+ if(!re){D.story=3;await S(`Now go help the villagers. Granny Pickles, Baker Bun, and Farmer Dougal all need a hero who can READ. The ❗ marks show who needs help. And the Notice Board has extra jobs.`);toast(`✨ New power: WORD MAGIC! Tap ✨ near enemies to cast a spell.`)}refreshSigns();save()}
+async function trialBlast(ok){const d=DUMMIES.find(d=>!d.dead)||DUMMIES[0];cutscene++;if(ok){await shootFireball(d.x,1.8,d.z,1);d.dead=true;d.g.visible=false;burst(d.x,1.5,d.z,0xE8C88A,16);setTimeout(()=>{d.dead=false;d.g.visible=true},900)}else{sfx('fizzle');burst(hero.x,1.6,hero.z,0x8A8A8A,8,.2,2)}await sleep(350);cutscene--}
+function cheer(){Object.values(NPCS).forEach(n=>npcBark(n,pick([`Hooray!`,`HERO! HERO!`,`Three cheers for ${D.name}!`,`I'm crying! Happy tears!`])));for(let i=0;i<6;i++)setTimeout(()=>burst(hero.x+(rnd()-.5)*6,3,hero.z+(rnd()-.5)*6,[0xFF5AA8,0xFFD447,0x5AC8FF,0x7AE05A][i%4],18,.2,7),i*200)}
+
+/* ===================== shops ===================== */
+const HATS={pot:{n:`Soup Pot Helmet`,cost:30,d:`Still has a little soup in it.`},party:{n:`Party Hat`,cost:45,d:`Every day is a party if you're brave enough.`},wizard:{n:`Wizard Hat`,cost:90,d:`Makes you look 300 years wiser.`},chicken:{n:`Live Chicken Hat`,cost:140,d:`It's a real chicken. She agreed to this.`},crown:{n:`Golden Crown`,cost:260,d:`For heroes who are basically royalty.`}};
+const price=c=>Math.round(c*(D.align>=25?.85:D.align<=-25?1.2:1));
+async function shopMenu(kind,n,S){const disc=D.align>=25?` (Good heroes get a discount!)`:D.align<=-25?` (Horned heroes pay extra. Sorry, rules.)`:'';
+ if(kind==='pot'){const c=await S(`Health potions! 15 gold each${disc}. Tastes like grape. Mostly.`,{choices:[`Buy a potion (${price(15)} gold)`,`No thanks`]});if(c===0){if(D.gold>=price(15)){D.gold-=price(15);D.pot++;sfx('buy');updateHUD();await S(`Here you go! Drink it when your hearts get low. (Potion button 🧪)`)}else await S(`You need more gold, sweetie. Fight some Grumplings!`)}return}
+ const list=kind==='sword'?SWORDS:HATS;await S(kind==='sword'?`Welcome to Bjorn's! I make swords. I have hit myself with my hammer 400 times. Want a sword?${disc}`:`Bonjour, darling! A hero must look FABULOUS. Choose a hat!${disc}`);
+ cardOpen=true;return new Promise(res=>{const render=()=>{const own=kind==='sword'?D.swords:D.hats,eq=kind==='sword'?D.sword:D.hat;
+  showCard(head(kind==='sword'?`Bjorn's Blacksmith`:`Frou-Frou's Hats`,`You have 🪙 ${D.gold} gold`)+`<div class="list">${Object.entries(list).filter(([k])=>k!=='wood'||own.wood).map(([k,it])=>`<div class="row"><div class="rt"><b>${esc(it.n)}</b>${kind==='sword'?` <span class="tag">⚔️ ${it.dmg} damage</span>`:''}<div class="sub">${esc(it.d)}</div></div><div class="ra">${own[k]?(eq===k?`<span class="tag on">Wearing</span>`:`<button class="btn small" data-eq="${k}">${kind==='sword'?'Equip':'Wear'}</button>`):`<button class="btn small gold" data-buy="${k}" ${D.gold<price(it.cost)?'disabled':''}>🪙 ${price(it.cost)}</button>`}</div></div>`).join('')}${kind==='hat'&&D.hat?`<div class="row"><div class="rt"><b>No hat</b></div><div class="ra"><button class="btn small" data-eq="">Take off</button></div></div>`:''}</div>`);
+  $('#card').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy,it=list[k];if(D.gold<price(it.cost))return;D.gold-=price(it.cost);own[k]=1;sfx('buy');equip(k);render()});
+  $('#card').querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{equip(b.dataset.eq);sfx('tap');render()});$('#cX').onclick=()=>{closeCard();res()}};
+  const equip=k=>{if(kind==='sword'){D.sword=k;setSword(hero.rig,k)}else{D.hat=k;setHat(hero.rig,k)}updateHUD();save()};render()})}
+
+/* ===================== dialogue ===================== */
+let dlgRes=null,dlgFull='',dlgShown=0,dlgChoices=null;
+function say(name,text,o={}){return new Promise(res=>{dlgOpen=true;const el=$('#dlg');el.hidden=false;$('#dName').textContent=name||'';$('#dName').hidden=!name;dlgFull=fmt(text);dlgShown=0;$('#dText').textContent='';dlgChoices=o.choices||null;$('#dCh').innerHTML='';$('#dNext').hidden=true;dlgRes=res;
+ if(name)speak(dlgFull,o.pitch||1);sfx('tap')})}
+function dlgTick(dt){if(!dlgOpen||dlgShown>=dlgFull.length)return;dlgShown=Math.min(dlgFull.length,dlgShown+dt*70);$('#dText').textContent=dlgFull.slice(0,Math.floor(dlgShown));if(dlgShown>=dlgFull.length)dlgDone()}
+function dlgDone(){$('#dText').textContent=dlgFull;dlgShown=dlgFull.length;if(dlgChoices){$('#dCh').innerHTML=dlgChoices.map((c,i)=>`<button class="btn choice" data-i="${i}">${esc(fmt(c))}</button>`).join('');$('#dCh').querySelectorAll('button').forEach(b=>b.onclick=e=>{e.stopPropagation();sfx('tap');dlgClose(+b.dataset.i)})}else $('#dNext').hidden=false}
+function dlgClose(v){$('#dlg').hidden=true;dlgOpen=false;hush();const r=dlgRes;dlgRes=null;r&&r(v)}
+$('#dlg').addEventListener('click',()=>{if(dlgShown<dlgFull.length){dlgDone();return}if(!dlgChoices)dlgClose(0)});
+
+/* ===================== cards: word magic + reading ===================== */
+function showCard(html){cardOpen=true;$('#card').innerHTML=html;$('#ov').hidden=false;$('#card').scrollTop=0}
+function closeCard(){$('#ov').hidden=true;cardOpen=false;hush()}
+const head=(t,sub)=>`<div class="chead"><div><h2>${t}</h2>${sub?`<div class="sub">${sub}</div>`:''}</div><button class="x" id="cX" aria-label="Close">✕</button></div>`;
+const tierName=()=>[``,`Fireball`,`Frost Bolt`,`Pickle Missile`,`Thesaurus Storm`][spellTier()];
+const spellTier=()=>Math.min(4,1+Math.floor(masteredCount('gram')/3));
+function tokHTML(t,i,cls){const p=/^[.?!,]$/.test(t);return`<button class="tok${p?' punct':''}${cls?' '+cls:''}" data-i="${i}">${esc(t)}</button>`}
+function askGram(q,o={}){return new Promise(res=>{window.__q=q;let first=true,stage=1,wrongTaps=0;const md=o.mode;
+ const title=md==='trial'?`Hero Trial: Word Magic`:md==='sign'?`Fix the scrambled sign!`:`✨ Word Magic: ${tierName()}`;
+ const draw=()=>{const toksH=q.tokens.map((t,i)=>tokHTML(i===q.bad&&stage===3?q.fix:t,i,stage>=2&&i===q.bad?(stage===3?'fixed':'sel'):'')).join(' ');
+  showCard(`<div class="chead"><div><h2>${title}</h2><div class="sub">${q.review?'🔁 A tricky one from before':md==='trial'?'Find it, then fix it!':`Fix the broken sentence to ${md==='sign'?'fix the sign':'cast your spell'}`}</div></div></div>
+   <div class="step">${stage===1?`<b>1.</b> Tap the mistake.`:stage===2?`<b>2.</b> Pick the right fix.`:first?`✅ Perfect!`:`✅ Fixed!`}</div>
+   <div class="sent" id="sent">${toksH}</div><div id="tip" class="tip">${stage===1&&(GTIP[GSK[q.s].id]&&(wrongTaps>0||q.s===10))?GTIP[GSK[q.s].id]:''}</div>
+   <div id="opts" class="opts">${stage===2?q.opts.map(o2=>`<button class="btn opt" data-o="${esc(o2)}">${esc(o2)}</button>`).join(''):''}</div>
+   <div id="fb" class="fb">${stage===3?esc(q.why):''}</div>${stage===3?`<div class="center"><button class="btn big" id="goB">${md==='trial'?'Next ➜':md==='sign'?'Done':'Cast it! ✨'}</button></div>`:''}`);
+  $('#card').querySelectorAll('.tok').forEach(b=>b.onclick=()=>{if(stage!==1)return;const i=+b.dataset.i;sfx('tap');if(i===q.bad){stage=2;draw()}else{first=false;wrongTaps++;b.classList.add('nope');$('#tip').textContent=wrongTaps>=2?`Look at the glowing word.`:`That word is fine. Look again!`+(GTIP[GSK[q.s].id]?' '+GTIP[GSK[q.s].id]:'');sfx('bad');if(wrongTaps>=2)$('#sent').querySelector(`[data-i="${q.bad}"]`).classList.add('hint')}});
+  $('#card').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(b.dataset.o===q.fix){stage=3;sfx('good');draw()}else{first=false;b.disabled=true;b.classList.add('no');sfx('bad');$('#fb').textContent=`Not that one. Try another!`}});
+  const g=$('#goB');if(g)g.onclick=()=>{closeCard();res(first)}};draw()})}
+function passageHTML(q){return`<div class="note">${q.title?`<div class="ntitle">${esc(q.title)}</div>`:''}${esc(q.passage).split('\n').map(l=>l?`<p>${q.hl?l.replace(new RegExp('\\b('+q.hl+')\\b','i'),'<mark>$1</mark>'):l}</p>`:'').join('')}</div>`}
+function askRead(q,o={}){return new Promise(res=>{window.__q=q;let first=true,done=false;const md=o.mode;
+ showCard(`<div class="chead"><div><h2>${md==='trial'?'Hero Trial: Reading':md==='lore'?'🪨 Riddle Stone':'📖 Story Scroll'}</h2><div class="sub">${q.review?'🔁 A tricky one from before':'Read carefully, then answer.'}</div></div></div>${passageHTML(q)}<div class="qq">${esc(q.q)}</div><div class="opts col">${q.opts.map(o2=>`<button class="btn opt" data-o="${esc(o2)}">${esc(o2)}</button>`).join('')}</div><div id="fb" class="fb"></div><div class="center" id="goW"></div>`);
+ $('#card').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(done)return;if(b.dataset.o===q.ans){done=true;b.classList.add('yes');sfx('good');$('#fb').textContent=(first?'✅ Correct! ':'✅ Got it! ')+q.why;$('#goW').innerHTML=`<button class="btn big" id="goB">${md==='trial'?'Next ➜':'Continue'}</button>`;$('#goB').onclick=()=>{closeCard();res(first)};$('#goB').scrollIntoView({block:'nearest',behavior:'smooth'})}
+  else{first=false;b.disabled=true;b.classList.add('no');sfx('bad');$('#fb').textContent=`Not quite. Look back at the story for a clue!`}})})}
+function showNote(q,hint){return new Promise(res=>{showCard(head('📜 '+(q.title||'A note'),`Read carefully. Then go search!`)+passageHTML(Object.assign({},q,{title:''}))+`<div class="qq">${esc(q.q)}</div><div class="sub center">Three spots around town are marked with a floating <b>?</b> — ${q.lm.opts.map(k=>LMS[k]).join(', ')}. Only one is right!</div>${hint?`<div class="fb">Hint: ${esc(q.why)}</div>`:''}<div class="center"><button class="btn big" id="goB">Got it!</button></div>`);
+ const f=()=>{closeCard();res()};$('#goB').onclick=f;$('#cX').onclick=f})}
+function showGateQ(g){return new Promise(res=>{const q=g.q;showCard(head('🔮 Riddle Stone','Read it, then walk through the arch with the right answer!')+passageHTML(q)+`<div class="qq">${esc(q.q)}</div><div class="sub center">The answers are written on the three arches: ${g.opts.map((o,k)=>`<b>${['Left','Middle','Right'][k]}:</b> ${esc(o)}${g.marks[k]==='x'?' ❌':''}`).join(' · ')}</div><div class="center"><button class="btn big" id="goB">Let's go!</button></div>`);const f=()=>{closeCard();res()};$('#goB').onclick=f;$('#cX').onclick=f})}
+async function tapTracker(){if(busy())return;sfx('tap');if(D.job&&!D.job.found){await showNote(D.job.q,D.job.misses>=2);return}const g=GATES.find(g=>g.q&&!D.gates[g.id]&&(g.zone==='dungeon')===(D.pos.zone==='dungeon'));if(g){await showGateQ(g);return}const t=target();toast(t.t)}
+
+/* ===================== combat + magic ===================== */
+const PROJ=[];
+function nearestEnemy(range){let b=null,bd=range;ENEMIES.forEach(e=>{if(e.dying)return;const d=Math.hypot(e.x-hero.x,e.z-hero.z);if(d<bd){bd=d;b=e}});return b}
+function swing(){if(busy()||hero.dead||hero.atk>0)return;audioInit();hero.atk=.38;hero.hitDone=false;sfx('swing');const e=nearestEnemy(3.4);if(e)hero.ry=Math.atan2(e.x-hero.x,e.z-hero.z);else if(boss&&Math.hypot(boss.x-hero.x,boss.z-hero.z)<5)hero.ry=Math.atan2(boss.x-hero.x,boss.z-hero.z)}
+function swingHit(){const fx=Math.sin(hero.ry),fz=Math.cos(hero.ry),inArc=(x,z,rng)=>{const dx=x-hero.x,dz=z-hero.z,d=Math.hypot(dx,dz);return d<rng&&(d<.8||(dx*fx+dz*fz)/d>.25)};let any=false;
+ ENEMIES.forEach(e=>{if(!e.dying&&inArc(e.x,e.z,2.3+e.r)){damageEnemy(e,heroDmg(),'sword');any=true}});
+ if(boss&&!boss.dead&&inArc(boss.x,boss.z,boss.vul>0?3.6:3.2)){bossSwordHit();any=true}
+ DUMMIES.forEach(d=>{if(!d.dead&&inArc(d.x,d.z,2.2)){any=true;d.wob=1;sfx('hit');burst(d.x,1.8,d.z,0xE8C88A,8,.15);if(D.story===1){d.dead=true;setTimeout(()=>{d.g.visible=false},250);D.flags.dum=(D.flags.dum||0)+1;floatText(d.x,2.6,d.z,'WHACK!','#FFE070');if(D.flags.dum>=3){D.story=2;save();setTimeout(()=>say('Guildmaster Mumbleton',`Marvelous whacking! Those dummies never stood a chance. Come talk to me for your Hero Trial!`,{pitch:.7}),600)}updateHUD()}}});
+ CHICKS.forEach(c=>{if(c.y===0&&inArc(c.x,c.z,1.8)){kickChicken(c);any=true}});if(any)shake=Math.max(shake,.12)}
+async function castSpell(){if(busy()||hero.dead)return;audioInit();if(D.story<3){toast(`You haven't learned Word Magic yet. Finish Mumbleton's Hero Trial!`);return}
+ const q=nextQ('gram');const ok=await askGram(q,{mode:'spell'});grade(q,ok);
+ if(ok){addXP(2);let tgt=nearestEnemy(18),tx,ty=1.2,tz;if(boss&&!boss.dead&&Math.hypot(boss.x-hero.x,boss.z-hero.z)<22&&(!tgt||boss.shield>0)){tx=boss.x;ty=boss.y;tz=boss.z;tgt='boss'}else if(tgt){tx=tgt.x;tz=tgt.z;hero.ry=Math.atan2(tx-hero.x,tz-hero.z)}else{tx=hero.x+Math.sin(hero.ry)*10;tz=hero.z+Math.cos(hero.ry)*10}
+  await shootFireball(tx,ty,tz,spellTier(),tgt)}else{sfx('fizzle');burst(hero.x,1.8,hero.z,0x9A9A9A,10,.2,2);floatText(hero.x,2.6,hero.z,'fizzle...','#BBBBBB')}}
+const TIERCOL=[0,0xFF7A1A,0x5AC8FF,0x7AE05A,0xB36BFF];
+function shootFireball(tx,ty,tz,tier,tgt){return new Promise(res=>{sfx('cast');const g=grp(hero.x,1.5,hero.z);const c=TIERCOL[tier]||0xFF7A1A;sph(.35+tier*.06,M(c,{basic:1}),0,0,0,g,8,6);sph(.55+tier*.08,new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.35}),0,0,0,g,8,6);
+ PROJ.push({g,tx,ty,tz,tier,tgt,res,spd:22,c})})}
+function updProj(dt){for(let i=PROJ.length-1;i>=0;i--){const p=PROJ[i];if(p.tgt&&p.tgt!=='boss'&&!p.tgt.dying){p.tx=p.tgt.x;p.tz=p.tgt.z}if(p.tgt==='boss'&&boss){p.tx=boss.x;p.ty=boss.y;p.tz=boss.z}
+  const v=new THREE.Vector3(p.tx-p.g.position.x,p.ty-p.g.position.y,p.tz-p.g.position.z),d=v.length();if(d<.6||d>60){explode(p);scene.remove(p.g);PROJ.splice(i,1);p.res();continue}v.multiplyScalar(Math.min(d,p.spd*dt)/d);p.g.position.add(v);p.g.rotation.y+=dt*9;if(rnd()<.6)burst(p.g.position.x,p.g.position.y,p.g.position.z,p.c,1,.15,1)}}
+function explode(p){const x=p.g.position.x,y=p.g.position.y,z=p.g.position.z;sfx('boom');shake=Math.max(shake,.22);burst(x,y,z,p.c,22,.3,8);burst(x,y,z,0xFFFFFF,8,.2,5);const dmg=4+p.tier*2;
+ ENEMIES.forEach(e=>{if(!e.dying&&Math.hypot(e.x-x,e.z-z)<3.2)damageEnemy(e,dmg,'spell')});if(p.tgt==='boss'&&boss){if(boss.vul>0){boss.hp-=3;floatText(boss.x,boss.y+2,boss.z,'3','#fff');if(boss.hp<=0)bossSwordHit()}else bossSpellHit()}}
+function onEnemyDown(e){if(D.story===5&&e.sp.tag==='camp'){const left=SPAWNS.filter(p=>p.tag==='camp'&&!p.used).length;if(left===0)setTimeout(()=>toast(`🪓 All the Grumplings are gone! Talk to Hank.`),500)}}
+function usePotion(){if(busy()||hero.dead)return;audioInit();if(D.pot<=0){toast(`No potions! Buy some from Mags at The Soggy Boot.`);return}if(D.hp>=heroMaxHP()){toast(`Your hearts are already full!`);return}D.pot--;D.hp=Math.min(heroMaxHP(),D.hp+6);sfx('heal');burst(hero.x,1.5,hero.z,0xFF5A7A,14,.18,3);updateHUD();save()}
+
+/* ===================== HUD ===================== */
+let toastT=0;function toast(t){const el=$('#toast');el.textContent=fmt(t);el.classList.add('on');toastT=4.2}
+function updateHUD(){const mx=heroMaxHP();D.hp=Math.min(D.hp,mx);$('#hpFill').style.width=(D.hp/mx*100)+'%';$('#hpTxt').textContent=`♥ ${Math.ceil(D.hp)}/${mx}`;$('#lvlN').textContent=`Lv ${D.lvl}`;$('#xpFill').style.width=(D.xp/xpNeed(D.lvl)*100)+'%';
+ $('#gold').textContent=`🪙 ${D.gold}`;$('#potN').textContent=D.pot;const a=D.align;$('#alignI').textContent=a>=25?'😇':a<=-25?'😈':'🙂';$('#alignB').style.left=(50+a/2)+'%';
+ Object.values(NPCS).forEach(n=>{let m=false;const s=D.story;if(n.id==='mumbleton')m=s===0||s===2||s===8||(s===4&&!D.flags.toldGo);else if(ERR[n.id])m=s===3&&(!D.errands[n.id]&&!(D.job&&!D.job.found)||D.errands[n.id]==='found');else if(n.id==='hank')m=s===5;else if(n.id==='mayor')m=D.flags.purse==='carry';n.mark.visible=m});
+ $('#bMagic').classList.toggle('locked',D.story<3);purse.visible=purseM.visible=D.story>=4&&!D.flags.purse}
+let trkLast='';function slowTick(){if(SIGNS.some(s=>s.state!==signBroken(s.i)))refreshSigns();LORE.forEach(l=>{const f=D.flags['lore_'+l.id];l.glow.visible=!(f&&Date.now()-f<5*60000)})}
+function trackerTick(){const t=target();if(t.t!==trkLast){trkLast=t.t;$('#trkText').textContent=t.t}const ar=$('#trkArrow');if(t.x==null||t.note){ar.style.visibility='hidden';$('#trkDist').textContent=t.note?'📜':'';return}
+ const dx=t.x-hero.x,dz=t.z-hero.z,d=Math.hypot(dx,dz);ar.style.visibility=d<3?'hidden':'visible';const fx=-Math.sin(cyaw),fz=-Math.cos(cyaw),rx=Math.cos(cyaw),rz=-Math.sin(cyaw);const ang=Math.atan2(dx*rx+dz*rz,dx*fx+dz*fz);ar.style.transform=`rotate(${ang}rad)`;$('#trkDist').textContent=d<3?'here!':Math.round(d)+'m'}
+
+/* ===================== input ===================== */
+const keys={};const joy={id:null,ox:0,oy:0,x:0,y:0};const camDrag={id:null,lx:0};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;keys[e.code]=1;if(mode!=='play')return;if(dlgOpen&&(e.code==='Space'||e.code==='Enter')){$('#dlg').click();e.preventDefault();return}if(busy())return;
+ if(e.code==='KeyJ'||e.code==='Space'){swing();e.preventDefault()}else if(e.code==='KeyK'){castSpell()}else if(e.code==='KeyE'||e.code==='Enter'){doAct()}else if(e.code==='KeyQ'){usePotion()}});
+addEventListener('keyup',e=>{keys[e.code]=0});
+function bindBtn(id,f){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();b.classList.add('down');f()});['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,()=>b.classList.remove('down')))}
+function inputInit(){bindBtn('#bSword',swing);bindBtn('#bMagic',castSpell);bindBtn('#bAct',doAct);bindBtn('#bPot',usePotion);$('#tracker').onclick=tapTracker;$('#menuBtn').onclick=()=>{if(!busy())openMenu()};
+ const gl=$('#touch');gl.addEventListener('pointerdown',e=>{audioInit();if(busy())return;const w=innerWidth;if(e.clientX<w*.5&&joy.id===null){joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;joy.x=joy.y=0;const j=$('#joy');j.style.left=(e.clientX-60)+'px';j.style.top=(e.clientY-60)+'px';j.classList.add('on')}
+  else if(camDrag.id===null){camDrag.id=e.pointerId;camDrag.lx=e.clientX}gl.setPointerCapture(e.pointerId)});
+ gl.addEventListener('pointermove',e=>{if(e.pointerId===joy.id){let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const l=Math.hypot(dx,dy),m=50;if(l>m){dx*=m/l;dy*=m/l}joy.x=dx/m;joy.y=dy/m;$('#joyKnob').style.transform=`translate(${dx}px,${dy}px)`}
+  else if(e.pointerId===camDrag.id){cyaw-=(e.clientX-camDrag.lx)*.008;camDrag.lx=e.clientX}});
+ const up=e=>{if(e.pointerId===joy.id){joy.id=null;joy.x=joy.y=0;$('#joyKnob').style.transform='';$('#joy').classList.remove('on')}if(e.pointerId===camDrag.id)camDrag.id=null};gl.addEventListener('pointerup',up);gl.addEventListener('pointercancel',up)}
+
+/* ===================== menu / report / settings ===================== */
+function openMenu(){sfx('tap');const t=target();showCard(head('☰ Menu',`${esc(D.name)}${D.flags.title?' '+D.flags.title:''} · Level ${D.lvl} · ${D.align>=25?'😇 Good':D.align<=-25?'😈 Naughty':'🙂 Neutral'} (${D.align})`)+
+ `<div class="qbox"><b>Quest:</b> ${esc(t.t)}</div>
+ <div class="grid2"><button class="btn" id="mHero">🧙 My Hero</button><button class="btn" id="mRep">📊 Grown-ups report</button><button class="btn" id="mSave">💾 Save game</button><button class="btn" id="mSet">⚙️ Settings</button></div>
+ <div class="sub" style="margin-top:12px"><b>How to play:</b> left side of screen = move. Drag the right side = turn the camera. ⚔️ sword · ✨ Word Magic (fix a sentence to cast a spell) · 🧪 potion · the round button talks, reads and searches.</div>`);
+ $('#cX').onclick=closeCard;$('#mHero').onclick=heroCard;$('#mRep').onclick=()=>report('gram');$('#mSet').onclick=settings;$('#mSave').onclick=e=>{savePos();if(cloud.ok){clearTimeout(cloud.t);cloudFlush()}e.target.textContent=cloud.ok?'✅ Saved online!':'✅ Saved!';sfx('good')}}
+function heroCard(){const gm=masteredCount('gram');showCard(head('🧙 '+esc(D.name),`Level ${D.lvl} · ${D.kills} monsters bonked`)+`<div class="list">
+ <div class="row"><div class="rt"><b>Sword</b><div class="sub">${esc(SWORDS[D.sword].n)} (⚔️ ${SWORDS[D.sword].dmg})</div></div></div>
+ <div class="row"><div class="rt"><b>Hat</b><div class="sub">${D.hat?esc(HATS[D.hat].n):'None'}</div></div></div>
+ <div class="row"><div class="rt"><b>Word Magic</b><div class="sub">${tierName()||'Not learned yet'} · ${gm} of ${GSK.length} grammar spells mastered. Master more to unlock stronger spells!</div></div></div>
+ <div class="row"><div class="rt"><b>Good or naughty?</b><div class="sub">${D.align} (from −100 to +100). Helping, hugging chickens and honest choices = halo 😇. Kicking chickens and greedy choices = horns 😈.</div></div></div></div><div class="center"><button class="btn" id="bk">Back</button></div>`);$('#cX').onclick=closeCard;$('#bk').onclick=openMenu}
+function report(tab){const days=Object.entries(D.days).sort();const totSec=days.reduce((a,[,v])=>a+(v.sec||0),0);const eng=tab==='gram'?D.gr:D.rd,SK=tab==='gram'?GSK:RSK;let body='';
+ if(tab==='log'){const rl=D.readlog.slice(-25).reverse();body=`<p class="sub">Days played: <b>${days.length}</b> · Total time: <b>${Math.round(totSec/60)} min</b> · Passages read: <b>${D.readlog.length}</b></p>
+  <table class="tbl"><tr><th>Day</th><th>Min</th><th>Grammar</th><th>Reading</th></tr>${days.slice(-14).reverse().map(([d,v])=>`<tr><td>${d}</td><td>${Math.round((v.sec||0)/60)}</td><td>${v.gram.c}/${v.gram.q}</td><td>${v.read.c}/${v.read.q}</td></tr>`).join('')}</table>
+  <h3>Reading log (latest)</h3><table class="tbl">${rl.map(r=>`<tr><td>${r.d}</td><td>${esc(r.t)}</td><td>${esc(RSK[r.s]?RSK[r.s].n:'')}</td></tr>`).join('')||'<tr><td>Nothing yet</td></tr>'}</table>`}
+ else{const pl=eng.placement;body=`<p class="sub">${pl?`Placement (${pl.date}): ${pl.correct}/${pl.q} correct, started at <b>${esc(SK[pl.focus].n)}</b>.`:'Placement not done yet (Hero Trial at the guild).'} Overall: <b>${eng.ok}/${eng.q}</b> correct${eng.q?` (${Math.round(eng.ok/eng.q*100)}%)`:''}. Now working on: <b>${esc(SK[focusOf(tab)].n)}</b>.</p>
+  <div class="list">${SK.map((k,i)=>`<div class="srow"><div class="sk"><b>${esc(k.n)}</b> <span class="tag">gr ${k.g}</span><div class="sub">${eng.c[i]}/${eng.n[i]} correct</div></div><div class="bar"><i style="width:${Math.round(eng.m[i]*100)}%;background:${eng.m[i]>=MASTER?'#3F9A3A':eng.m[i]>.4?'#E9A93B':'#C8473A'}"></i></div></div>`).join('')}</div>
+  ${eng.review.length?`<p class="sub">Coming back for review: ${eng.review.length} item${eng.review.length>1?'s':''}.</p>`:''}`}
+ showCard(head('📊 Grown-ups report',`${esc(D.name)} · ${cloud.ok?'saved online':'saved on this device'}`)+`<div class="tabs">${[['gram','Grammar'],['read','Reading'],['log','Time & log']].map(([k,n])=>`<button class="tab${k===tab?' on':''}" data-t="${k}">${n}</button>`).join('')}</div>${body}`);
+ $('#card').querySelectorAll('.tab').forEach(b=>b.onclick=()=>report(b.dataset.t));$('#cX').onclick=()=>mode==='play'?openMenu():closeCard()}
+function settings(){const tg=(k,n)=>`<div class="row"><div class="rt"><b>${n}</b></div><div class="ra"><button class="btn small tgl${D[k]?' on':''}" data-k="${k}">${D[k]?'On':'Off'}</button></div></div>`;
+ showCard(head('⚙️ Settings','')+`<div class="list">${tg('sound','Sound')}${tg('music','Music')}${tg('voice','Character voices')}</div><div class="center" style="margin-top:14px"><button class="btn" id="bk">Back</button> <button class="btn danger" id="restart">Start over…</button></div>`);
+ $('#card').querySelectorAll('.tgl').forEach(b=>b.onclick=()=>{D[b.dataset.k]=!D[b.dataset.k];applyVol();if(!D.voice)hush();save();settings()});$('#cX').onclick=closeCard;$('#bk').onclick=openMenu;$('#restart').onclick=confirmRestart}
+function confirmRestart(){showCard(head('Start over?','')+`<p>This restarts the story from the very beginning: level, gold, gear and quests.</p><p><b>Learning progress is kept</b> (placement, skill levels and the report), so ${esc(D.name)} won't repeat work they already know.</p><div class="center"><button class="btn" id="no">Keep playing</button> <button class="btn danger" id="yes">Yes, start over</button></div>`);
+ $('#cX').onclick=closeCard;$('#no').onclick=()=>mode==='play'?openMenu():closeCard();$('#yes').onclick=()=>{const keep={name:D.name,gr:D.gr,rd:D.rd,days:D.days,readlog:D.readlog,sound:D.sound,music:D.music,voice:D.voice};D=Object.assign(fresh(),keep);D.started=true;save();location.reload()}}
+
+/* ===================== camera + frame ===================== */
+let lastT=performance.now(),acc=0;const tmpV=new THREE.Vector3();
+function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.fov=w<h?68:58;cdist=w<h?9.2:8;cam.updateProjectionMatrix()}
+addEventListener('resize',resize);
+function heroUpdate(dt){let ix=joy.x,iy=-joy.y;if(keys.KeyA||keys.ArrowLeft)ix-=1;if(keys.KeyD||keys.ArrowRight)ix+=1;if(keys.KeyW||keys.ArrowUp)iy+=1;if(keys.KeyS||keys.ArrowDown)iy-=1;const il=Math.hypot(ix,iy);if(il>1){ix/=il;iy/=il}
+ const fx=-Math.sin(cyaw),fz=-Math.cos(cyaw),rx=Math.cos(cyaw),rz=-Math.sin(cyaw);let mx=fx*iy+rx*ix,mz=fz*iy+rz*ix;const mag=Math.hypot(mx,mz);
+ const spd=(hero.atk>0?1.8:5.6)*Math.min(1,mag);if(mag>.08){hero.ry=lerpA(hero.ry,Math.atan2(mx,mz),dt*12);hero.x+=mx/mag*spd*dt;hero.z+=mz/mag*spd*dt;if(iy>.6&&Math.abs(ix)<.4&&camDrag.id===null)cyaw=lerpA(cyaw,hero.ry+Math.PI,dt*1.2)}
+ hero.x+=hero.kbx*dt;hero.z+=hero.kbz*dt;hero.kbx*=Math.pow(.01,dt);hero.kbz*=Math.pow(.01,dt);pushOut(hero,hero.r);hero.spd=spd*(mag>.08?1:0)/5.6;
+ const r=hero.rig;r.g.position.set(hero.x,0,hero.z);r.g.rotation.y=hero.ry;
+ if(hero.atk>0){const p=1-hero.atk/.38;r.armR.rotation.x=p<.35?lerp(-.3,-2.9,p/.35):lerp(-2.9,-.1,(p-.35)/.65);r.body.rotation.y=p<.35?-.4*p/.35:lerp(-.4,.35,(p-.35)/.65);if(p>.45&&!hero.hitDone){hero.hitDone=true;swingHit()}hero.atk-=dt;if(hero.atk<=0){r.body.rotation.y=0}}
+ animRig(r,dt,hero.spd,hero.atk>0?1:null);
+ if(hero.flex>0){hero.flex-=dt;r.armL.rotation.x=0;r.armR.rotation.x=0;r.armL.rotation.z=-2.4-Math.sin(hero.flex*14)*.2;r.armR.rotation.z=2.4+Math.sin(hero.flex*14)*.2;if(hero.flex<=0){r.armL.rotation.z=r.armR.rotation.z=0}}
+ cape.rotation.x=-.12-hero.spd*.55+Math.sin(performance.now()/180)*.04*hero.spd;
+ if(hero.inv>0){hero.inv-=dt;r.g.visible=Math.floor(hero.inv*14)%2===0||hero.inv<=0}else r.g.visible=true;tickFlash(r,dt);
+ if(D.align>=60&&rnd()<dt*3)burst(hero.x+(rnd()-.5),2.2,hero.z+(rnd()-.5),0xFFE070,1,.1,1);if(D.align<=-60&&rnd()<dt*3)burst(hero.x+(rnd()-.5),2.2,hero.z+(rnd()-.5),0x2A1A1A,1,.1,1)}
+function npcUpdate(dt){const inD=D.pos.zone==='dungeon';Object.values(NPCS).forEach(n=>{const g=n.rig.g;let vis=!inD;if(n.id==='hank')vis=vis&&D.story>=4;if(n.id==='gristle'&&D.errands.bun==='sold')vis=vis;g.visible=vis;if(!vis)return;
+  const dh=Math.hypot(hero.x-n.x,hero.z-n.z);let spd=0;if(dh<3.2){n.ry=lerpA(n.ry,Math.atan2(hero.x-n.x,hero.z-n.z),dt*6)}
+  else if(n.d.wander&&!busy()){n.wait-=dt;if(n.wait<=0){n.wait=3+rnd()*5;const a=rnd()*6.28,r2=rnd()*n.d.wander;n.tx=n.hx+Math.cos(a)*r2;n.tz=n.hz+Math.sin(a)*r2}const tx=n.tx-n.x,tz=n.tz-n.z,td=Math.hypot(tx,tz);if(td>.3){const s=(D.align<=-25&&dh<6)?2.6:1.3;n.x+=tx/td*s*dt;n.z+=tz/td*s*dt;n.ry=lerpA(n.ry,Math.atan2(tx,tz),dt*5);spd=s/5.6;const p={x:n.x,z:n.z};pushOut(p,.4);n.x=p.x;n.z=p.z}}
+  if(D.align<=-25&&n.d.gen&&dh<5&&!busy()){const a=Math.atan2(n.x-hero.x,n.z-hero.z);n.tx=n.x+Math.sin(a)*4;n.tz=n.z+Math.cos(a)*4;n.wait=2}
+  if(n.d.gen&&dh<6&&dh>2.5&&n.barkT<=0&&rnd()<dt*.12){const set=D.align>=25?BARK.g:D.align<=-25?BARK.e:BARK.n;npcBark(n,pick(set))}
+  n.barkT-=dt;g.position.set(n.x,0,n.z);g.rotation.y=n.ry;animRig(n.rig,dt,spd)})}
+const TAGS={};function labelsUpdate(){const W=innerWidth,H=innerHeight;const proj=(x,y,z)=>{tmpV.set(x,y,z).project(cam);return tmpV.z<1?{x:(tmpV.x+1)/2*W,y:(1-tmpV.y)/2*H}:null};
+ Object.values(NPCS).forEach(n=>{let el=TAGS[n.id];if(!el){el=TAGS[n.id]=document.createElement('div');el.className='tag3';$('#labels').appendChild(el)}const d=Math.hypot(hero.x-n.x,hero.z-n.z),show=n.rig.g.visible&&(d<9||n.barkT>0)&&mode==='play';
+  const sc=(n.d.o.scale||1);const p=show&&proj(n.x,2.35*sc+.25,n.z);if(!p){el.style.display='none';return}el.style.display='block';el.style.transform=`translate(${p.x}px,${p.y}px) translate(-50%,-100%)`;const txt=n.barkT>0?`<div class="bub">${esc(n.bark)}</div>`:'';const nm=d<9?`<span>${esc(n.d.n)}</span>`:'';const html=txt+nm;if(el._h!==html){el.innerHTML=html;el._h=html}});
+ for(let i=FLOAT.length-1;i>=0;i--){const f=FLOAT[i];f.t+=1/60;f.p.y+=.02;const p=proj(f.p.x,f.p.y,f.p.z);if(!p||f.t>1.1){f.el.remove();FLOAT.splice(i,1);continue}f.el.style.transform=`translate(${p.x}px,${p.y}px) translate(-50%,-50%)`;f.el.style.opacity=String(1-Math.max(0,f.t-.6)/.5)}}
+function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-lastT)/1000);lastT=now;const t=now/1000;musicTick();if(duck>0){duck-=dt;if(duck<=0)applyVol()}
+ ANIM.forEach(a=>a.f(t,dt));dlgTick(dt);if(toastT>0){toastT-=dt;if(toastT<=0)$('#toast').classList.remove('on')}
+ if(mode==='play'){tPlay+=dt;dayStat().sec+=dt;if(!busy()){heroUpdate(dt);spawnTick(dt);const f=updEnemies(dt);updBoss(dt);updChicks(dt);checkArches(dt);zoneTriggers(dt);
+   const m=boss?'boss':D.pos.zone==='dungeon'?'cave':f?'fight':hero.z<-40?'forest':'village';if(m!==lastZoneMusic){lastZoneMusic=m;setMusic(m)}
+   nearAct=findInteract();const lab=nearAct?nearAct.label:'Flex 💪';if($('#bActL').textContent!==lab)$('#bActL').textContent=lab;$('#bAct').classList.toggle('hot',!!nearAct)}
+  else{animRig(hero.rig,dt,0,hero.atk>0?1:null)}
+  npcUpdate(busy()?0:dt);updProj(dt);updParts(dt);DUMMIES.forEach(d=>{if(d.wob>0){d.wob-=dt*2;d.b.rotation.z=Math.sin(d.wob*20)*d.wob*.4}});zoneAmbience();
+  saveT+=dt;if(saveT>6){saveT=0;savePos()}trackerTick();slowT+=dt;if(slowT>3){slowT=0;slowTick()}}
+ else{cyaw+=dt*.08}
+ const tx=hero.x,tz=hero.z,p=.4;if(D.pos.zone==='dungeon'){lantern.position.set(tx,3,tz)}
+ const sx=shake>0?(rnd()-.5)*shake:0,sy=shake>0?(rnd()-.5)*shake:0;shake=Math.max(0,shake-dt);
+ let cd=cdist;for(let k=1;k<=12;k++){const dd=cdist*k/12;if(!camOK(tx+Math.sin(cyaw)*dd*Math.cos(p),tz+Math.cos(cyaw)*dd*Math.cos(p))){cd=Math.max(1.6,cdist*(k-1)/12);break}}camD=lerp(camD,cd,cd<camD?1:dt*3);
+ cam.position.set(tx+Math.sin(cyaw)*camD*Math.cos(p)+sx,1.4+camD*Math.sin(p)+sy,tz+Math.cos(cyaw)*camD*Math.cos(p));tmpV.set(tx,1.4,tz);cam.lookAt(tmpV);
+ R.render(scene,cam);labelsUpdate()}
+
+/* ===================== fades + title + boot ===================== */
+function fadeOut(){return new Promise(r=>{$('#fade').classList.add('on');setTimeout(r,450)})}
+function fadeIn(){return new Promise(r=>{$('#fade').classList.remove('on');setTimeout(r,450)})}
+function titleRefresh(){const st=D.started;$('#nameRow').hidden=st;$('#contBtn').hidden=!st;$('#goBtn').textContent=st?'Start over…':'Start the adventure!';$('#goBtn').classList.toggle('ghost',st);
+ $('#saveInfo').textContent=st?`${D.name} · Level ${D.lvl}${D.flags.title?' · '+D.name+' '+D.flags.title:''} · ${cloud.ok?'saved online':'saved on this device'}`:'';if(!st&&D.name)$('#nameIn').value=D.name}
+function enterGame(){audioInit();mode='play';$('#title').hidden=true;$('#hud').hidden=false;$('#touch').hidden=false;
+ if(D.pos.zone==='dungeon')setZone('dungeon');else setZone('world');hero.x=D.pos.x;hero.z=D.pos.z;hero.ry=D.pos.ry||0;cyaw=hero.ry+Math.PI;D.hp=Math.max(1,Math.min(D.hp,heroMaxHP()));
+ setSword(hero.rig,D.sword);setHat(hero.rig,D.hat||'');heroLooks();refreshSpots();refreshSigns();
+ GATES.forEach(g=>{g.setOpen(!!D.gates[g.id]);if(D.gates[g.id])gateSigns(g,['✓','✓','✓'])});LORE.forEach(l=>l.glow.visible=true);purse.visible=purseM.visible=D.story>=4&&!D.flags.purse;
+ if(D.story===1)DUMMIES.forEach(d=>{d.dead=false;d.g.visible=true});
+ if(D.flags.bossBeat&&D.story===7){D.story=8}
+ updateHUD();lastZoneMusic='';save();
+ if(!D.flags.intro){D.flags.intro=1;setTimeout(()=>say('',`Welcome to Snortwood, ${D.name}! A quiet village with loud chickens. Use the left side of the screen to walk. Drag the right side to look around. Follow the arrow at the top!`),500)}}
+function boot(){try{initGL()}catch(e){$('#noGL').style.display='block';return}makeHero();makeNPCs();makeChickens();makeSpots();purseM=grp(8,0,-88);const pm=sph(.35,0x8A4A2A,0,.3,0,purseM,8,6);pm.scale.y=.8;const ps=sprite('$','#FFD447',.8);ps.position.y=1.1;purseM.add(ps);
+ inputInit();resize();load();titleRefresh();cloudInit();
+ $('#goBtn').onclick=()=>{audioInit();if(D.started){showCard(head('Start over?','')+`<p>Start the story again from the beginning? Learning progress is kept.</p><div class="center"><button class="btn" id="no">Cancel</button> <button class="btn danger" id="yes">Start over</button></div>`);$('#cX').onclick=closeCard;$('#no').onclick=closeCard;$('#yes').onclick=()=>{const keep={name:D.name,gr:D.gr,rd:D.rd,days:D.days,readlog:D.readlog,sound:D.sound,music:D.music,voice:D.voice};D=Object.assign(fresh(),keep);D.started=true;save();location.reload()};return}
+  const nm=$('#nameIn').value.trim().replace(/[^A-Za-z0-9 '\-]/g,'').slice(0,14);if(!nm){$('#nameIn').focus();$('#nameIn').classList.add('shake');setTimeout(()=>$('#nameIn').classList.remove('shake'),500);return}D.name=nm;D.started=true;D.hp=heroMaxHP();save();enterGame()};
+ $('#contBtn').onclick=enterGame;$('#titleRep').onclick=()=>report('gram');
+ hero.x=-4;hero.z=7;cyaw=.6;requestAnimationFrame(frame)}
+
+boot();
+window.__f={get D(){return D},hero,NPCS,ENEMIES,GATES,SPAWNS,DUMMIES,SIGNS,LORE,CHICKS,get boss(){return boss},nextQ,makeG,makeR,GEN,genDetail,grade,setZone,target,talk,doAct,swing,castSpell,askGram,askRead,save,enterGame,findInteract,get nearAct(){return nearAct},busy,get cyaw(){return cyaw},set cyaw(v){cyaw=v},keys,startBossFight,bossSpellHit,bossSwordHit,updateHUD,heroMaxHP,R,get cam(){return cam},scene,chooseArch,refreshSpots,SPOT,LMPOS,errandsDone,report,openMenu,settings,heroCard};
+})();</script>
+
+</body></html>

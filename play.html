@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Game Room</title>
+<meta name="theme-color" content="#2A2140">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&display=swap">
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#2A2140;overscroll-behavior:none}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+#bar{flex:none;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 5px) max(10px,env(safe-area-inset-right)) 5px max(10px,env(safe-area-inset-left));background:#2A2140;color:#FFF6E6;font:600 16px Fredoka,system-ui,sans-serif}
+#back{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:11px;padding:6px 12px 6px 8px;background:#F2B632;color:#3A2600;font:inherit;cursor:pointer;box-shadow:0 3px 0 #B5841A}
+#back:active{transform:translateY(2px);box-shadow:0 1px 0 #B5841A}
+#back svg{width:18px;height:18px}
+#who{display:inline-flex;align-items:center;gap:7px;margin-left:auto;opacity:.9;white-space:nowrap;overflow:hidden}
+#who i{font-style:normal;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:17px;border:2px solid #fff}
+#title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#frame{flex:1;width:100%;border:0;display:block;background:#000}
+#msg{flex:1;display:grid;place-items:center;color:#FFF6E6;font:600 20px Fredoka,system-ui,sans-serif;text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<div id="bar"><button id="back" aria-label="Back to games"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Games</button><span id="title"></span><span id="who"></span></div>
+<script src="games/catalog.js"></script>
+<script src="hub.js"></script>
+<script>
+(()=>{'use strict';
+const q=new URLSearchParams(location.search),k=HUB.kid(q.get('k')||''),g=HUB.game(q.get('g')||'');
+const back=()=>{location.href='./'+(k?'#'+k.id:'')};
+document.getElementById('back').onclick=back;
+if(!k||!g||g.soon||!k.games.includes(g.id)){const m=document.createElement('div');m.id='msg';m.textContent='That game isn’t on this shelf.';document.body.appendChild(m);return}
+document.title=g.title+' · Game Room';
+document.getElementById('title').textContent=g.title;
+const w=document.getElementById('who');const i=document.createElement('i');i.textContent=k.emoji;i.style.background=k.color;w.appendChild(i);w.appendChild(document.createTextNode(k.name));
+const f=document.createElement('iframe');f.id='frame';f.title=g.title;f.allow='autoplay; fullscreen';
+f.src='games/'+g.id+'/?kid='+encodeURIComponent(k.id);
+f.addEventListener('load',()=>{try{f.contentWindow.focus()}catch(e){}});
+document.body.appendChild(f);
+HUB.touch(k.id,g.id);
+/* Count time only while the game is on screen. */
+let lastT=Date.now(),acc=0,vis=!document.hidden;
+function flush(){const n=Date.now();if(vis){acc+=Math.min(60,(n-lastT)/1000)}lastT=n;if(acc>=1){HUB.addTime(k.id,g.id,Math.floor(acc));acc-=Math.floor(acc)}}
+setInterval(flush,15000);
+document.addEventListener('visibilitychange',()=>{flush();vis=!document.hidden;lastT=Date.now()});
+window.addEventListener('pagehide',flush);
+})();
+</script>
+</body>
+</html>
