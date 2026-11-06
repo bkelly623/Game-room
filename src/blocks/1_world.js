@@ -1,10 +1,10 @@
 /* ================= world: textures, terrain, mesh, picking ================= */
-const W=20,H=11,Dp=20,SEA=1.72;
-const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,LOG:5,LEAVES:6,PLANK:7,GLASS:8,BRICK:9,GOLD:10,DIAMOND:11,RAINBOW:12,TABLE:13,BEDROCK:14,ORE:15,PIC:16,PUMPKIN:17,SNOW:18};
-const BNAME={1:'grass',2:'dirt',3:'stone',4:'sand',5:'log',6:'leaves',7:'planks',8:'glass',9:'brick',10:'gold',11:'diamond',12:'rainbow',17:'pumpkin',18:'snow'};
-const PLACEABLE=[1,2,3,4,5,6,7,8,9,10,11,12,17,18];
+const W=32,H=14,Dp=32,SEA=1.72;
+const B={AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,LOG:5,LEAVES:6,PLANK:7,GLASS:8,BRICK:9,GOLD:10,DIAMOND:11,RAINBOW:12,TABLE:13,BEDROCK:14,ORE:15,PIC:16,PUMPKIN:17,SNOW:18,LANTERN:19};
+const BNAME={1:'grass',2:'dirt',3:'stone',4:'sand',5:'log',6:'leaves',7:'planks',8:'glass',9:'brick',10:'gold',11:'diamond',12:'rainbow',17:'pumpkin',18:'snow',19:'lantern'};
+const PLACEABLE=[19,1,2,3,4,5,6,7,8,9,10,11,12,17,18];
 /* atlas tile per face: [top,bottom,side] */
-const FACES={1:[0,2,1],2:[2,2,2],3:[3,3,3],4:[4,4,4],5:[6,6,5],6:[7,7,7],7:[8,8,8],8:[9,9,9],9:[10,10,10],10:[11,11,11],11:[12,12,12],12:[13,13,13],13:[14,8,15],14:[16,16,16],15:[17,17,17],17:[18,8,19],18:[20,2,21]};
+const FACES={1:[0,2,1],2:[2,2,2],3:[3,3,3],4:[4,4,4],5:[6,6,5],6:[7,7,7],7:[8,8,8],8:[9,9,9],9:[10,10,10],10:[11,11,11],11:[12,12,12],12:[13,13,13],13:[14,8,15],14:[16,16,16],15:[17,17,17],17:[18,8,19],18:[20,2,21],19:[23,23,22]};
 const TRANSP=new Set([B.LEAVES,B.GLASS,B.PIC]);
 let G=new Uint8Array(W*H*Dp);
 const idx=(x,y,z)=>(y*Dp+z)*W+x;
@@ -43,6 +43,8 @@ function drawTile(i,x){const r=mulberry(1000+i*77);
   case 18:fill('#E8862A');for(let k=1;k<16;k+=4)px(x,'#C86A1A',k,0,1,16);px(x,'#4E7A2A',6,0,4,3);break;
   case 19:fill('#E8862A');for(let k=1;k<16;k+=4)px(x,'#C86A1A',k,0,1,16);px(x,'#3A2010',3,5,3,3);px(x,'#3A2010',10,5,3,3);px(x,'#3A2010',4,10,8,2);px(x,'#3A2010',5,12,2,1);px(x,'#3A2010',9,12,2,1);break;
   case 20:fill('#F6FAFF');speck(x,r,['#E2ECF6','#FFFFFF','#D6E2EE'],50);break;
+  case 22:fill('#2A2A34');px(x,'#4A4A58',0,0,16,2);px(x,'#4A4A58',0,14,16,2);px(x,'#4A4A58',0,0,2,16);px(x,'#4A4A58',14,0,2,16);px(x,'#FFC24A',3,3,10,10);px(x,'#FFE89A',5,5,6,6);px(x,'#FFFFFF',7,6,2,3);px(x,'#2A2A34',7,2,2,12);px(x,'#2A2A34',2,7,12,2);break;
+  case 23:fill('#2A2A34');px(x,'#4A4A58',1,1,14,14);px(x,'#FFC24A',5,5,6,6);break;
   case 21:fill('#8A5A34');speck(x,r,['#7A4C2A','#9A6A40'],60);px(x,'#F6FAFF',0,0,16,5);for(let k=0;k<16;k++)if(r()<.5)px(x,'#F6FAFF',k,5,1,1+((r()*2)|0));break;
  }}
 function buildAtlas(){const c=document.createElement('canvas');c.width=ACOLS*TS;c.height=AROWS*TS;const x=c.getContext('2d');
@@ -54,51 +56,74 @@ function iconFor(id){const f=FACES[id];if(!f)return null;const c=document.create
  x.save();x.setTransform(1,.5,0,1,0,9);x.drawImage(side,0,0);x.fillStyle='rgba(0,0,0,.15)';x.fillRect(0,0,16,16);x.restore();
  x.save();x.setTransform(1,-.5,0,1,16,17);x.drawImage(side,0,0);x.fillStyle='rgba(0,0,0,.32)';x.fillRect(0,0,16,16);x.restore();return c}
 
-/* ---------- terrain ---------- */
-const CX=9.5,CZ=9.5;
-const HOME={table:{x:11,z:8},clucks:{x:8,z:8},spawn:{x:10,z:10}};
-function genWorld(seed){G=new Uint8Array(W*H*Dp);const r=mulberry(seed);const ph=[r()*6,r()*6,r()*6,r()*6];
- const nz=(x,z)=>Math.sin(x*.55+ph[0])*Math.cos(z*.47+ph[1])*.6+Math.sin(x*.21+z*.33+ph[2])*.4+Math.cos(x*.9-z*.7+ph[3])*.15;
+/* ---------- terrain: a bigger island with a home meadow, a forest (east), snowy peaks (north), rocky hills with buried treasure (west) and a beach (south) ---------- */
+const CX=15.5,CZ=15.5;
+const HOME={table:{x:17,z:14},clucks:{x:14,z:14},spawn:{x:16,z:16}};
+function biomeAt(x,z){const dx=x-CX,dz=z-CZ,d=Math.hypot(dx,dz);if(d<5)return'home';const a=Math.atan2(dz,dx);if(a>-2.36&&a<-.79)return'snow';if(a>=-.79&&a<.79)return'forest';if(a>=.79&&a<2.36)return'beach';return'rocks'}
+function genWorld(seed){G=new Uint8Array(W*H*Dp);const r=mulberry(seed);const ph=[r()*6,r()*6,r()*6,r()*6,r()*6];
+ const nz=(x,z)=>Math.sin(x*.41+ph[0])*Math.cos(z*.37+ph[1])*.55+Math.sin(x*.17+z*.23+ph[2])*.45+Math.cos(x*.7-z*.6+ph[3])*.18;
  const tops={};
- for(let z=0;z<Dp;z++)for(let x=0;x<W;x++){const d=Math.hypot(x-CX,z-CZ)+nz(x*1.7,z*1.3)*.7;if(d>8.6)continue;
-  let h;if(d>7.1)h=1;else{h=2+Math.round(clamp(nz(x,z)*1.4+(7-d)*.12,0,2));if(Math.hypot(x-CX,z-CZ)<3.2)h=2}
-  setB(x,0,z,B.BEDROCK);for(let y=1;y<=h;y++)setB(x,y,z,y===h?(h===1?B.SAND:B.GRASS):y<h-1?B.STONE:B.DIRT);tops[x+','+z]=h}
- /* stone hills */
- for(let k=0;k<3;k++){const a=r()*Math.PI*2,rr=4.5+r()*2,x0=Math.round(CX+Math.cos(a)*rr),z0=Math.round(CZ+Math.sin(a)*rr);for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const x=x0+dx,z=z0+dz,h=tops[x+','+z];if(!h||h<2||(dx&&dz&&r()<.5))continue;const add=(dx||dz)?1:2;for(let y=h+1;y<=h+add;y++)setB(x,y,z,B.STONE);tops[x+','+z]=h+add}}
- /* trees */
- const trees=[];let tries=0;while(trees.length<5&&tries++<400){const x=ri(2,W-3),z=ri(2,Dp-3),h=tops[x+','+z];if(!h||h<2||get(x,h,z)!==B.GRASS)continue;const dh=Math.hypot(x-CX,z-CZ);if(dh<4||dh>6.8)continue;if(trees.some(t=>Math.abs(t.x-x)<3&&Math.abs(t.z-z)<3))continue;trees.push({x,z,h})}
+ for(let z=0;z<Dp;z++)for(let x=0;x<W;x++){const d=Math.hypot(x-CX,z-CZ)+nz(x*1.3,z*1.1)*1.1;if(d>14.2)continue;const bi=biomeAt(x,z);
+  let h;if(d>12.6||(bi==='beach'&&d>9.5))h=1;else{const n=nz(x,z);
+   if(bi==='snow')h=2+Math.round(clamp(n*1.6+(12-d)*.42,0,5));else if(bi==='rocks')h=2+Math.round(clamp(n*1.8+(12-d)*.3,0,4));else if(bi==='beach')h=1+Math.round(clamp(n+.6,0,1));else h=2+Math.round(clamp(n*1.3+(12-d)*.1,0,2))}
+  if(Math.hypot(x-CX,z-CZ)<4.6)h=2;
+  setB(x,0,z,B.BEDROCK);for(let y=1;y<=h;y++){let v=y<h-1?B.STONE:B.DIRT;if(y===h)v=h===1||bi==='beach'?B.SAND:B.GRASS;if(bi==='snow'&&y===h&&h>=4)v=B.SNOW;if(bi==='rocks'&&y>=h-1&&h>=3)v=B.STONE;setB(x,y,z,v)}
+  /* buried treasure in the rocky hills */
+  if(bi==='rocks'&&h>=4){const y=ri(2,h-1);if(r()<.18)setB(x,y,z,r()<.3?B.DIAMOND:B.GOLD)}
+  tops[x+','+z]=h}
+ /* trees: thick forest in the east, a few elsewhere, pine-ish in the snow */
+ const trees=[];let tries=0;while(trees.length<22&&tries++<3000){const x=ri(2,W-3),z=ri(2,Dp-3),h=tops[x+','+z];if(!h||h<2)continue;const top=get(x,h,z);if(top!==B.GRASS&&top!==B.SNOW)continue;const bi=biomeAt(x,z);if(bi==='home'||bi==='beach')continue;if(bi!=='forest'&&r()<.6)continue;if(trees.some(t=>Math.abs(t.x-x)<3&&Math.abs(t.z-z)<3))continue;trees.push({x,z,h,snow:bi==='snow'})}
  trees.forEach(t=>{const th=3+(r()<.4?1:0);for(let y=t.h+1;y<=t.h+th;y++)setB(t.x,y,t.z,B.LOG);const ly=t.h+th;
   for(let y=ly-1;y<=ly;y++)for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;if(dx&&dz&&y===ly&&r()<.6)continue;if(!get(t.x+dx,y,t.z+dz))setB(t.x+dx,y,t.z+dz,B.LEAVES)}
-  setB(t.x,ly+1,t.z,B.LEAVES);[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz])=>{if(r()<.7)setB(t.x+dx,ly+1,t.z+dz,B.LEAVES)})});
- /* pumpkins */
- for(let k=0;k<3;k++){const x=ri(3,W-4),z=ri(3,Dp-4),h=tops[x+','+z];if(h>=2&&get(x,h,z)===B.GRASS&&!get(x,h+1,z)&&Math.hypot(x-CX,z-CZ)>3.5)setB(x,h+1,z,B.PUMPKIN)}
- /* home: flat pad, crafting table */
- for(let dz=-2;dz<=2;dz++)for(let dx=-3;dx<=3;dx++){const x=10+dx,z=9+dz;for(let y=3;y<H;y++)setB(x,y,z,0);setB(x,1,z,B.DIRT);setB(x,2,z,B.GRASS)}
- setB(HOME.table.x,3,HOME.table.z,B.TABLE);
- for(let k=0;k<6;k++)spawnOre(r)}
+  setB(t.x,ly+1,t.z,t.snow?B.SNOW:B.LEAVES);[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz])=>{if(r()<.7)setB(t.x+dx,ly+1,t.z+dz,t.snow?B.SNOW:B.LEAVES)})});
+ /* pumpkin patch */
+ for(let k=0;k<6;k++){const x=ri(3,W-4),z=ri(3,Dp-4),h=tops[x+','+z];if(h>=2&&get(x,h,z)===B.GRASS&&!get(x,h+1,z)&&biomeAt(x,z)!=='home')setB(x,h+1,z,B.PUMPKIN)}
+ /* home: flat meadow, crafting table, two lanterns */
+ for(let dz=-3;dz<=3;dz++)for(let dx=-4;dx<=4;dx++){const x=16+dx,z=15+dz;if(Math.abs(dx)===4&&Math.abs(dz)===3)continue;for(let y=3;y<H;y++)setB(x,y,z,0);setB(x,0,z,B.BEDROCK);setB(x,1,z,B.DIRT);setB(x,2,z,B.GRASS)}
+ setB(HOME.table.x,3,HOME.table.z,B.TABLE);setB(13,3,13,B.LANTERN);setB(19,3,17,B.LANTERN);
+ for(let k=0;k<7;k++)spawnOre(r)}
 function topY(x,z){for(let y=H-1;y>=0;y--)if(G[idx(x,y,z)])return y;return -1}
 /* where a creature stands in this column (y of feet), or -1 if it's water / no room */
 function standY(x,z){if(x<0||z<0||x>=W||z>=Dp)return -1;const t=topY(x,z);if(t<0)return -1;const v=G[idx(x,t,z)];if(v===B.TABLE)return -1;if(t+2<H&&G[idx(x,t+1,z)])return -1;return t+1}
 function oreCount(){let n=0;for(let i=0;i<G.length;i++)if(G[i]===B.ORE)n++;return n}
 function oreList(){const L=[];for(let y=0;y<H;y++)for(let z=0;z<Dp;z++)for(let x=0;x<W;x++)if(G[idx(x,y,z)]===B.ORE)L.push({x,y,z});return L}
 function spawnOre(r=Math.random){for(let t=0;t<200;t++){const x=Math.floor(r()*W),z=Math.floor(r()*Dp);const y=topY(x,z);if(y<1)continue;const v=get(x,y,z);if(![B.GRASS,B.DIRT,B.STONE,B.SAND].includes(v))continue;
-  const dh=Math.hypot(x-HOME.spawn.x,z-HOME.spawn.z);if(Math.hypot(x-HOME.clucks.x,z-HOME.clucks.z)<2||dh<1.5)continue;if(Math.hypot(x-HOME.table.x,z-HOME.table.z)<2.5||dh>6.5)continue;let leafy=false;for(let yy=y+1;yy<H;yy++)for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(get(x+dx,yy,z+dz)===B.LEAVES)leafy=true;if(leafy)continue;if(oreList().some(o=>Math.abs(o.x-x)+Math.abs(o.z-z)<3))continue;setB(x,y,z,B.ORE);return{x,y,z}}return null}
+  const dh=Math.hypot(x-HOME.spawn.x,z-HOME.spawn.z);if(Math.hypot(x-HOME.clucks.x,z-HOME.clucks.z)<2||dh<1.5)continue;if(Math.hypot(x-HOME.table.x,z-HOME.table.z)<2.5||dh>11)continue;let leafy=false;for(let yy=y+1;yy<H;yy++)for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(get(x+dx,yy,z+dz)===B.LEAVES)leafy=true;if(leafy)continue;if(oreList().some(o=>Math.abs(o.x-x)+Math.abs(o.z-z)<4))continue;setB(x,y,z,B.ORE);return{x,y,z}}return null}
 function packWorld(){let s='',last=-1,run=0;const out=[];for(let i=0;i<G.length;i++){const v=G[i];if(v===last&&run<250)run++;else{if(run)out.push(last,run);last=v;run=1}}out.push(last,run);return out.join(',')}
 function unpackWorld(s){const a=s.split(',').map(Number);const g=new Uint8Array(W*H*Dp);let p=0;for(let i=0;i<a.length;i+=2){for(let k=0;k<a[i+1];k++)g[p++]=a[i]}if(p!==g.length)return false;G=g;return true}
 
 /* ---------- meshing ---------- */
-let scene,cam,R,worldMesh=null,waterMesh,seabed;
+let scene,cam,R,worldMesh=null,waterMesh,seabed,hemi,sunL;
 const FD=[{n:[1,0,0],c:[[1,0,1],[1,0,0],[1,1,0],[1,1,1]],s:.8},{n:[-1,0,0],c:[[0,0,0],[0,0,1],[0,1,1],[0,1,0]],s:.8},{n:[0,1,0],c:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]],s:1},{n:[0,-1,0],c:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]],s:.55},{n:[0,0,1],c:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]],s:.9},{n:[0,0,-1],c:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]],s:.7}];
-function rebuildWorld(){const pos=[],uv=[],col=[],ind=[];let vi=0;const e=.02/ (ACOLS*TS);
+/* ---------- light from lanterns (and lamp / sun blocks you craft) ---------- */
+const LIGHT=new Float32Array(W*Dp);const LR=5.5;
+const LIGHT_WORDS=new Set(['lamp','sun','star','moon']);
+function lightSources(){const L=[];for(let y=0;y<H;y++)for(let z=0;z<Dp;z++)for(let x=0;x<W;x++){const v=G[idx(x,y,z)];if(v===B.LANTERN||v===B.PUMPKIN&&false)L.push([x,z])}Object.entries(D.pics||{}).forEach(([k,w])=>{if(LIGHT_WORDS.has(w)){const [x,y,z]=k.split(',').map(Number);L.push([x,z])}});return L}
+function computeLight(){LIGHT.fill(0);lightSources().forEach(([sx,sz])=>{for(let z=Math.max(0,sz-6);z<=Math.min(Dp-1,sz+6);z++)for(let x=Math.max(0,sx-6);x<=Math.min(W-1,sx+6);x++){const l=1-Math.hypot(x-sx,z-sz)/LR;const i=z*W+x;if(l>LIGHT[i])LIGHT[i]=l}})}
+const lightAt=(x,z)=>x<0||z<0||x>=W||z>=Dp?0:LIGHT[z*W+x];
+const WORLD_U={uSun:{value:1}};
+function worldMaterial(){return new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{map:{value:atlasTex}}]),vertexColors:true,fog:true,
+ vertexShader:`attribute float light;varying vec2 vUv;varying vec3 vCol;varying float vLight;
+#include <fog_pars_vertex>
+void main(){vUv=uv;vCol=color;vLight=light;vec4 mvPosition=modelViewMatrix*vec4(position,1.0);gl_Position=projectionMatrix*mvPosition;
+#include <fog_vertex>
+}`,
+ fragmentShader:`uniform sampler2D map;uniform float uSun;varying vec2 vUv;varying vec3 vCol;varying float vLight;
+#include <fog_pars_fragment>
+void main(){vec4 t=texture2D(map,vUv);if(t.a<.5)discard;float l=max(uSun,vLight*.95);vec3 tint=mix(vec3(.5,.58,1.0),vec3(1.0),clamp((uSun-.25)/.75,0.,1.));tint=mix(tint,vec3(1.08,.9,.68),clamp((vLight-uSun)*1.4,0.,1.));
+gl_FragColor=vec4(t.rgb*vCol*l*tint,1.0);
+#include <fog_fragment>
+}`})}
+function rebuildWorld(){computeLight();const pos=[],uv=[],col=[],ind=[],lt=[];let vi=0;const e=.02/ (ACOLS*TS);
  for(let y=0;y<H;y++)for(let z=0;z<Dp;z++)for(let x=0;x<W;x++){const v=G[idx(x,y,z)];if(!v||v===B.PIC)continue;const f=FACES[v];if(!f)continue;
   for(let fi=0;fi<6;fi++){const F=FD[fi],nx=x+F.n[0],ny=y+F.n[1],nz=z+F.n[2];if(ny<0)continue;const nv=get(nx,ny,nz);if(opaque(nv))continue;if(nv===v&&TRANSP.has(v))continue;
    const tile=fi===2?f[0]:fi===3?f[1]:f[2];const u0=(tile%ACOLS)/ACOLS,v0=1-(Math.floor(tile/ACOLS)+1)/AROWS,du=1/ACOLS,dv=1/AROWS;
    /* tiny bit of corner darkening from neighbours = cheap ambient occlusion */
    F.c.forEach((c,k)=>{pos.push(x+c[0],y+c[1],z+c[2]);let ao=1;if(fi!==3){const ox=c[0]?1:-1,oz=c[2]?1:-1,oy=c[1]?1:-1;if(fi===2){if(opaque(get(x+ox,y+1,z))||opaque(get(x,y+1,z+oz)))ao=.82}else if(c[1]===0&&opaque(get(nx,y-1,nz)))ao=.86}
-    const s=F.s*ao;col.push(s,s,s);const uu=[[0,0],[1,0],[1,1],[0,1]][k];uv.push(u0+(uu[0]?du-e:e),v0+(uu[1]?dv-e:e))});
+    const s=F.s*ao;col.push(s,s,s);lt.push(fi===2||fi===3?lightAt(x,z):lightAt(nx,nz));const uu=[[0,0],[1,0],[1,1],[0,1]][k];uv.push(u0+(uu[0]?du-e:e),v0+(uu[1]?dv-e:e))});
    ind.push(vi,vi+1,vi+2,vi,vi+2,vi+3);vi+=4}}
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(ind);g.computeBoundingSphere();
- if(worldMesh){worldMesh.geometry.dispose();worldMesh.geometry=g}else{worldMesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:atlasTex,vertexColors:true,alphaTest:.5,side:THREE.FrontSide}));scene.add(worldMesh)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setAttribute('light',new THREE.Float32BufferAttribute(lt,1));g.setIndex(ind);g.computeBoundingSphere();
+ if(worldMesh){worldMesh.geometry.dispose();worldMesh.geometry=g}else{const m=worldMaterial();m.uniforms.uSun=WORLD_U.uSun;worldMesh=new THREE.Mesh(g,m);scene.add(worldMesh)}
  syncPics();syncOres()}
 
 /* ---------- picture blocks (things you crafted, like a cake block) ---------- */
@@ -130,19 +155,22 @@ function makeEmojiSprite(e,s){const m=new THREE.Sprite(new THREE.SpriteMaterial(
 function setupScene(){R=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.setSize(innerWidth,innerHeight);
  scene=new THREE.Scene();scene.background=new THREE.Color(0x8FD3FF);scene.fog=new THREE.Fog(0x8FD3FF,34,70);
  cam=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,200);
- scene.add(new THREE.HemisphereLight(0xFFFFFF,0x6A8A5A,.9));const sun=new THREE.DirectionalLight(0xFFFFFF,.55);sun.position.set(6,12,4);scene.add(sun);
+ hemi=new THREE.HemisphereLight(0xFFFFFF,0x6A8A5A,.9);scene.add(hemi);sunL=new THREE.DirectionalLight(0xFFFFFF,.55);sunL.position.set(6,12,4);scene.add(sunL);
  buildAtlas();
  /* water: gently wobbling plane */
  const wc=document.createElement('canvas');wc.width=wc.height=16;const wx=wc.getContext('2d');wx.fillStyle='#3E9AE8';wx.fillRect(0,0,16,16);speck(wx,mulberry(9),['#5AB0F2','#3088DA','#6EC0F8'],40);
  const wt=new THREE.CanvasTexture(wc);wt.magFilter=THREE.NearestFilter;wt.wrapS=wt.wrapT=THREE.RepeatWrapping;wt.repeat.set(90,90);
- waterMesh=new THREE.Mesh(new THREE.PlaneGeometry(90,90),new THREE.MeshBasicMaterial({map:wt,transparent:true,opacity:.82,depthWrite:false}));waterMesh.rotation.x=-Math.PI/2;waterMesh.position.set(CX+.5,SEA,CZ+.5);waterMesh.renderOrder=2;scene.add(waterMesh);
+ waterMesh=new THREE.Mesh(new THREE.PlaneGeometry(120,120),new THREE.MeshBasicMaterial({map:wt,transparent:true,opacity:.82,depthWrite:false}));waterMesh.rotation.x=-Math.PI/2;waterMesh.position.set(CX+.5,SEA,CZ+.5);waterMesh.renderOrder=2;scene.add(waterMesh);
  const sc=document.createElement('canvas');sc.width=sc.height=16;const sx=sc.getContext('2d');sx.fillStyle='#C8B478';sx.fillRect(0,0,16,16);speck(sx,mulberry(4),['#B8A468','#D8C488'],60);const st=new THREE.CanvasTexture(sc);st.magFilter=THREE.NearestFilter;st.wrapS=st.wrapT=THREE.RepeatWrapping;st.repeat.set(90,90);
- seabed=new THREE.Mesh(new THREE.PlaneGeometry(90,90),new THREE.MeshBasicMaterial({map:st,color:0x9AB8C8}));seabed.rotation.x=-Math.PI/2;seabed.position.set(CX+.5,.9,CZ+.5);scene.add(seabed);
+ seabed=new THREE.Mesh(new THREE.PlaneGeometry(120,120),new THREE.MeshBasicMaterial({map:st,color:0x9AB8C8}));seabed.rotation.x=-Math.PI/2;seabed.position.set(CX+.5,.9,CZ+.5);scene.add(seabed);
  /* clouds */
- for(let i=0;i<9;i++){const c=new THREE.Group();const m=new THREE.MeshBasicMaterial({color:0xFFFFFF,transparent:true,opacity:.92});const n=ri(2,4);for(let k=0;k<n;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(ri(2,4),.8,ri(2,3)),m);b.position.set(k*1.6-n*.8,0,(rnd()-.5)*1.5);c.add(b)}c.position.set(rnd()*60-20,27+rnd()*4,rnd()*60-20);c.scale.setScalar(1.6);c.userData.v=.3+rnd()*.4;scene.add(c);CLOUDS.push(c)}
+ for(let i=0;i<14;i++){const c=new THREE.Group();const m=new THREE.MeshBasicMaterial({color:0xFFFFFF,transparent:true,opacity:.92});const n=ri(2,4);for(let k=0;k<n;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(ri(2,4),.8,ri(2,3)),m);b.position.set(k*1.6-n*.8,0,(rnd()-.5)*1.5);c.add(b)}c.position.set(rnd()*80-25,27+rnd()*4,rnd()*80-25);c.scale.setScalar(1.6);c.userData.v=.3+rnd()*.4;scene.add(c);CLOUDS.push(c)}
  addEventListener('resize',()=>{R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()})}
 const CLOUDS=[];
-function skyTick(dt,t){CLOUDS.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>40)c.position.x=-25});if(waterMesh){waterMesh.material.map.offset.set(t*.01,Math.sin(t*.3)*.02);waterMesh.position.y=SEA+Math.sin(t*1.2)*.02}}
+const SKY_DAY=new THREE.Color(0x8FD3FF),SKY_NIGHT=new THREE.Color(0x141A3A),SKY_DUSK=new THREE.Color(0xF4A06A),_sc=new THREE.Color();
+function applySun(s,dusk){WORLD_U.uSun.value=s;_sc.copy(SKY_NIGHT).lerp(SKY_DAY,clamp((s-.22)/.78,0,1));if(dusk>0)_sc.lerp(SKY_DUSK,dusk*.45);scene.background.copy(_sc);scene.fog.color.copy(_sc);if(hemi)hemi.intensity=.25+.65*s;if(sunL)sunL.intensity=.1+.45*s;
+ if(waterMesh)waterMesh.material.color.setScalar(.35+.65*s);if(seabed)seabed.material.color.setRGB(.6*(.35+.65*s),.72*(.35+.65*s),.78*(.35+.65*s));CLOUDS.forEach(c=>c.children.forEach(b=>b.material.color.setScalar(.3+.7*s)));Object.values(picMesh).forEach(m=>{const w=m.userData.word;m.material.color.setScalar(LIGHT_WORDS.has(w)?1:Math.max(.45,s))})}
+function skyTick(dt,t){CLOUDS.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>60)c.position.x=-30});if(waterMesh){waterMesh.material.map.offset.set(t*.01,Math.sin(t*.3)*.02);waterMesh.position.y=SEA+Math.sin(t*1.2)*.02}}
 
 /* ---------- picking ---------- */
 const ray=new THREE.Raycaster(),_v2=new THREE.Vector2();

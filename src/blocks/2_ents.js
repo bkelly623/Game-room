@@ -111,6 +111,14 @@ function makeBurpling(){const g=new THREE.Group(),body=new THREE.Group();g.add(b
  const m=box(.8,.8,.8,faceMats('#7ACC3A',x=>{x.fillStyle='#7ACC3A';x.fillRect(0,0,16,16);x.fillStyle='#5AA82A';x.fillRect(0,13,16,3);x.fillStyle='#fff';x.fillRect(2,3,5,5);x.fillRect(9,3,5,5);x.fillStyle='#1A1A1A';x.fillRect(4,5,2,3);x.fillRect(10,4,2,3);x.fillStyle='#3A1A1A';x.fillRect(4,10,8,4);x.fillStyle='#E87890';x.fillRect(6,12,4,2);x.fillStyle='#fff';x.fillRect(5,10,2,1);x.fillRect(9,10,2,1)}),0,.4,0,body);
  box(.2,.2,.2,'#7ACC3A',0,.9,0,body);return{g,body,type:'burpling'}}
 
+/* ---------- Gloomy: a grumpy night-time cube with glowing eyes. Scared of light. ---------- */
+function makeGloomy(){const g=new THREE.Group(),body=new THREE.Group();g.add(body);
+ const m=box(.78,.86,.78,faceMats('#3A2A5E',x=>{x.fillStyle='#3A2A5E';x.fillRect(0,0,16,16);x.fillStyle='#2A1E46';x.fillRect(0,12,16,4);x.fillRect(0,0,16,2);x.fillStyle='#FFE04A';x.fillRect(2,5,4,3);x.fillRect(10,5,4,3);x.fillStyle='#FF8A2A';x.fillRect(3,6,2,2);x.fillRect(11,6,2,2);x.fillStyle='#1A1030';x.fillRect(1,3,6,1);x.fillRect(9,3,6,1);x.fillRect(5,11,6,2);x.fillRect(4,10,1,1);x.fillRect(11,10,1,1)}),0,.48,0,body);
+ m.material.forEach(mm=>{mm.emissive=new THREE.Color(0x140A28)});
+ const arm=s=>{const a=new THREE.Group();a.position.set(s*.45,.6,0);box(.14,.42,.14,'#2A1E46',0,-.18,0,a);body.add(a);return a};
+ const P={g,body,armL:arm(-1),armR:arm(1),type:'gloomy'};box(.1,.2,.1,'#2A1E46',0,1,0,body);const tuft=box(.24,.08,.24,'#5A3A8E',0,1.12,0,body);
+ const zz=makeEmojiSprite('💢',.5);zz.position.set(.35,1.35,0);g.add(zz);P.mad=zz;return P}
+
 /* ---------- entities ---------- */
 function addEnt(kind,P,x,z,extra){const e=Object.assign({kind,P,x,z,y:standY(Math.floor(x),Math.floor(z)),ry:rnd()*6,path:null,t:0,cd:rnd()*3,bob:rnd()*6,vy:0,hopY:0},extra||{});if(e.y<0)e.y=3;P.g.position.set(x,e.y,z);P.g.userData.ent=e;scene.add(P.g);ENTS.push(e);return e}
 function removeEnt(e){scene.remove(e.P.g);const i=ENTS.indexOf(e);if(i>=0)ENTS.splice(i,1)}
@@ -122,10 +130,10 @@ function nearestLand(x,z){x=Math.round(x-.5);z=Math.round(z-.5);for(let r=0;r<12
 function packMobs(){return ENTS.filter(e=>e.kind==='mob').map(e=>[e.type,+e.x.toFixed(2),+e.z.toFixed(2)])}
 
 /* ---------- paths across block tops ---------- */
-function findPath(sx,sz,goal){/* goal(x,z) -> true when reached; BFS over columns; step up/down at most 1 */
+function findPath(sx,sz,goal,avoid,maxN){/* goal(x,z) -> true when reached; BFS over columns; step up/down at most 1 */
  const k=(x,z)=>x+z*W;const prev=new Map();const q=[[sx,sz]];prev.set(k(sx,sz),null);let end=null;
  while(q.length){const [x,z]=q.shift();if(goal(x,z)){end=[x,z];break}const h=standY(x,z);
-  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,nz=z+dz;if(prev.has(k(nx,nz)))continue;const nh=standY(nx,nz);if(nh<1||h<0||Math.abs(nh-h)>1)continue;prev.set(k(nx,nz),[x,z]);q.push([nx,nz])}}
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,nz=z+dz;if(prev.has(k(nx,nz)))continue;const nh=standY(nx,nz);if(nh<1||h<0||Math.abs(nh-h)>1)continue;if(avoid&&avoid(nx,nz))continue;if(maxN&&prev.size>maxN)return null;prev.set(k(nx,nz),[x,z]);q.push([nx,nz])}}
  if(!end)return null;const path=[];let c=end;while(c){path.unshift(c);c=prev.get(k(c[0],c[1]))}return path}
 
 /* ---------- moving + animating ---------- */
@@ -140,6 +148,7 @@ function entsTick(dt,t){for(const e of ENTS.slice()){const P=e.P;e.cd-=dt;e.t+=d
   else if(e.kind==='mob')mobTick(e,dt,t);
   else if(e.kind==='clucks'){P.body.rotation.y=Math.sin(t*.7)*.3;P.head.rotation.x=Math.max(0,Math.sin(t*2.3))*.5*(Math.sin(t*.37)>.6?1:0);P.wings.forEach((w,i)=>w.rotation.z=(i?-1:1)*(e.flap>0?Math.abs(Math.sin(t*20))*.9:0));if(e.flap>0)e.flap-=dt;P.bang.visible=!!e.hasNews;P.bang.position.y=1.7+Math.sin(t*4)*.08;settleY(e,dt)}
   else if(e.kind==='burpling')burpTick(e,dt,t);
+  else if(e.kind==='gloomy')gloomTick(e,dt,t);
   if(e.hopY>0){e.hopV-=22*dt;e.hopY=Math.max(0,e.hopY+e.hopV*dt)}else if(e.hopV>0){e.hopY+=e.hopV*dt}
   P.g.position.set(e.x,e.y+(e.hopY||0),e.z);if(e.kind!=='mob'||!ANIMALS[e.type]||ANIMALS[e.type].t!=='swim')P.g.rotation.y+=angDiff(P.g.rotation.y,e.ry)*Math.min(1,dt*10)}}
 const angDiff=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d};

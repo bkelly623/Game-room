@@ -14,7 +14,7 @@ const SKILLS=[
  {n:'Short a words (cat, map)',w:['cat:c.a.t:🐱:cat','hat:h.a.t:🎩','bat:b.a.t:🦇:bat','map:m.a.p:🗺️','van:v.a.n:🚐','can:c.a.n:🥫','rat:r.a.t:🐀:rat','bag:b.a.g:👜','pan:p.a.n:🍳','ram:r.a.m:🐏:ram','cab:c.a.b:🚕','ax:a.x:🪓']},
  {n:'Short i and o words (pig, dog)',w:['pig:p.i.g:🐷:pig','pin:p.i.n:📌','dog:d.o.g:🐶:dog','pot:p.o.t:🍲','fox:f.o.x:🦊:fox','box:b.o.x:📦','log:l.o.g:🪵','ox:o.x:🐂:ox','kid:k.i.d:🧒','bin:b.i.n:🗑️','hog:h.o.g:🐗:hog']},
  {n:'Short e and u words (bed, sun)',w:['bed:b.e.d:🛏️','hen:h.e.n:🐔:hen','net:n.e.t:🥅','web:w.e.b:🕸️','sun:s.u.n:☀️','bug:b.u.g:🐛:bug','cup:c.u.p:☕','bus:b.u.s:🚌','pen:p.e.n:🖊️','ten:t.e.n:🔟','egg:e.gg:🥚','nut:n.u.t:🥜','tub:t.u.b:🛁','leg:l.e.g:🦵','jet:j.e.t:✈️']},
- {n:'Blends (stop, frog, hand)',w:['stop:s.t.o.p:🛑','frog:f.r.o.g:🐸:frog','crab:c.r.a.b:🦀:crab','drum:d.r.u.m:🥁','flag:f.l.a.g:🚩','sled:s.l.e.d:🛷','hand:h.a.n.d:✋','tent:t.e.n.t:⛺','plug:p.l.u.g:🔌','swim:s.w.i.m:🏊','milk:m.i.l.k:🥛','gift:g.i.f.t:🎁','plant:p.l.a.n.t:🪴','skunk:s.k.u.n.k:🦨:skunk','drop:d.r.o.p:💧']},
+ {n:'Blends (stop, frog, hand)',w:['stop:s.t.o.p:🛑','frog:f.r.o.g:🐸:frog','crab:c.r.a.b:🦀:crab','drum:d.r.u.m:🥁','flag:f.l.a.g:🚩','sled:s.l.e.d:🛷','hand:h.a.n.d:✋','tent:t.e.n.t:⛺','plug:p.l.u.g:🔌','swim:s.w.i.m:🏊','milk:m.i.l.k:🥛','gift:g.i.f.t:🎁','plant:p.l.a.n.t:🪴','skunk:s.k.u.n.k:🦨:skunk','drop:d.r.o.p:💧','lamp:l.a.m.p:💡']},
  {n:'sh, ch, th, ck (ship, duck)',w:['ship:sh.i.p:🚢','fish:f.i.sh:🐟:fish','shell:sh.e.ll:🐚','chick:ch.i.ck:🐤:chick','duck:d.u.ck:🦆:duck','sock:s.o.ck:🧦','lock:l.o.ck:🔒','rock:r.o.ck:🪨','truck:t.r.u.ck:🚚','brick:b.r.i.ck:🧱','clock:c.l.o.ck:⏰','dish:d.i.sh:🍽️','shop:sh.o.p:🏪','bath:b.a.th:🛀']},
  {n:'Magic e (cake, bike)',w:['cake:c.a*.k.e~:🎂','bike:b.i*.k.e~:🚲','bone:b.o*.n.e~:🦴','cube:c.u*.b.e~:🧊','kite:k.i*.t.e~:🪁','nose:n.o*.s.e~:👃','rose:r.o*.s.e~:🌹','snake:s.n.a*.k.e~:🐍:snake','skate:s.k.a*.t.e~:⛸️','smile:s.m.i*.l.e~:😃','cone:c.o*.n.e~:🍦','globe:g.l.o*.b.e~:🌍']},
  {n:'ee and ea (bee, leaf)',w:['bee:b.ee:🐝:bee','tree:t.r.ee:🌳','feet:f.ee.t:🦶','seal:s.ea.l:🦭:seal','leaf:l.ea.f:🍃','sheep:sh.ee.p:🐑:sheep','teeth:t.ee.th:🦷','peach:p.ea.ch:🍑','jeep:j.ee.p:🚙','seed:s.ee.d:🌱','beach:b.ea.ch:🏖️','queen:qu.ee.n:👸','meat:m.ea.t:🍖']},
@@ -63,7 +63,13 @@ const SFX={
  tap(){tone(880,.05,{type:'triangle',vol:.06})},
  step(){noise(.05,.05,1500,0,1)},
  magic(){[784,988,1175,1568,1976].forEach((f,i)=>tone(f,.25,{type:'triangle',vol:.06,at:i*.07}))},
- splash(){noise(.6,.25,600,0,1)}};
+ splash(){noise(.6,.25,600,0,1)},
+ zap(){tone(1200,.25,{type:'sawtooth',vol:.08,slide:-900});noise(.25,.2,2500);[1568,2093].forEach((f,i)=>tone(f,.12,{type:'square',vol:.05,at:.08+i*.06}))},
+ hurt(){tone(300,.25,{type:'square',vol:.12,slide:-180});noise(.15,.15,600,0,1)},
+ grumble(){tone(80,.5,{type:'sawtooth',vol:.12,wob:6,slide:-20})},
+ night(){[392,330,262].forEach((f,i)=>tone(f,.6,{type:'triangle',vol:.08,at:i*.35}))},
+ morning(){[523,659,784,1047].forEach((f,i)=>tone(f,.3,{type:'triangle',vol:.08,at:i*.15}));setTimeout(()=>SFX.cluck(),700)},
+ combo(){[784,988,1319].forEach((f,i)=>tone(f,.1,{type:'square',vol:.06,at:i*.05}))}};
 const sfx=n=>{if(AC&&D.sound!==false&&SFX[n])SFX[n]()};
 const Music={next:0,step:0,on:true};
 const MEL=[72,0,76,79,76,0,72,0,74,0,77,81,77,0,74,0,72,0,76,79,84,0,83,79,77,0,76,0,74,0,72,0];
@@ -103,7 +109,7 @@ function grade(E,word,ok,help){const s=word.s;E.q++;if(ok)E.ok++;E.n[s]++;if(ok&
 /* ---------- save ---------- */
 const KEY='blockparty.v1';
 let D=null;
-function freshSave(){return{v:1,name:'',started:false,sound:true,music:true,rd:freshEng(),sp:freshEng(),gems:4,inv:{},world:null,pics:{},mobs:[],book:{},quest:0,qprog:{},hats:[],hat:null,stats:{ores:0,crafts:0,placed:0,digs:0,burps:0,quests:0},days:{},burpT:0,savedAt:0}}
-function load(){D=freshSave();try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.v===1)D=Object.assign(freshSave(),d)}}catch(e){}}
+function freshSave(){return{v:2,hearts:5,combo:0,bestCombo:0,clock:30,day:1,nightsOn:false,name:'',started:false,sound:true,music:true,rd:freshEng(),sp:freshEng(),gems:4,inv:{},world:null,pics:{},mobs:[],book:{},quest:0,qprog:{},hats:[],hat:null,stats:{ores:0,crafts:0,placed:0,digs:0,burps:0,quests:0,zaps:0,nights:0,lamps:0},days:{},burpT:0,savedAt:0}}
+function load(){D=freshSave();try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.v===2)D=Object.assign(freshSave(),d);else if(d&&d.v===1){/* bigger world in v2: keep everything learned and collected, make a new island */const keep=['name','started','sound','music','rd','sp','gems','inv','book','quest','qprog','hats','hat','stats','days'];keep.forEach(k=>{if(d[k]!==undefined)D[k]=d[k]});D.world=null;D.pics={};D.mobs=[];D.stats=Object.assign(freshSave().stats,d.stats||{})}}}catch(e){}}
 function save(){if(!D||!D.started)return;D.savedAt=Date.now();try{if(typeof packWorld==='function')D.world=packWorld();if(typeof packMobs==='function')D.mobs=packMobs();localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
 function kidName(){try{if(window.__hubRaw){const h=JSON.parse(window.__hubRaw('hub.v1')||'null');const k=h&&h.kids&&h.kids.find(k=>k.id===window.__KID);if(k&&k.name)return k.name}}catch(e){}return ''}

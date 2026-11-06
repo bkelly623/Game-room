@@ -17,7 +17,7 @@ window.CATALOG=[
  {id:'summit',title:'Summit Quest',emoji:'🏔️',bg:['#2A8C9F','#163E5E'],subjects:['Math','Spelling','Grammar','Reading'],
   blurb:'Earn play time with short lessons, then spend it climbing in Ridge Runner.',kind:'Lessons + arcade'},
  {id:'blocks',title:'Block Party',emoji:'🧱',bg:['#5DBB3E','#2E6B1E'],subjects:['Reading','Spelling'],
-  blurb:'Dig, build and craft on a blocky island. Read words to pop sparkly blocks; spell words to make pigs, cakes and more.',kind:'Block building'}
+  blurb:'Dig, build and craft on a blocky island. Read to pop sparkly blocks, spell to craft animals and lamps, and zap the Gloomies at night.',kind:'Block building'}
 ];
 /* What each game's save looks like, so the grown-up page can show answers and accuracy. */
 window.SAVEKEYS={kingdoms:'dawnkingdoms.v1',ashvale:'ashvale.v1',snortwood:'snortwood.v1',glorp:'glorpisland.v1',rocket:'rocketpants.v1',echo:'echomines.v1',blocks:'blockparty.v1',lumen:'lumenvale.save.v1',summit:'summitquest.v1'};
