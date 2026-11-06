@@ -1,5 +1,7 @@
 /* The game library. Add a game here and it shows up in the grown-up page. */
 window.CATALOG=[
+ {id:'kingswall',title:"King's Wall",emoji:'👑',bg:['#F2A12E','#7A3A10'],subjects:['Math','Reading','Spelling'],
+  blurb:'Goblins, wolves and Big Gary the ogre are coming for the King\'s pudding. Every right answer fires a volley of arrows. Pick powers, beat bosses and upgrade your castle.',kind:'Castle defense'},
  {id:'kingdoms',title:'Dawn of Kingdoms',emoji:'🏰',bg:['#3B5BA5','#1E2F5E'],subjects:['Math','Reading','Grammar'],
   blurb:'Build a kingdom, raise an army and lead a hero. Math, reading and grammar run the realm.',kind:'3D strategy'},
  {id:'ashvale',title:'Legend of Ashvale',emoji:'🛡️',bg:['#B4552E','#5E2414'],subjects:['Grammar','Reading'],
@@ -20,4 +22,4 @@ window.CATALOG=[
   blurb:'Dig, build and craft on a blocky island. Read to pop sparkly blocks, spell to craft animals and lamps, and zap the Gloomies at night.',kind:'Block building'}
 ];
 /* What each game's save looks like, so the grown-up page can show answers and accuracy. */
-window.SAVEKEYS={kingdoms:'dawnkingdoms.v1',ashvale:'ashvale.v1',snortwood:'snortwood.v1',glorp:'glorpisland.v1',rocket:'rocketpants.v1',echo:'echomines.v1',blocks:'blockparty.v1',lumen:'lumenvale.save.v1',summit:'summitquest.v1'};
+window.SAVEKEYS={kingdoms:'dawnkingdoms.v1',ashvale:'ashvale.v1',snortwood:'snortwood.v1',glorp:'glorpisland.v1',rocket:'rocketpants.v1',echo:'echomines.v1',blocks:'blockparty.v1',lumen:'lumenvale.save.v1',summit:'summitquest.v1',kingswall:'kingswall.v1'};

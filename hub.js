@@ -3,12 +3,13 @@
 'use strict';
 var KEY='hub.v1';
 function defaults(){return{v:1,pin:null,kids:[
-  {id:'vinny',name:'Vinny',emoji:'🦊',color:'#E8742E',speak:false,games:['kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']},
-  {id:'luca',name:'Luca',emoji:'🐸',color:'#2FA35A',speak:true,games:['blocks','glorp','rocket']},
-  {id:'jack',name:'Jack',emoji:'🐺',color:'#3E7CD6',speak:false,games:['kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']}
- ],log:{}}}
+  {id:'vinny',name:'Vinny',emoji:'🦊',color:'#E8742E',speak:false,games:['kingswall','kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']},
+  {id:'luca',name:'Luca',emoji:'🐸',color:'#2FA35A',speak:true,games:['kingswall','blocks','glorp','rocket']},
+  {id:'jack',name:'Jack',emoji:'🐺',color:'#3E7CD6',speak:false,games:['kingswall','kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']}
+ ],log:{},kwAdded:1}}
 var mem=null;
-function load(){if(mem)return mem;try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(d&&Array.isArray(d.kids)){d.log=d.log||{};d.kids.forEach(function(k){var i=k.games.indexOf('letters');if(i>=0)k.games[i]='blocks'});mem=d;return d}}}catch(e){}mem=defaults();return mem}
+function load(){if(mem)return mem;try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(d&&Array.isArray(d.kids)){d.log=d.log||{};d.kids.forEach(function(k){var i=k.games.indexOf('letters');if(i>=0)k.games[i]='blocks';if(!d.kwAdded&&k.games.indexOf('kingswall')<0)k.games.unshift('kingswall')});d.kwAdded=1;mem=d;return d}}}catch(e){}mem=defaults();return mem}
+function kw(k){if(!k.kw&&window.KW)k.kw=window.KW.defaults(k.id);return k.kw}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(e){}}
 function kid(id){return load().kids.find(function(k){return k.id===id})||null}
 function game(id){return (window.CATALOG||[]).find(function(g){return g.id===id})||null}
@@ -37,5 +38,5 @@ if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pick
 function say(t){try{if(!('speechSynthesis' in window))return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=.9;u.pitch=1.1;if(voice){u.voice=voice;u.lang=voice.lang}else u.lang='en-US';speechSynthesis.speak(u)}catch(e){}}
 function fmtDur(sec){sec=Math.round(sec||0);if(sec<60)return sec?'<1 min':'0 min';var m=Math.round(sec/60);if(m<60)return m+' min';var h=Math.floor(m/60);return h+' h '+(m%60)+' min'}
 function ago(ts){if(!ts)return'Never';var s=(Date.now()-ts)/1000;if(s<90)return'Just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' h ago';var d=Math.round(s/86400);return d===1?'Yesterday':d+' days ago'}
-window.HUB={load:load,save:save,kid:kid,game:game,logOf:logOf,addTime:addTime,touch:touch,weekSec:weekSec,progress:progress,wipe:wipe,wipeKid:wipeKid,say:say,fmtDur:fmtDur,ago:ago,reset:function(){mem=defaults();save()}};
+window.HUB={kw:kw,load:load,save:save,kid:kid,game:game,logOf:logOf,addTime:addTime,touch:touch,weekSec:weekSec,progress:progress,wipe:wipe,wipeKid:wipeKid,say:say,fmtDur:fmtDur,ago:ago,reset:function(){mem=defaults();save()}};
 })();
