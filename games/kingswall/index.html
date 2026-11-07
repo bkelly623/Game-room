@@ -823,11 +823,11 @@ function endRun(win){if(G.over)return;G.over=true;Music.on=false;$('#qWait').hid
   $('#rLine').textContent=win?(st%5===0?'You beat Big Gary!':'The pudding is safe!'):'The goblins ate the pudding... Try again!';
   $('#rStats').innerHTML=`<div><b>${G.right}</b>right answers</div><div><b>${G.best}</b>best streak</div><div><b>${G.killed}</b>monsters</div><div><b>+${earned}</b>gold</div>`;
   const cb=$('#chestBox');cb.hidden=!win;$('#rGold').textContent='';const chest=$('#chest');chest.className='';chest.textContent=st%5===0?'🎁':'📦';chest.dataset.bonus=bonus;chest.dataset.open='';
-  $('#rNext').textContent=win?'Next stage ▶':'Try again ↻';$('#rNext').disabled=win;$('#rNext').classList.toggle('pulse',!win);
+  $('#rNext').textContent=win?'Next stage ▶':'Try again ↻';$('#rNext').disabled=false;$('#rNext').classList.add('pulse');
   if(win){$('#rLine').textContent+=' Tap the chest!'}
   show('result');if(cfg().speak)say(win?'You won! Tap the chest!':'Oh no! Try again!')},win?1300:900)}
-function openChest(){const c=$('#chest');if(c.dataset.open)return;c.dataset.open='1';const b=+c.dataset.bonus;c.classList.add('open');c.textContent='✨';SFX.lvl();
- let n=0;const iv=setInterval(()=>{n=Math.min(b,n+Math.ceil(b/12));$('#rGold').textContent='+'+n+' 🪙';SFX.coin();if(n>=b){clearInterval(iv);D.gold+=b;save();$('#rNext').disabled=false;$('#rNext').classList.add('pulse')}},70)}
+function openChest(){const c=$('#chest');if(c.dataset.open)return;c.dataset.open='1';const b=+c.dataset.bonus;D.gold+=b;save();c.classList.add('open');c.textContent='✨';SFX.lvl();
+ let n=0;const iv=setInterval(()=>{n=Math.min(b,n+Math.ceil(b/12));$('#rGold').textContent='+'+n+' 🪙';SFX.coin();if(n>=b)clearInterval(iv)},70)}
 function openShop(){const L=$('#shopList');L.innerHTML='';$('#shGold').textContent=D.gold;
  Object.keys(UPS).forEach(k=>{const U=UPS[k],l=D.up[k],max=l>=U.max,c=upCost(k);const d=document.createElement('div');d.className='up';
   d.innerHTML=`<div class="h"><span class="ic">${U.ic}</span><div><div class="nm">${U.n}</div><div class="lv">Level ${l}${max?' (max)':''}</div></div></div><div class="ds">${esc(U.d)}</div>`;
@@ -849,7 +849,7 @@ $('#setup').addEventListener('click',e=>{const b=e.target.closest('button');if(!
 /* ================= wiring ================= */
 $('#tPlay').onclick=startRun;$('#tShop').onclick=()=>{audioInit();openShop()};$('#tSet').onclick=openSetup;$('#suX').onclick=()=>{hide('setup');titleScreen()};
 $('#shDone').onclick=$('#shX').onclick=()=>{hide('shop');if($('#result').hidden)titleScreen()};
-$('#rShop').onclick=openShop;$('#rNext').onclick=()=>{if($('#rNext').disabled)return;startRun()};$('#rHome').onclick=()=>{const c=$('#chest');if(!$('#chestBox').hidden&&!c.dataset.open){openChest()}titleScreen()};
+$('#rShop').onclick=openShop;$('#rNext').onclick=()=>{const c=$('#chest');if(!$('#chestBox').hidden&&!c.dataset.open)openChest();startRun()};$('#rHome').onclick=()=>{const c=$('#chest');if(!$('#chestBox').hidden&&!c.dataset.open){openChest()}titleScreen()};
 $('#chest').onclick=openChest;$('#bPause').onclick=()=>pause(true);$('#pGo').onclick=()=>pause(false);
 $('#pSnd').onclick=()=>{D.sound=!D.sound;applyVol();save();pause(true)};$('#pMus').onclick=()=>{D.music=!D.music;applyVol();save();pause(true)};
 $('#pQuit').onclick=()=>{hide('pause');G.paused=false;G.wall.hp=0};
