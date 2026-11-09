@@ -1,15 +1,27 @@
 /* ================= save + settings ================= */
-const KEY='kingswall.v1';
+let KEY='kingswall.v1';
+/* players: in the Game Room each kid already has their own save; on its own the game keeps a list of players */
+const PKEY='kingswall.profiles';let PROF=null;
+function setupProfiles(){HK=hubKid();if(HK){KEY='kingswall.v1';PROF=null;return}
+ try{PROF=JSON.parse(localStorage.getItem(PKEY)||'null')}catch(e){PROF=null}
+ if(!PROF||!Array.isArray(PROF.list)){PROF={list:[],cur:null};let old=null;try{old=localStorage.getItem('kingswall.v1')}catch(e){}
+  if(old){const id='p'+Date.now().toString(36);PROF.list.push({id,name:'Player 1',em:'🛡️'});PROF.cur=id;try{localStorage.setItem('kingswall.v1.'+id,old)}catch(e){}}saveProfiles()}
+ const p=PROF.list.find(x=>x.id===PROF.cur)||PROF.list[0];if(p){PROF.cur=p.id;KEY='kingswall.v1.'+p.id}else KEY=null}
+function saveProfiles(){try{localStorage.setItem(PKEY,JSON.stringify(PROF))}catch(e){}}
+function curProfile(){return PROF&&PROF.list.find(x=>x.id===PROF.cur)||null}
+function readSave(key){try{const s=key.indexOf('kid.')===0&&window.__hubRaw?window.__hubRaw(key):localStorage.getItem(key);return s?JSON.parse(s):null}catch(e){return null}}
+/* new game: castle, gold and upgrades start over; learning levels and answer history stay */
+function newGame(){const keep={eng:D.eng,ma:D.ma,rd:D.rd,sp:D.sp,days:D.days,sound:D.sound,music:D.music,cfg:D.cfg,seenHelp:true,rot:D.rot};D=Object.assign(freshSave(),keep);save()}
 let D=null;
 function freshSave(){return{v:1,stage:1,best:0,gold:0,up:{dmg:0,wall:0,vol:0,arch:0,king:0,luck:0},eng:{},ma:{q:0,ok:0},rd:{q:0,ok:0},sp:{q:0,ok:0},days:{},sound:true,music:true,rot:0,cfg:null,stats:{wins:0,losses:0,kills:0,megas:0,bosses:0},seenHelp:false}}
-function load(){D=freshSave();try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.v===1){D=Object.assign(freshSave(),d);D.up=Object.assign(freshSave().up,d.up||{});D.stats=Object.assign(freshSave().stats,d.stats||{})}}}catch(e){}
+function load(){D=freshSave();try{const s=KEY&&localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.v===1){D=Object.assign(freshSave(),d);D.up=Object.assign(freshSave().up,d.up||{});D.stats=Object.assign(freshSave().stats,d.stats||{})}}}catch(e){}
  if(!D.cfg)D.cfg=Object.assign(window.KW.defaults(''),{speak:false})}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+function save(){if(!KEY)return;try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
 function hubKid(){try{if(window.__hubRaw){const h=JSON.parse(window.__hubRaw('hub.v1')||'null');return h&&h.kids&&h.kids.find(k=>k.id===window.__KID)||null}}catch(e){}return null}
 let HK=null;
 function cfg(){HK=hubKid();const kw=(HK&&HK.kw)||(HK?window.KW.defaults(HK.id):D.cfg);
  const subj=(kw.subj||[]).filter(s=>window.KW.subjects[s]);
- return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:''}}
+ return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 /* ================= learning engine (per subject) ================= */

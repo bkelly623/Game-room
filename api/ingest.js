@@ -9,7 +9,7 @@ module.exports=async(req,res)=>{
   if(!ev.length&&!b.snap)return json(res,200,{ok:true,skipped:true});
   const doc={v:1,at:now,kid:b.kid,name:String(b.name||'').slice(0,30),dev:{id:b.dev.id,name:String(b.dev.name||'').slice(0,40),test:!!b.dev.test},ev,snap:b.snap||null};
   const body=JSON.stringify(doc);if(body.length>500000)return json(res,413,{error:'too big'});
-  try{await B.put(`gr/v1/b/${day(now)}/${b.kid}.json`,body)}catch(e){return json(res,500,{error:String(e.message||e)})}
+  try{await B.put(`gr/v1/b/${day(now)}/${b.kid}-${now}-${Math.random().toString(36).slice(2,12)}.json`,body,{random:false})}catch(e){return json(res,500,{error:String(e.message||e)})}
   /* King's Wall leaderboard: only touched when someone beats their best */
   const best=ev.filter(e=>e&&e.e==='kwbest'&&!doc.dev.test).reduce((m,e)=>Math.max(m,+e.st||0),0);
   if(best){try{const url=B.publicUrl('gr/v1/board.json');const cur=(url&&await B.getJSON(url+'?t='+now))||{kids:{}};

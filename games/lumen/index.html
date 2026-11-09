@@ -210,7 +210,7 @@ function freshSave(){return{name:'',coins:5,hat:'none',tunic:'leaf',owned:['hat:
 let G=freshSave();
 function load(){try{const s=localStorage.getItem(SAVE_KEY);if(s){const d=JSON.parse(s);G=Object.assign(freshSave(),d);G.stats=Object.assign(freshSave().stats,d.stats||{})}}catch(e){}}
 function save(){try{if(cur)G.map=cur.id;localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
-function record(skill,ok){const s=G.stats[skill];s[ok?0:1]++;
+function record(skill,ok){try{window.__trk&&__trk.ans({s:skill==='word'?'read':'math',f:skill,ok})}catch(e){}const s=G.stats[skill];s[ok?0:1]++;
   if(ok){G.stats.streak=Math.max(0,G.stats.streak)+1;if(G.stats.streak>=4&&G.level<5){G.level++;G.stats.streak=0}}
   else{G.stats.streak=Math.min(0,G.stats.streak)-1;if(G.stats.streak<=-2&&G.level>1){G.level--;G.stats.streak=0}}
   save()}

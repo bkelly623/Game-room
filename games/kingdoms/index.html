@@ -419,7 +419,7 @@ function makeLike(q,ctx){return Object.assign(makeM(q.s,ctx),{})}
 /* reading: choose, from the questions a passage offers, the one nearest the reader's current skill */
 function pickReadQ(list){const want=pickSkill('read');let best=list[0],bd=99;shuffle(list.slice()).forEach(q=>{const d=Math.abs(q.s-want)+(q.s>want?.5:0);if(d<bd){bd=d;best=q}});return best}
 function tally(subj,ok){const E=ENG[subj].E();E.q++;if(ok)E.ok++;const ds=dayStat();ds[subj].q++;if(ok)ds[subj].c++}
-function grade(q,ok){const subj=q.subj,E=ENG[subj].E(),f=q.s;E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
+function grade(q,ok){try{window.__trk&&__trk.ans({s:q.subj,f:q.s,it:q.text,ok})}catch(e){}const subj=q.subj,E=ENG[subj].E(),f=q.s;E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
  E.recent.push(ok?1:0);if(E.recent.length>10)E.recent.shift();if(ok&&E.recent.length>=8&&accOf(E)>=.9)E.m[f]+=(1-E.m[f])*.12;tally(subj,ok);
  if(subj!=='read'){const key=q.subj==='math'?'s'+q.s+':'+q.text:q.text,rv=E.review.find(r=>r.key===key||(subj==='math'&&r.q.s===q.s&&q.review));
   if(!ok){E.missed[String(q.text).slice(0,80)]=(E.missed[String(q.text).slice(0,80)]||0)+1;if(rv){rv.need=2;rv.due=E.counter+ri(3,5)}else{const keep=Object.assign({},q);delete keep.review;delete keep.survey;E.review.push({key,q:keep,due:E.counter+ri(3,5),need:2})}}

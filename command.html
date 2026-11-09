@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Command Center</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0E0B24">
+<link rel="icon" href="assets/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;500;600;700&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#0E0B24;--panel:#1A1540;--panel2:#231C52;--line:#352C6E;--ink:#F3F0FF;--ink2:#B9B2DA;--ink3:#8C85B3;
+ --good:#2fb36b;--warn:#e0a020;--bad:#e5534b;--idea:#9085e9;--set:#3987e5;--display:'Bungee','Arial Black',Impact,sans-serif;--body:'Lexend',system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body)}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+a{color:#9DB8FF}
+.wrap{max-width:1180px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px 40px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+header h1{font:400 24px var(--display);margin:0;letter-spacing:.02em}
+header .meta{color:var(--ink3);font-size:13px}
+header .sp{flex:1}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:9px;font-weight:600;color:var(--ink2);cursor:pointer}
+.seg button.on{background:var(--panel2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.chk{display:inline-flex;align-items:center;gap:6px;color:var(--ink2);font-size:13px;cursor:pointer}
+.btn{border:0;border-radius:12px;padding:8px 14px;background:#F2B632;color:#2A1E00;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;gap:6px;align-items:center}
+.btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+h2{font:700 13px var(--body);text-transform:uppercase;letter-spacing:.1em;color:var(--ink2);margin:26px 0 10px}
+.grid{display:grid;gap:12px}
+.kids{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+.kid{cursor:pointer;transition:border-color .15s}
+.kid:hover,.kid.on{border-color:var(--c)}
+.kid .top{display:flex;align-items:center;gap:10px}
+.face{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:var(--c);flex:none}
+.kid .nm{font-weight:700;font-size:19px;line-height:1.1}
+.kid .last{font-size:13px;color:var(--ink2)}
+.status{margin-left:auto;font-size:12px;font-weight:700;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.st-good{background:rgba(47,179,107,.16);color:#7fe0a8}.st-warn{background:rgba(224,160,32,.16);color:#f3c766}.st-idle{background:rgba(255,255,255,.07);color:var(--ink2)}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 10px}
+.num b{display:block;font-size:24px;font-weight:700;line-height:1.1}
+.num span{font-size:12px;color:var(--ink3)}
+.spark{display:flex;align-items:flex-end;gap:3px;height:34px}
+.spark i{flex:1;background:var(--c);border-radius:3px 3px 0 0;min-height:2px;opacity:.9}
+.spark i.z{background:var(--line);opacity:1}
+.sparkl{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-top:3px}
+/* insights */
+.ins{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.ins:first-child{border-top:0;padding-top:0}
+.ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;flex:none}
+.k-good .ico{background:rgba(47,179,107,.16)}.k-warn .ico{background:rgba(224,160,32,.18)}.k-bad .ico{background:rgba(229,83,75,.18)}.k-idea .ico{background:rgba(144,133,233,.2)}.k-set .ico{background:rgba(57,135,229,.2)}.k-info .ico{background:rgba(255,255,255,.08)}
+.ins .t{font-weight:600}
+.ins .d{color:var(--ink2);font-size:14px;margin-top:2px}
+.ins .who{font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.tagk{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:1px}
+.tg-good{background:rgba(47,179,107,.16);color:#7fe0a8}.tg-warn{background:rgba(224,160,32,.18);color:#f3c766}.tg-bad{background:rgba(229,83,75,.18);color:#ff9a93}.tg-idea{background:rgba(144,133,233,.2);color:#c5bdff}.tg-set{background:rgba(57,135,229,.2);color:#9cc4ff}
+/* charts */
+.chart{position:relative}
+.chart svg{display:block;width:100%;overflow:visible}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-bottom:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:#0B0920;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;white-space:nowrap;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.tip b{display:block;margin-bottom:2px}
+.axis{fill:var(--ink3);font-size:11px}
+.gridl{stroke:var(--line);stroke-width:1}
+/* detail */
+.detail{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;align-items:start}
+.detail>.grid{align-content:start}
+@media (max-width:860px){.detail{grid-template-columns:1fr}}
+.dhead{display:flex;align-items:center;gap:12px;margin:28px 0 12px}
+.dhead h2{margin:0;font:400 20px var(--display);color:var(--ink);letter-spacing:.02em;text-transform:none}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--ink3);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid rgba(53,44,110,.6);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.acc{display:inline-flex;align-items:center;gap:8px}
+.accbar{width:70px;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.accbar i{display:block;height:100%;border-radius:4px}
+.up{color:#7fe0a8}.down{color:#ff9a93}.flat{color:var(--ink3)}
+.hbar{display:grid;grid-template-columns:150px 1fr 64px;gap:10px;align-items:center;margin:7px 0;font-size:14px}
+.hbar .tr{height:12px;background:var(--panel2);border-radius:6px;overflow:hidden}
+.hbar .tr i{display:block;height:100%;background:var(--c);border-radius:0 4px 4px 0}
+.hbar .v{text-align:right;color:var(--ink2);font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:4px 9px;font-size:13px}
+.chip b{color:#ff9a93;font-weight:700;margin-left:4px}
+.chip.ok b{color:#7fe0a8}
+.muted{color:var(--ink3);font-size:13px}
+.empty{color:var(--ink2);padding:6px 0}
+.gate{max-width:420px;margin:12vh auto;text-align:center}
+.gate input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);margin:14px 0 10px;font-size:17px}
+.foot{margin-top:30px;color:var(--ink3);font-size:12px}
+.load{padding:40px 0;text-align:center;color:var(--ink2)}
+.sub3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat b{display:block;font-size:22px;font-weight:700}.stat span{font-size:12px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div id="gate" class="gate" hidden>
+  <h1 style="font:400 24px var(--display)">Command Center</h1>
+  <p class="muted">Enter the grown-up key to see the boys' progress.</p>
+  <input id="keyIn" type="password" autocomplete="current-password" aria-label="Grown-up key" placeholder="Grown-up key">
+  <button class="btn" id="keyGo">Open</button>
+  <p id="keyErr" class="muted" style="color:#ff9a93" hidden>That key didn't work.</p>
+ </div>
+ <div id="app" hidden>
+  <header>
+   <h1>📊 Command Center</h1><span class="meta" id="meta"></span><span class="sp"></span>
+   <div class="seg" id="range"><button data-d="7" class="on">7 days</button><button data-d="30">30 days</button></div>
+   <label class="chk"><input type="checkbox" id="showTest"> Include test devices</label>
+   <a class="btn ghost" href="./">← Game Room</a>
+  </header>
+  <div id="body"><div class="load">Loading…</div></div>
+  <div class="foot" id="foot"></div>
+ </div>
+</div>
+<script src="games/catalog.js"></script>
+<script src="games/kingswall/levels.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---------- constants ---------- */
+const SUBJ={ma:'Math',math:'Math',rd:'Reading',read:'Reading',reading:'Reading',sp:'Spelling',spell:'Spelling',spelling:'Spelling',gr:'Grammar',grammar:'Grammar',sw:'Sight words'};
+const SERIES=['#3987e5','#d95926','#199e70','#c98500','#d55181','#9085e9'];   /* validated dark categorical order */
+const KIDCOL={jack:SERIES[0],vinny:SERIES[1],luca:SERIES[2]};
+const GAME=Object.fromEntries((window.CATALOG||[]).map(g=>[g.id,g]));
+const gname=id=>GAME[id]?GAME[id].emoji+' '+GAME[id].title:id;
+const DAY=864e5;
+function dkey(d){d=new Date(d);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function ago(ts){if(!ts)return'never';const s=(Date.now()-ts)/1000;if(s<90)return'just now';if(s<3600)return Math.round(s/60)+' min ago';if(s<86400)return Math.round(s/3600)+' h ago';const d=Math.round(s/86400);return d===1?'yesterday':d+' days ago'}
+function mins(sec){const m=Math.round((sec||0)/60);return m<60?m+' min':Math.floor(m/60)+' h '+(m%60)+' min'}
+const pct=x=>Math.round(x*100)+'%';
+const median=a=>{if(!a.length)return null;const b=a.slice().sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2};
+/* ---------- key ---------- */
+let KEY='';
+try{const h=new URLSearchParams(location.hash.slice(1));if(h.get('key')){localStorage.setItem('cc.key',h.get('key'));history.replaceState(null,'',location.pathname)}KEY=localStorage.getItem('cc.key')||''}catch(e){}
+let RAW=null,RANGE=7,SHOWTEST=false,SEL=null;
+async function fetchData(){const r=await fetch('/api/data?days=60',{headers:{'x-dash-key':KEY},cache:'no-store'});if(r.status===401)throw new Error('key');if(!r.ok)throw new Error('server '+r.status);return r.json()}
+async function start(){if(!KEY){showGate();return}
+ $('#gate').hidden=true;$('#app').hidden=false;
+ try{RAW=await fetchData();render()}catch(e){if(e.message==='key'){try{localStorage.removeItem('cc.key')}catch(_){}KEY='';showGate(true)}else $('#body').innerHTML='<div class="card">Couldn\'t load data: '+esc(e.message)+'. Try again in a minute.</div>'}}
+function showGate(bad){$('#app').hidden=true;$('#gate').hidden=false;$('#keyErr').hidden=!bad;$('#keyIn').focus()}
+$('#keyGo').onclick=()=>{KEY=$('#keyIn').value.trim();try{localStorage.setItem('cc.key',KEY)}catch(e){}start()};
+$('#keyIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#keyGo').click()});
+$('#range').onclick=e=>{const b=e.target.closest('button');if(!b)return;RANGE=+b.dataset.d;[...$('#range').children].forEach(x=>x.classList.toggle('on',x===b));render()};
+$('#showTest').onchange=e=>{SHOWTEST=e.target.checked;render()};
+
+/* ---------- model ---------- */
+function build(){const kids={},devices={};const seen=new Set();
+ for(const b of RAW.batches){devices[b.dev.id]={name:b.dev.name,test:b.dev.test,last:b.at};
+  if(b.dev.test&&!SHOWTEST)continue;
+  const K=kids[b.kid]||(kids[b.kid]={id:b.kid,name:b.name||b.kid,ev:[],snaps:{},devs:{},info:null,lastSync:0});
+  if(b.name)K.name=b.name;K.devs[b.dev.id]=b.dev.name;K.lastSync=Math.max(K.lastSync,b.at);
+  for(const e of (b.ev||[])){const k=b.kid+'|'+JSON.stringify(e);if(seen.has(k))continue;seen.add(k);e.dev=b.dev.id;K.ev.push(e)}
+  if(b.snap){K.snaps[b.dev.id]=b.snap;if(b.snap.kid)K.info=b.snap.kid}}
+ const now=Date.now(),startT=now-RANGE*DAY,days=[];for(let i=RANGE-1;i>=0;i--)days.push(dkey(now-i*DAY));
+ const prevStart=startT-RANGE*DAY;
+ for(const K of Object.values(kids)){
+  K.color=KIDCOL[K.id]||SERIES[3+Object.keys(kids).indexOf(K.id)%3];K.emoji=(K.info&&K.info.emoji)||'🙂';if(K.info&&K.info.name)K.name=K.info.name;
+  /* play time: the Game Room's own per-day log on each device (covers every game, including before tracking began) */
+  K.dayGame={};K.last=0;
+  for(const s of Object.values(K.snaps)){const L=s.log||{};for(const g in L){const e=L[g];if(!e)continue;K.last=Math.max(K.last,e.last||0);for(const d in (e.days||{})){(K.dayGame[d]=K.dayGame[d]||{})[g]=((K.dayGame[d]||{})[g]||0)+e.days[d]}}}
+  K.ev.sort((a,b)=>a.t-b.t);for(const e of K.ev)K.last=Math.max(K.last,e.t);
+  K.daySec=days.map(d=>Object.values(K.dayGame[d]||{}).reduce((a,b)=>a+b,0));
+  K.sec=K.daySec.reduce((a,b)=>a+b,0);
+  K.gameSec={};days.forEach(d=>{for(const g in (K.dayGame[d]||{}))K.gameSec[g]=(K.gameSec[g]||0)+K.dayGame[d][g]});
+  K.activeDays=K.daySec.filter(s=>s>=60).length;
+  K.ans=K.ev.filter(e=>e.e==='ans'&&e.t>=startT);K.ansPrev=K.ev.filter(e=>e.e==='ans'&&e.t>=prevStart&&e.t<startT);
+  K.ok=K.ans.filter(e=>e.ok).length;
+  K.stages=K.ev.filter(e=>e.e==='stage'&&e.t>=startT);K.lvls=K.ev.filter(e=>e.e==='lvl'&&e.t>=startT);
+  /* answers saved inside games before tracking started (counts only) */
+  K.saved=savedTotals(K);
+  K.subj=subjects(K);K.items=items(K.ans);
+  K.dayAns=days.map(d=>K.ans.filter(e=>dkey(e.t)===d).length);}
+ return{kids:Object.values(kids).sort((a,b)=>(b.last||0)-(a.last||0)),devices,days}}
+function subjects(K){const by={};const add=(arr,key)=>{for(const e of arr){const s=SUBJ[e.s]||e.s||'Other';const o=by[s]||(by[s]={s,n:0,ok:0,ms:[],fastWrong:0,wrong:0,pn:0,pok:0,lv:null,games:{},last:[]});
+  if(key==='cur'){o.n++;if(e.ok)o.ok++;else{o.wrong++;if(e.ms!=null&&e.ms<1200)o.fastWrong++}if(e.ms!=null&&e.ms<60000)o.ms.push(e.ms);if(e.lv!=null)o.lv=e.lv;o.games[e.g]=(o.games[e.g]||0)+1;o.last.push(e.ok?1:0)}else{o.pn++;if(e.ok)o.pok++}}};
+ add(K.ans,'cur');add(K.ansPrev,'prev');
+ /* current King's Wall level from the latest save */
+ for(const s of Object.values(K.snaps)){const kw=s.saves&&s.saves['kingswall.v1'];if(kw&&kw.eng)for(const k in kw.eng){const nm=SUBJ[k];if(by[nm]&&kw.eng[k].lv)by[nm].kwlv=kw.eng[k].lv}}
+ return Object.values(by).filter(o=>o.n>0).map(o=>{o.acc=o.ok/o.n;o.pacc=o.pn?o.pok/o.pn:null;o.med=median(o.ms);o.recent=o.last.slice(-20);o.racc=o.recent.length?o.recent.reduce((a,b)=>a+b,0)/o.recent.length:null;return o}).sort((a,b)=>b.n-a.n)}
+function items(ans){const m={};for(const e of ans){if(!e.it)continue;const k=(SUBJ[e.s]||e.s)+'|'+e.it;const o=m[k]||(m[k]={s:SUBJ[e.s]||e.s,it:e.it,n:0,ok:0,game:e.g});o.n++;if(e.ok)o.ok++}return Object.values(m)}
+function savedTotals(K){let q=0,ok=0;const per={};for(const s of Object.values(K.snaps)){const S=s.saves||{};for(const key in S){const D=S[key];if(!D||typeof D!=='object')continue;
+  for(const p of ['ma','rd','gr','sp']){const E=D[p];if(E&&typeof E.q==='number'){q+=E.q;ok+=E.ok||0;const nm=SUBJ[p];per[nm]=per[nm]||{q:0,ok:0};per[nm].q+=E.q;per[nm].ok+=E.ok||0}}
+  if(D.stats&&typeof D.stats.q==='number'){q+=D.stats.q;ok+=D.stats.correct||0}
+  if(typeof D.totalAnswered==='number'){q+=D.totalAnswered;ok+=D.totalCorrect||0}}}
+ return{q,ok,per}}
+/* misses remembered inside game saves (before tracking began) */
+function savedMisses(K){const out={};const walk=(o,game,d)=>{if(!o||typeof o!=='object'||d>4)return;if(o.missed&&typeof o.missed==='object'&&!Array.isArray(o.missed)){for(const k in o.missed){const n=+o.missed[k];if(n>=2){const key=game+'|'+k;out[key]={game,it:k,n:Math.max(n,(out[key]||{}).n||0)}}}}for(const k in o)if(k!=='missed'&&o[k]&&typeof o[k]==='object')walk(o[k],game,d+1)};
+ for(const s of Object.values(K.snaps))for(const key in (s.saves||{}))walk(s.saves[key],key,0);
+ return Object.values(out).sort((a,b)=>b.n-a.n)}
+
+/* ---------- analysis ---------- */
+function analyse(M){const out=[];const add=(K,kind,title,detail,pri)=>out.push({kid:K?K.id:null,name:K?K.name:'',kind,title,detail,pri:pri||5});
+ for(const K of M.kids){const C=K.info&&K.info.kw;const wkSec=K.sec,daysSince=K.last?(Date.now()-K.last)/DAY:99;
+  /* activity */
+  if(daysSince>=3)add(K,'warn',`No play in ${Math.floor(daysSince)} days`,`Last played ${ago(K.last)}.`,3);
+  else if(K.activeDays>=Math.min(5,RANGE))add(K,'good',`Playing most days`,`${K.activeDays} of the last ${RANGE} days, ${mins(wkSec)} in total.`,7);
+  const games=Object.entries(K.gameSec).sort((a,b)=>b[1]-a[1]);
+  if(games.length&&wkSec>1200&&games[0][1]/wkSec>.8)add(K,'idea',`Mostly ${gname(games[0][0])}`,`${pct(games[0][1]/wkSec)} of play time. That's fine while it's working; if a subject in another game is falling behind, point them there.`,8);
+  /* per subject */
+  for(const S of K.subj){
+   const lvTxt=S.kwlv?` (King's Wall level ${S.kwlv}: ${levelName(S.s,S.kwlv)})`:'';
+   if(S.n>=15&&S.fastWrong>=4&&S.fastWrong/S.wrong>=.45)add(K,'bad',`Possible guessing in ${S.s}`,`${S.fastWrong} of ${S.wrong} wrong answers came in under 1.2 seconds. Sit with them for a round, or slow the monster speed so there's less pressure.`,1);
+   if(S.n>=30&&S.acc>=.95&&(S.med==null||S.med<4000))add(K,'set',`${S.s} looks too easy`,`${pct(S.acc)} right over ${S.n} answers${S.med?`, about ${(S.med/1000).toFixed(1)} s each`:''}${lvTxt}. Raise the starting level by 1–2 in the Game Room grown-up page.`,2);
+   else if(S.n>=20&&S.acc>=.85)add(K,'good',`Strong in ${S.s}`,`${pct(S.acc)} right over ${S.n} answers${lvTxt}.`,6);
+   if(S.n>=15&&S.acc<.6)add(K,'bad',`${S.s} is a struggle`,`Only ${pct(S.acc)} right over ${S.n} answers${lvTxt}. Lower the starting level by 1 so they rebuild confidence, then let it climb.`,1);
+   else if(S.n>=15&&S.acc<.72)add(K,'warn',`${S.s} needs work`,`${pct(S.acc)} right over ${S.n} answers${lvTxt}. This is the productive zone, but watch it.`,3);
+   if(S.pacc!=null&&S.pn>=15&&S.n>=15){const d=S.acc-S.pacc;if(d>=.1)add(K,'good',`${S.s} improving`,`${pct(S.pacc)} → ${pct(S.acc)} compared with the ${RANGE} days before.`,4);else if(d<=-.12)add(K,'warn',`${S.s} slipping`,`${pct(S.pacc)} → ${pct(S.acc)} compared with the ${RANGE} days before. Often means the level just went up; check again next week.`,3)}
+  }
+  /* math fact families */
+  const fam={};for(const it of K.items.filter(i=>i.s==='Math')){const m=it.it.match(/^(\d+)\s*[×]\s*(\d+)$/);if(!m)continue;for(const f of new Set([+m[1],+m[2]])){if(f<2)continue;const o=fam[f]||(fam[f]={n:0,ok:0});o.n+=it.n;o.ok+=it.ok}}
+  const weakF=Object.entries(fam).filter(([f,o])=>o.n>=6&&o.ok/o.n<.7).sort((a,b)=>a[1].ok/a[1].n-b[1].ok/b[1].n);
+  if(weakF.length)add(K,'idea',`Times tables to practice: ${weakF.slice(0,3).map(f=>'×'+f[0]).join(', ')}`,weakF.slice(0,3).map(([f,o])=>`×${f}: ${o.ok}/${o.n} right`).join(' · ')+'. Skip-counting out loud (7, 14, 21…) in the car works well.',2);
+  const strongF=Object.entries(fam).filter(([f,o])=>o.n>=8&&o.ok/o.n>=.95).map(f=>'×'+f[0]);
+  if(strongF.length>=2)add(K,'good',`Solid times tables: ${strongF.join(', ')}`,'',7);
+  /* trouble items */
+  const bad=K.items.filter(i=>i.n-i.ok>=2&&i.ok/i.n<.6).sort((a,b)=>(b.n-b.ok)-(a.n-a.ok)).slice(0,8);
+  if(bad.length)add(K,'idea',`Keeps missing: ${bad.slice(0,5).map(i=>i.it).join(', ')}`,'The game already brings these back for review. A few minutes off-screen with the same items helps them stick.',3);
+  /* level movement */
+  const ups=K.lvls.filter(l=>l.dir==='up'),downs=K.lvls.filter(l=>l.dir==='down');
+  if(ups.length>=2)add(K,'good',`Levelled up ${ups.length} times`,ups.slice(-3).map(l=>`${SUBJ[l.s]||l.s} → ${l.to}`).join(' · '),5);
+  if(downs.length>=2)add(K,'warn',`Level dropped ${downs.length} times`,downs.slice(-3).map(l=>`${SUBJ[l.s]||l.s} → ${l.to}`).join(' · ')+'. The game eased off on its own; if it keeps happening, lower the starting level.',3);
+  /* King's Wall stages */
+  const kw=K.stages.filter(s=>s.g==='kingswall');if(kw.length){const losses=kw.filter(s=>!s.win);let streak=0,stuck=null;for(const s of kw){if(!s.win){streak++;stuck=s.st}else streak=0}
+   if(streak>=3)add(K,'warn',`Stuck on King's Wall stage ${stuck}`,`Lost ${streak} times in a row. Spending gold on upgrades helps; if it continues, set monster speed one step easier.`,2);
+   const rate=kw.length?(kw.reduce((a,s)=>a+s.right,0)/Math.max(1,kw.reduce((a,s)=>a+s.dur,0))*60):0;
+   if(rate>0)K.kwRate=rate}
+ }
+ if(!M.kids.length)add(null,'info','No data yet','Each device sends data the next time a kid opens the Game Room or a game.',1);
+ return out.sort((a,b)=>a.pri-b.pri)}
+function levelName(s,lv){const K=window.KW;if(!K)return'';const map={Math:'ma',Reading:'rd','Sight words':'sw',Spelling:'sp'};const S=K.subjects[map[s]];return S&&S.lv[lv-1]||''}
+
+/* ---------- charts ---------- */
+function activityChart(M){const W=1000,H=200,P={l:34,r:8,t:8,b:24};const n=M.days.length;const totals=M.days.map((d,i)=>M.kids.reduce((a,K)=>a+K.daySec[i],0)/60);
+ const max=Math.max(10,...totals);const step=Math.ceil(max/4/5)*5||5,top=step*4;const bw=(W-P.l-P.r)/n,barW=Math.max(4,Math.min(46,bw*.62));
+ const y=v=>P.t+(H-P.t-P.b)*(1-v/top);let g='';
+ for(let i=0;i<=4;i++){const v=step*i,yy=y(v);g+=`<line class="gridl" x1="${P.l}" x2="${W-P.r}" y1="${yy}" y2="${yy}"/><text class="axis" x="${P.l-6}" y="${yy+4}" text-anchor="end">${v}</text>`}
+ M.days.forEach((d,i)=>{const x=P.l+bw*i+(bw-barW)/2;let acc=0;const segs=M.kids.map(K=>({K,v:K.daySec[i]/60})).filter(s=>s.v>0);
+  segs.forEach((s,j)=>{const y0=y(acc),y1=y(acc+s.v);const h=Math.max(1,y0-y1-(j<segs.length-1?2:0));const isTop=j===segs.length-1;
+   g+=isTop?`<path d="M${x},${y0-0} V${y0-h+4} q0,-4 4,-4 H${x+barW-4} q4,0 4,4 V${y0} Z" fill="${s.K.color}"/>`:`<rect x="${x}" y="${y0-h}" width="${barW}" height="${h}" fill="${s.K.color}"/>`;acc+=s.v});
+  if(n<=14||i%Math.ceil(n/10)===0||i===n-1){const dt=new Date(d+'T12:00:00');g+=`<text class="axis" x="${x+barW/2}" y="${H-6}" text-anchor="middle">${n<=7?dt.toLocaleDateString(undefined,{weekday:'short'}):(dt.getMonth()+1)+'/'+dt.getDate()}</text>`}
+  g+=`<rect x="${P.l+bw*i}" y="${P.t}" width="${bw}" height="${H-P.t-P.b}" fill="transparent" data-i="${i}" class="hit"/>`});
+ const leg=M.kids.map(K=>`<span><i style="background:${K.color}"></i>${esc(K.name)}</span>`).join('');
+ return`<div class="legend">${leg}<span class="muted" style="margin-left:auto">minutes played per day</span></div><div class="chart" id="act"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:200px">${g}</svg><div class="tip" hidden></div></div>`}
+function wireActivity(M){const box=$('#act');if(!box)return;const tip=box.querySelector('.tip');
+ box.querySelectorAll('.hit').forEach(r=>{r.addEventListener('mousemove',ev=>{const i=+r.dataset.i,d=M.days[i];const dt=new Date(d+'T12:00:00');
+  tip.innerHTML=`<b>${dt.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})}</b>`+M.kids.map(K=>`<div><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${K.color};margin-right:6px"></i>${esc(K.name)}: ${mins(K.daySec[i])}${K.dayAns[i]?` · ${K.dayAns[i]} answers`:''}</div>`).join('');
+  tip.hidden=false;const bb=box.getBoundingClientRect();let x=ev.clientX-bb.left+12;if(x>bb.width-200)x-=220;tip.style.left=x+'px';tip.style.top='10px'});r.addEventListener('mouseleave',()=>tip.hidden=true)})}
+
+/* ---------- render ---------- */
+function statusOf(K){const d=K.last?(Date.now()-K.last)/DAY:99;if(d>=3)return['st-idle','Idle '+Math.floor(d)+'d'];const weak=K.subj.some(S=>S.n>=15&&S.acc<.6);return weak?['st-warn','Needs attention']:['st-good','On track']}
+function kidCard(K,M){const [cls,txt]=statusOf(K);const max=Math.max(1,...K.daySec);const acc=K.ans.length?pct(K.ok/K.ans.length):'–';
+ const bars=K.daySec.slice(-14).map(s=>`<i class="${s?'':'z'}" style="height:${Math.max(6,s/max*100)}%" title="${mins(s)}"></i>`).join('');
+ return`<div class="card kid${SEL===K.id?' on':''}" style="--c:${K.color}" data-kid="${K.id}"><div class="top"><div class="face">${esc(K.emoji)}</div><div><div class="nm">${esc(K.name)}</div><div class="last">Last played ${esc(ago(K.last))}</div></div><span class="status ${cls}">${txt}</span></div>
+  <div class="nums"><div class="num"><b>${mins(K.sec)}</b><span>played</span></div><div class="num"><b>${K.ans.length}</b><span>answers</span></div><div class="num"><b>${acc}</b><span>right</span></div></div>
+  <div class="spark">${bars}</div><div class="sparkl"><span>${RANGE>14?'14 days ago':RANGE+' days ago'}</span><span>today</span></div></div>`}
+const ICON={good:'✅',warn:'⚠️',bad:'🚩',idea:'💡',set:'🎯',info:'ℹ️'},TAG={good:'Strength',warn:'Watch',bad:'Act now',idea:'Suggestion',set:'Change setting',info:''};
+function insightHTML(list,showWho){if(!list.length)return'<div class="empty">Nothing to flag yet. Insights appear after about 15 answers in a subject.</div>';
+ return list.map(i=>`<div class="ins k-${i.kind}"><div class="ico">${ICON[i.kind]}</div><div>${showWho&&i.name?`<div class="who">${esc(i.name)}</div>`:''}<div class="t">${esc(i.title)}${TAG[i.kind]?`<span class="tagk tg-${i.kind}">${TAG[i.kind]}</span>`:''}</div>${i.detail?`<div class="d">${esc(i.detail)}</div>`:''}</div></div>`).join('')}
+function detail(K,ins){const C=K.info&&K.info.kw;
+ const subj=K.subj.length?`<table><thead><tr><th>Subject</th><th class="n">Answers</th><th>Right</th><th class="n">Typical time</th><th>vs before</th><th>Level now</th></tr></thead><tbody>${K.subj.map(S=>{const col=S.acc>=.85?'var(--good)':S.acc>=.65?'var(--warn)':'var(--bad)';const d=S.pacc==null?'<span class="flat">–</span>':S.acc-S.pacc>=.05?`<span class="up">▲ ${pct(S.acc-S.pacc)}</span>`:S.acc-S.pacc<=-.05?`<span class="down">▼ ${pct(S.pacc-S.acc)}</span>`:'<span class="flat">≈ same</span>';
+   return`<tr><td><b>${esc(S.s)}</b><div class="muted">${Object.keys(S.games).map(g=>GAME[g]?GAME[g].emoji:'').join(' ')}</div></td><td class="n">${S.n}</td><td><span class="acc"><span class="accbar"><i style="width:${S.acc*100}%;background:${col}"></i></span>${pct(S.acc)}</span></td><td class="n">${S.med?(S.med/1000).toFixed(1)+' s':'–'}</td><td>${d}</td><td>${S.kwlv?`${S.kwlv} <span class="muted">${esc(levelName(S.s,S.kwlv))}</span>`:S.lv!=null?S.lv:'–'}</td></tr>`}).join('')}</tbody></table>`:`<div class="empty">No answers recorded in the last ${RANGE} days.</div>`;
+ const tot=Object.values(K.gameSec).reduce((a,b)=>a+b,0),gmax=Math.max(1,...Object.values(K.gameSec));
+ const games=Object.entries(K.gameSec).sort((a,b)=>b[1]-a[1]).map(([g,s])=>`<div class="hbar" style="--c:${K.color}"><span>${esc(gname(g))}</span><div class="tr"><i style="width:${s/gmax*100}%"></i></div><span class="v">${mins(s)}</span></div>`).join('')||`<div class="empty">No play time in the last ${RANGE} days.</div>`;
+ const miss=K.items.filter(i=>i.n-i.ok>=1).sort((a,b)=>(b.n-b.ok)-(a.n-a.ok)||a.ok/a.n-b.ok/b.n).slice(0,14);
+ const mastered=K.items.filter(i=>i.n>=3&&i.ok===i.n).sort((a,b)=>b.n-a.n).slice(0,10);
+ const sm=savedMisses(K).slice(0,10);
+ const kw=K.stages.filter(s=>s.g==='kingswall');const kwSave=Object.values(K.snaps).map(s=>s.saves&&s.saves['kingswall.v1']).filter(Boolean)[0];
+ const settings=C?Object.entries(C.lv||{}).filter(([s])=>(C.subj||[]).includes(s)).map(([s,l])=>`${window.KW.subjects[s].n} ${l}`).join(' · ')+` · ${window.KW.speeds[C.speed]||C.speed} speed`:'Default';
+ return`<div class="dhead" style="--c:${K.color}"><div class="face" style="background:${K.color}">${esc(K.emoji)}</div><h2>${esc(K.name)}</h2><span class="muted">Devices: ${Object.values(K.devs).map(esc).join(', ')} · last sync ${esc(ago(K.lastSync))}</span></div>
+ <div class="detail">
+  <div class="grid">
+   <div class="card"><h2 style="margin-top:0">Subjects · last ${RANGE} days</h2>${subj}</div>
+   <div class="card"><h2 style="margin-top:0">Trouble spots</h2>${miss.length?`<div class="chips">${miss.map(i=>`<span class="chip" title="${esc(i.s)} · ${esc(GAME[i.game]?GAME[i.game].title:i.game)}">${esc(i.it)}<b>${i.ok}/${i.n}</b></span>`).join('')}</div>`:'<div class="empty">No repeated misses. 👍</div>'}
+    ${sm.length?`<h2>Missed most often (saved in games)</h2><div class="chips">${sm.map(i=>`<span class="chip" title="${esc(i.game)}">${esc(i.it.slice(0,40))}<b>×${i.n}</b></span>`).join('')}</div>`:''}
+    ${mastered.length?`<h2>Got right every time</h2><div class="chips">${mastered.map(i=>`<span class="chip ok">${esc(i.it)}<b>${i.n}/${i.n}</b></span>`).join('')}</div>`:''}</div>
+  </div>
+  <div class="grid">
+   <div class="card"><h2 style="margin-top:0">What to do</h2>${insightHTML(ins,false)}</div>
+   <div class="card"><h2 style="margin-top:0">Time by game · last ${RANGE} days</h2>${games}</div>
+   <div class="card"><h2 style="margin-top:0">King's Wall</h2><div class="sub3"><div class="stat"><b>${kwSave?kwSave.best||0:'–'}</b><span>best stage</span></div><div class="stat"><b>${kw.length?kw.filter(s=>s.win).length+'/'+kw.length:'–'}</b><span>stages won (${RANGE} d)</span></div><div class="stat"><b>${K.kwRate?K.kwRate.toFixed(1):'–'}</b><span>right answers / min</span></div></div><div class="muted" style="margin-top:10px">Settings: ${esc(settings)}</div></div>
+  </div>
+ </div>`}
+let MODEL=null;
+function render(){const M=MODEL=build();const ins=analyse(M);if(!SEL||!M.kids.find(k=>k.id===SEL))SEL=M.kids[0]?M.kids[0].id:null;
+ const devs=Object.values(M.devices);$('#meta').textContent=RAW.batches.length?`Updated ${ago(RAW.now)} · ${devs.filter(d=>!d.test).length} kid device${devs.filter(d=>!d.test).length===1?'':'s'}${devs.some(d=>d.test)?` · ${devs.filter(d=>d.test).length} test`:''}`:'';
+ if(!M.kids.length){$('#body').innerHTML=`<div class="card"><h2 style="margin-top:0">Waiting for the first sync</h2><p>Tracking is on. Each iPad sends its history (the last 90 days of play time and every game's save) the next time a kid opens the Game Room or a game, and keeps sending as they play.</p><p class="muted">Your own test device is excluded if "This is a grown-up testing device" is switched on in the Game Room grown-up page.${devs.some(d=>d.test)?' Data from test devices exists: tick "Include test devices" to see it.':''}</p></div>`;$('#foot').textContent='';return}
+ const top=ins.filter(i=>i.kind!=='good'&&i.kind!=='info').slice(0,6),wins=ins.filter(i=>i.kind==='good').slice(0,4);
+ const K=M.kids.find(k=>k.id===SEL);
+ $('#body').innerHTML=`<div class="grid kids">${M.kids.map(k=>kidCard(k,M)).join('')}</div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:12px">
+   <div class="card"><h2 style="margin-top:0">Needs your attention</h2>${insightHTML(top,true)}</div>
+   <div class="card"><h2 style="margin-top:0">Going well</h2>${insightHTML(wins,true)}</div>
+  </div>
+  <h2>Activity · last ${RANGE} days</h2><div class="card">${activityChart(M)}</div>
+  ${K?detail(K,ins.filter(i=>i.kid===K.id)):''}`;
+ wireActivity(M);
+ document.querySelectorAll('.kid').forEach(c=>c.onclick=()=>{SEL=c.dataset.kid;render();setTimeout(()=>document.querySelector('.dhead').scrollIntoView({behavior:'smooth',block:'start'}),30)});
+ const saved=M.kids.map(k=>k.saved.q?`${k.name}: ${k.saved.q} answers saved in games so far`:'').filter(Boolean).join(' · ');
+ $('#foot').textContent=(saved?saved+'. ':'')+'Play time covers every game. Answer details start from the day tracking was switched on.'}
+start();
+setInterval(()=>{if(KEY&&!document.hidden&&RAW)fetchData().then(d=>{RAW=d;render()}).catch(()=>{})},120000);
+</script>
+</body>
+</html>

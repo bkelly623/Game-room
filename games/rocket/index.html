@@ -218,7 +218,7 @@ function chooseQ(){D.counter++;const due=D.review.find(r=>r.due<=D.counter);if(d
   const ff=focusS(),acc=recentAcc(),r=rnd(),pRev=acc<.65?.4:.18,pNext=acc>.88?.2:.1;let f=ff;
   if(r<pRev&&ff>0)f=ri(Math.max(0,ff-3),ff-1);else if(r<pRev+pNext&&ff<SK.length-1)f=ff+1;return gen(f)}
 function tally(ok){D.stats.q++;if(ok)D.stats.correct++;const ds=dayStat();ds.q++;if(ok)ds.c++}
-function grade(q,ok){const f=q.s;D.n[f]++;if(ok){D.c[f]++;D.m[f]+=(1-D.m[f])*.25}else D.m[f]-=D.m[f]*.35;
+function grade(q,ok){try{window.__trk&&__trk.ans({s:'math',f:q.s,it:q.text,ok})}catch(e){}const f=q.s;D.n[f]++;if(ok){D.c[f]++;D.m[f]+=(1-D.m[f])*.25}else D.m[f]-=D.m[f]*.35;
   D.recent.push(ok?1:0);if(D.recent.length>10)D.recent.shift();if(ok&&D.recent.length>=8&&recentAcc()>=.9)D.m[f]+=(1-D.m[f])*.12;tally(ok);
   const rv=D.review.find(r=>r.key===q.text);
   if(!ok){D.missed[q.text]=(D.missed[q.text]||0)+1;if(rv){rv.need=2;rv.due=D.counter+ri(3,5)}else{const keep={s:q.s,text:q.text,ans:q.ans,choices:q.choices,hint:q.hint,say:q.say};D.review.push({key:q.text,q:keep,due:D.counter+ri(3,5),need:2})}}

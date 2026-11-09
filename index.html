@@ -31,6 +31,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 h1,h2,h3{margin:0;line-height:1.05;text-wrap:balance}
 .wrap{max-width:1120px;margin:0 auto}
+a.btn{text-decoration:none}
 .btn{font:700 17px var(--body);border:0;border-radius:14px;padding:11px 18px;background:var(--gold);color:#2A1E00;box-shadow:0 5px 0 var(--gold-d);display:inline-flex;align-items:center;gap:8px;justify-content:center}
 .btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--gold-d)}
 .btn.ghost{background:var(--panel2);color:var(--ink);box-shadow:0 5px 0 #15103A;border:2px solid var(--line)}
@@ -191,6 +192,7 @@ h1,h2,h3{margin:0;line-height:1.05;text-wrap:balance}
 <script src="games/catalog.js"></script>
 <script src="games/kingswall/levels.js"></script>
 <script src="hub.js"></script>
+<script src="games/_sync.js"></script>
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s);
@@ -261,7 +263,12 @@ const confirmOpen={};
 function openPanel(){$('#pinBox').hidden=true;const P=$('#panel');P.hidden=false;
  let h=`<div class="panelTop"><h1>Grown-ups</h1><button class="btn" id="addKid">+ Add a kid</button><button class="btn ghost" id="doneBtn">Done</button></div>`;
  S.kids.forEach(k=>{h+=kidCard(k)});
- h+=`<div class="kcard"><div class="ksec" style="margin-top:0"><h3>About saves</h3><p class="note">Each kid's progress is saved separately, in this browser on this device. If the kids play on two different tablets, each tablet keeps its own progress.</p>
+ const dev=window.__trk&&__trk.device?__trk.device():{name:'This device',test:false};
+ h+=`<div class="kcard"><div class="ksec" style="margin-top:0"><h3>📊 Command Center</h3><p class="note">Play time, answers, strengths and weak spots for every kid, from every device, in one place.</p>
+  <div class="row" style="margin-top:10px"><a class="btn small" href="command.html">Open the Command Center</a></div></div>
+  <div class="ksec"><h3>This device: ${esc(dev.name)}</h3>
+  <div class="toggle"><button class="tg" aria-pressed="${!!dev.test}" id="devTest" aria-label="Testing device"></button><span>This is a grown-up testing device<small>Turn on for your own phone or computer, so your test games don't count in the kids' numbers.</small></span></div></div>
+  <div class="ksec"><h3>About saves</h3><p class="note">Each kid's progress is saved on the device they play on, and also sent to the Command Center so you can see it from anywhere.</p>
   <div class="row" style="margin-top:10px"><button class="btn ghost small" id="chgPin">Change PIN</button></div></div></div>`;
  P.innerHTML=h;bindPanel();show('grown');$('#pinBox').hidden=true}
 function kwBox(k){const c=H.kw(k),K=window.KW;if(!K)return'';
@@ -291,6 +298,7 @@ function bindPanel(){const P=$('#panel');
  $('#addKid').onclick=()=>{const id='kid-'+Date.now().toString(36);S.kids.push({id,name:'New player',emoji:EMOJI[S.kids.length%EMOJI.length],color:COLORS[S.kids.length%COLORS.length],speak:false,games:[]});H.save();openPanel();
   const inp=P.querySelector(`[data-name="${id}"]`);if(inp){inp.scrollIntoView({block:'center'});inp.focus();inp.select()}};
  $('#chgPin').onclick=()=>{S.pin=null;H.save();openGrown()};
+ $('#devTest').onclick=()=>{const d=__trk.device();__trk.setDevice({test:!d.test});H.kids&&0;toast(!d.test?'Testing device: not counted':'Counted as a kid device');const y=window.scrollY;openPanel();window.scrollTo(0,y)};
  P.querySelectorAll('[data-name]').forEach(i=>{i.onchange=()=>{const k=H.kid(i.dataset.name);const v=i.value.trim();if(v){k.name=v;H.save();toast('Saved')}else i.value=k.name}});
  P.onclick=e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;let k;
   if(d.emo){k=H.kid(d.emo);k.emoji=d.v}
@@ -312,6 +320,8 @@ function bindPanel(){const P=$('#panel');
 /* ---------- start ---------- */
 let start=null;try{start=location.hash.slice(1)||sessionStorage.getItem('hub.kid')}catch(e){}
 if(start&&H.kid(start))openShelf(start);else renderWho();
+/* send each kid's saves and play time to the Command Center (skips if nothing changed) */
+setTimeout(()=>{if(window.__trk)S.kids.forEach((k,i)=>setTimeout(()=>__trk.syncKid(k.id),i*400))},2500);
 window.addEventListener('pageshow',e=>{if(e.persisted&&curKid&&!$('#shelf').hidden)openShelf(curKid.id)});
 })();
 </script>

@@ -99,7 +99,7 @@ function chooseSkill(E){if(!E.placed)return E.probe;const f=focusOf(E),acc=recen
 function chooseWord(E,s,avoid){E.counter++;const due=E.review.find(r=>r.due<=E.counter&&(!avoid||!avoid.includes(r.w)));if(due&&WORDS[due.w])return WORDS[due.w];
  const pool=SKILLS[s].words.filter(w=>!(avoid||[]).includes(w.w));const fresh=pool.filter(w=>!(E.seen[w.w]>E.counter-8));const o=pick(fresh.length?fresh:pool);E.seen[o.w]=E.counter;return o}
 /* ok: got it; help: needed a hint (counts as a small step only). */
-function grade(E,word,ok,help){const s=word.s;E.q++;if(ok)E.ok++;E.n[s]++;if(ok&&!help)E.c[s]++;
+function grade(E,word,ok,help){try{window.__trk&&__trk.ans({s:E===D.sp?'sp':'rd',lv:word.s+1,it:word.w,ok:ok&&!help,help:!!help})}catch(e){}const s=word.s;E.q++;if(ok)E.ok++;E.n[s]++;if(ok&&!help)E.c[s]++;
  if(!E.placed){if(ok&&!help){for(let i=0;i<=s;i++)E.m[i]=Math.max(E.m[i],.85);E.probe=s+1;if(E.probe>=SKILLS.length)E.placed=true}else{E.m[s]=Math.min(E.m[s],.3);E.placed=true}}
  else if(ok&&!help)E.m[s]+=(1-E.m[s])*.22;else if(ok)E.m[s]+=(1-E.m[s])*.06;else E.m[s]-=E.m[s]*.3;
  E.recent.push(ok&&!help?1:0);if(E.recent.length>10)E.recent.shift();

@@ -923,7 +923,7 @@ const RENDER={
 function passageHTML(p,inter){return`<article class="passage"><h4>${esc(p.title)}</h4><p>${p.s.map((s,i)=>inter?`<span class="sen" role="button" tabindex="0" aria-pressed="false" data-i="${i}">${esc(s)}</span>`:`<span>${esc(s)}</span>`).join(' ')}</p></article>`;}
 const PRAISE=['Sure-footed!','Right on the trail!','Summit-worthy!','Nailed it!','Sharp eyes!','Great climbing!','Steady footing!'];
 function check(){if(!L||L.phase!=='answer'||$('#l-check').disabled)return;const ok=L.ctl.grade();L.phase='feedback';L.res[L.i]=ok;L.ctl.reveal(ok);award(ok);showFeedback(ok);}
-function award(ok){const q=L.q,st=S.subj[L.subj];st.a++;S.totalAnswered++;rollDay();L.last=null;
+function award(ok){try{window.__trk&&__trk.ans({s:L.subj,lv:(S.subj[L.subj]||{}).lvl,ok})}catch(e){}const q=L.q,st=S.subj[L.subj];st.a++;S.totalAnswered++;rollDay();L.last=null;
   if(ok){st.c++;S.totalCorrect++;L.correct++;L.combo++;L.bestCombo=Math.max(L.bestCombo,L.combo);S.today.correct++;
     const g=1+(L.combo>=3?1:0)+(L.combo>=5?1:0),sec=Math.min(S.settings.secPerCorrect,capLeft());
     S.gems+=g;S.bankSec+=sec;S.today.earnedSec+=sec;L.gems+=g;L.sec+=sec;L.ft+=100;L.last={g,sec,capped:sec<S.settings.secPerCorrect};

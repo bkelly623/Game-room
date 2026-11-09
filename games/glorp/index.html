@@ -391,7 +391,7 @@ function nextQ(subj){const E=ENG[subj].E();if(E.survey){const q=makeQ(subj,E.sur
   if(r<pRev&&ff>0)f=ri(Math.max(0,ff-3),ff-1);else if(r<pRev+pNext&&ff<ENG[subj].len()-1)f=ff+1;return makeQ(subj,f)}
 function skillOf(q){return q.subj==='spell'?q.f:q.s}
 function tally(subj,ok){const E=ENG[subj].E();E.q++;if(ok)E.ok++;const ds=dayStat();ds[subj].q++;if(ok)ds[subj].c++}
-function grade(q,ok){const subj=q.subj,E=ENG[subj].E(),f=skillOf(q);E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
+function grade(q,ok){try{window.__trk&&__trk.ans({s:q.subj,it:q.text,ok})}catch(e){}const subj=q.subj,E=ENG[subj].E(),f=skillOf(q);E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
   E.recent.push(ok?1:0);if(E.recent.length>10)E.recent.shift();if(ok&&E.recent.length>=8&&accOf(E)>=.9)E.m[f]+=(1-E.m[f])*.12;tally(subj,ok);
   const key=q.text,rv=E.review.find(r=>r.key===key);
   if(!ok){E.missed[key]=(E.missed[key]||0)+1;if(rv){rv.need=2;rv.due=E.counter+ri(3,5)}else{const keep=Object.assign({},q);delete keep.review;delete keep.survey;delete keep.typed;E.review.push({key,q:keep,due:E.counter+ri(3,5),need:2})}}

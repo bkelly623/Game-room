@@ -283,7 +283,7 @@ function nextQ(subj,opt={}){const E=ENG[subj].E(),L=ENG[subj].len();if(E.survey)
  if(opt.noDetail&&f===0&&subj==='read')f=ri(1,Math.max(1,Math.min(L-1,ff+1)));
  return ENG[subj].make(f)}
 function tally(subj,ok){const E=ENG[subj].E();E.q++;if(ok)E.ok++;const ds=dayStat();ds[subj].q++;if(ok)ds[subj].c++}
-function grade(q,ok){const subj=q.subj,E=ENG[subj].E(),f=q.s;E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
+function grade(q,ok){try{window.__trk&&__trk.ans({s:q.subj,f:q.s,it:q.text,ok})}catch(e){}const subj=q.subj,E=ENG[subj].E(),f=q.s;E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
  E.recent.push(ok?1:0);if(E.recent.length>10)E.recent.shift();if(ok&&E.recent.length>=8&&accOf(E)>=.9)E.m[f]+=(1-E.m[f])*.12;tally(subj,ok);
  const key=q.text,rv=E.review.find(r=>r.key===key);
  if(!ok){E.missed[key.slice(0,80)]=(E.missed[key.slice(0,80)]||0)+1;if(rv){rv.need=2;rv.due=E.counter+ri(3,5)}else{const keep=Object.assign({},q);delete keep.review;delete keep.survey;E.review.push({key,q:keep,due:E.counter+ri(3,5),need:2})}}

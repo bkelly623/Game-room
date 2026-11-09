@@ -148,6 +148,27 @@ h1,h2{font-family:var(--disp);font-weight:400;margin:0;letter-spacing:.02em}
 .lvrow button{width:38px;height:36px;border-radius:10px;background:rgba(255,255,255,.16);font-size:20px;font-weight:700}
 .lvrow .d{flex:1;font-size:15px;color:#DCD2FF}
 .x{position:absolute;top:12px;right:12px;width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.14);font-size:22px}
+/* Leaderboard + players */
+.sub{color:#DCD2FF;font-weight:600;margin:6px 0 14px}
+.lb{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);border-radius:16px;padding:10px 14px;margin:8px 0;text-align:left}
+.lb.me{background:rgba(255,201,60,.18);box-shadow:inset 0 0 0 2px #FFC93C}
+.lb .rk{font-family:var(--disp);font-size:26px;width:38px;text-align:center}
+.lb .em{font-size:30px}
+.lb .nm{flex:1;font-family:var(--disp);font-size:22px;line-height:1.05}
+.lb .nm small{display:block;font-family:Fredoka,sans-serif;font-size:14px;color:#BDB3E8;font-weight:600}
+.lb .st{font-family:var(--disp);font-size:26px;color:#FFC93C;text-align:right;line-height:1}
+.lb .st small{display:block;font-family:Fredoka,sans-serif;font-size:12px;color:#BDB3E8}
+.pl{display:flex;align-items:center;gap:10px;margin:8px 0}
+.pl .go{flex:1;display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.1);border-radius:16px;padding:10px 14px;text-align:left}
+.pl .go.on{box-shadow:inset 0 0 0 3px #3DCB6C}
+.pl .go b{font-family:var(--disp);font-weight:400;font-size:22px;flex:1}
+.pl .go span{font-size:30px}.pl .go small{color:#BDB3E8;font-weight:600}
+.pl .del{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.1);font-size:18px}
+.newp{margin-top:16px;padding-top:14px;border-top:2px solid rgba(255,255,255,.12)}
+.newp h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:#BDB3E8}
+#plName{width:100%;font:700 22px Fredoka,sans-serif;padding:12px 14px;border-radius:14px;border:0;background:#fff;color:var(--ink);margin-bottom:10px}
+#plEm{justify-content:center;margin-bottom:12px}#plEm .chip{font-size:26px;padding:6px 10px}
+#tWho button{color:#FFC93C;font-weight:700;text-decoration:underline;font-size:inherit}
 #toast{position:fixed;left:50%;top:14%;transform:translateX(-50%);z-index:40;background:#5B3FD6;border-radius:16px;padding:10px 18px;font-weight:700;font-size:19px;box-shadow:0 5px 0 #2F1F86;pointer-events:none;transition:opacity .3s;white-space:nowrap}
 </style>
 </head><body>
@@ -179,7 +200,7 @@ h1,h2{font-family:var(--disp);font-weight:400;margin:0;letter-spacing:.02em}
   <div id="logo">KING'S<span>WALL</span></div>
   <div id="tWho"></div>
   <div class="trow"><button class="btn pulse" id="tPlay">⚔️ Battle!</button></div>
-  <div class="trow"><button class="btn blue small" id="tShop">🏰 Upgrades</button><button class="btn ghost small" id="tSet" hidden>⚙️ Grown-ups</button></div>
+  <div class="trow"><button class="btn blue small" id="tShop">🏰 Upgrades</button><button class="btn blue small" id="tBoard">🏆 Leaders</button><button class="btn ghost small" id="tNew">🔄 New game</button><button class="btn ghost small" id="tSet" hidden>⚙️ Grown-ups</button></div>
   <div id="tSubs"></div>
   <div id="tNote"></div>
  </div>
@@ -218,6 +239,26 @@ h1,h2{font-family:var(--disp);font-weight:400;margin:0;letter-spacing:.02em}
  <div class="srow"><h3>Starting level</h3><div id="suLv"></div><p style="font-size:14px;color:#BDB3E8;margin:6px 0 0">The game moves the level up or down as they play.</p></div>
  <div class="srow"><h3>Monster speed</h3><div class="chips" id="suSpd"></div></div>
  <div class="srow"><h3>Read things out loud</h3><div class="chips" id="suSpk"></div></div>
+</div></div>
+<div class="scr" id="board" hidden><div class="card">
+ <button class="x" id="bdX" aria-label="Close">✕</button>
+ <h1>🏆 Leaderboard</h1><p class="sub" id="bdSub">Highest stage beaten</p>
+ <div id="bdList"></div>
+</div></div>
+
+<div class="scr" id="players" hidden><div class="card">
+ <button class="x" id="plX" aria-label="Close">✕</button>
+ <h1>Who's playing?</h1>
+ <div id="plList"></div>
+ <div class="newp"><h3>New player</h3>
+  <input id="plName" maxlength="14" placeholder="Name" autocomplete="off" aria-label="Player name">
+  <div class="chips" id="plEm"></div>
+  <button class="btn green" id="plAdd">Start a new castle</button></div>
+</div></div>
+
+<div class="scr" id="confirm" hidden><div class="card">
+ <h2 id="cfT"></h2><p id="cfP" class="sub"></p>
+ <div class="trow"><button class="btn ghost" id="cfNo">Keep playing</button><button class="btn" id="cfYes" style="background:#FF5A5F;color:#fff;box-shadow:0 6px 0 #B5262B">Start over</button></div>
 </div></div>
 <div id="toast" style="opacity:0"></div>
 <script>
@@ -342,17 +383,29 @@ function genSpell(lv){let w,em=null,sent=null;
 function genQ(s,lv){if(s==='ma')return genMath(lv);if(s==='rd')return genRead(lv);if(s==='sw')return genSight(lv);return genSpell(lv)}
 
 /* ================= save + settings ================= */
-const KEY='kingswall.v1';
+let KEY='kingswall.v1';
+/* players: in the Game Room each kid already has their own save; on its own the game keeps a list of players */
+const PKEY='kingswall.profiles';let PROF=null;
+function setupProfiles(){HK=hubKid();if(HK){KEY='kingswall.v1';PROF=null;return}
+ try{PROF=JSON.parse(localStorage.getItem(PKEY)||'null')}catch(e){PROF=null}
+ if(!PROF||!Array.isArray(PROF.list)){PROF={list:[],cur:null};let old=null;try{old=localStorage.getItem('kingswall.v1')}catch(e){}
+  if(old){const id='p'+Date.now().toString(36);PROF.list.push({id,name:'Player 1',em:'🛡️'});PROF.cur=id;try{localStorage.setItem('kingswall.v1.'+id,old)}catch(e){}}saveProfiles()}
+ const p=PROF.list.find(x=>x.id===PROF.cur)||PROF.list[0];if(p){PROF.cur=p.id;KEY='kingswall.v1.'+p.id}else KEY=null}
+function saveProfiles(){try{localStorage.setItem(PKEY,JSON.stringify(PROF))}catch(e){}}
+function curProfile(){return PROF&&PROF.list.find(x=>x.id===PROF.cur)||null}
+function readSave(key){try{const s=key.indexOf('kid.')===0&&window.__hubRaw?window.__hubRaw(key):localStorage.getItem(key);return s?JSON.parse(s):null}catch(e){return null}}
+/* new game: castle, gold and upgrades start over; learning levels and answer history stay */
+function newGame(){const keep={eng:D.eng,ma:D.ma,rd:D.rd,sp:D.sp,days:D.days,sound:D.sound,music:D.music,cfg:D.cfg,seenHelp:true,rot:D.rot};D=Object.assign(freshSave(),keep);save()}
 let D=null;
 function freshSave(){return{v:1,stage:1,best:0,gold:0,up:{dmg:0,wall:0,vol:0,arch:0,king:0,luck:0},eng:{},ma:{q:0,ok:0},rd:{q:0,ok:0},sp:{q:0,ok:0},days:{},sound:true,music:true,rot:0,cfg:null,stats:{wins:0,losses:0,kills:0,megas:0,bosses:0},seenHelp:false}}
-function load(){D=freshSave();try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.v===1){D=Object.assign(freshSave(),d);D.up=Object.assign(freshSave().up,d.up||{});D.stats=Object.assign(freshSave().stats,d.stats||{})}}}catch(e){}
+function load(){D=freshSave();try{const s=KEY&&localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(d&&d.v===1){D=Object.assign(freshSave(),d);D.up=Object.assign(freshSave().up,d.up||{});D.stats=Object.assign(freshSave().stats,d.stats||{})}}}catch(e){}
  if(!D.cfg)D.cfg=Object.assign(window.KW.defaults(''),{speak:false})}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+function save(){if(!KEY)return;try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
 function hubKid(){try{if(window.__hubRaw){const h=JSON.parse(window.__hubRaw('hub.v1')||'null');return h&&h.kids&&h.kids.find(k=>k.id===window.__KID)||null}}catch(e){}return null}
 let HK=null;
 function cfg(){HK=hubKid();const kw=(HK&&HK.kw)||(HK?window.KW.defaults(HK.id):D.cfg);
  const subj=(kw.subj||[]).filter(s=>window.KW.subjects[s]);
- return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:''}}
+ return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 /* ================= learning engine (per subject) ================= */
@@ -742,7 +795,7 @@ function render(){if(!cx)return;cx.setTransform(DPR,0,0,DPR,0,0);
  const low=G.wall.hp<G.wall.max*.3&&!G.over;if(low){const a=.18+.12*Math.sin(performance.now()/180);const g=cx.createRadialGradient(CW/2,CH/2,Math.min(CW,CH)*.3,CW/2,CH/2,Math.max(CW,CH)*.7);g.addColorStop(0,'rgba(255,0,0,0)');g.addColorStop(1,'rgba(255,40,40,'+a+')');cx.fillStyle=g;cx.fillRect(0,0,CW,CH)}}
 
 /* ================= question panel ================= */
-let Q=null,qBusy=false,revealT=0,revealDur=0,goldShown=0;
+let qShown=0,Q=null,qBusy=false,revealT=0,revealDur=0,goldShown=0;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function setCombo(){[...$('#combo').children].forEach((d,i)=>d.classList.toggle('on',G&&G.combo%3>i))}
 function showQ(){if(!G||G.over)return;Q=nextQ();qBusy=false;const C=cfg();const S=window.KW.subjects[Q.s];
@@ -756,12 +809,12 @@ function showQ(){if(!G||G.over)return;Q=nextQ();qBusy=false;const C=cfg();const 
   b.textContent=o;b.onpointerdown=ev=>{ev.preventDefault();answer(i,b)};box.appendChild(b)});
  $('#qSay').hidden=!(Q.say||Q.listen||C.speak);
  /* readers must read before the pictures show up */
- revealDur=Q.reveal?(Q.kind==='pic'?1.1:.7):0;revealT=revealDur;
+ revealDur=Q.reveal?(Q.kind==='pic'?1.1:.7):0;revealT=revealDur;qShown=performance.now()+revealDur*1000;
  if(revealDur)[...box.children].forEach(b=>b.classList.add('hide'));$('#readBar').style.visibility=revealDur?'visible':'hidden';
  if(Q.listen)setTimeout(()=>say(Q.say,Q.s==='sp'?.85:.8),150);else if(C.speak&&Q.s==='ma')setTimeout(()=>say(Q.say||''),150)}
 function sayAgain(){if(!Q)return;if(Q.listen||Q.s==='ma')say(Q.say||Q.fixSay);else if(cfg().speak&&Q.prompt.ask)say(Q.prompt.ask)}
 function answer(i,b){if(!G||G.paused||G.over||qBusy||G.jam>0||revealT>0)return;audioInit();qBusy=true;const ok=Q.opts[i]===Q.ans;const btns=[...$('#choices').children];
- const ch=grade(Q,ok);
+ const ch=grade(Q,ok);try{window.__trk&&__trk.ans({s:Q.s,lv:Q.lv,it:Q.key,ok,ms:Math.max(0,performance.now()-qShown)});if(ch)window.__trk&&__trk.ev('lvl',{s:Q.s,to:eng(Q.s).lv,dir:ch})}catch(e){}
  if(ok){b.classList.add('ok');SFX.right();G.right++;G.combo++;G.best=Math.max(G.best,G.combo);addXp(1);setCombo();
   if(G.combo%3===0){mega();volley(1)}else volley(1);
   if(ch==='up')toast('⬆️ '+window.KW.subjects[Q.s].n+' level '+eng(Q.s).lv+'!');
@@ -800,23 +853,61 @@ function takePower(k){SFX.card();G.pw[k]=(G.pw[k]||0)+1;
 
 /* ================= screens ================= */
 function show(id){$('#'+id).hidden=false}function hide(id){$('#'+id).hidden=true}
-function titleScreen(){G=null;const C=cfg();Music.on=false;hide('result');hide('shop');hide('pause');hide('cards');
- const nm=C.name;$('#tWho').textContent=(nm?nm+"'s castle · ":'')+'Stage '+D.stage+(D.best?' · Best '+D.best:'');
- $('#tPlay').innerHTML='⚔️ Battle! <small style="font-size:.6em;opacity:.8">Stage '+D.stage+'</small>';
+function ssGet(k){try{return sessionStorage.getItem(k)}catch(e){return '1'}}
+function titleScreen(){G=null;if(!HK&&!curProfile()){openPlayers(true);return}if(!HK&&curProfile().name==='Player 1'&&!ssGet('kw.named')){try{sessionStorage.setItem('kw.named','1')}catch(e){}openPlayers(false);const p=curProfile();renaming=p.id;firstName=true;pickEm=p.em;[...$('#plEm').children].forEach(c=>c.classList.toggle('on',c.dataset.em===pickEm));$('#plName').value='';$('#plName').placeholder='What\'s your name?';$('#plAdd').textContent='Save name';toast('Give your castle a name!');return}const C=cfg();Music.on=false;['result','shop','pause','cards','board','players','confirm'].forEach(hide);
+ const nm=C.name,started=D.stage>1||D.gold>0||D.best>0;
+ $('#tWho').innerHTML=HK?esc((nm?nm+"'s castle":'Your castle')+(D.best?' · Best stage '+D.best:'')):'Playing as <b>'+esc(nm)+'</b> · <button id="tChange">change player</button>';
+ if(!HK)$('#tChange').onclick=()=>openPlayers(false);
+ $('#tPlay').innerHTML=started?'▶ Continue <small style="font-size:.6em;opacity:.85">Stage '+D.stage+'</small>':'⚔️ Start!';
+ $('#tNew').hidden=!started;
  $('#tSubs').innerHTML=C.subj.map(s=>{const S=window.KW.subjects[s];return`<span>${S.em} ${S.n} · Lv ${eng(s).lv}</span>`}).join('');
  $('#tSet').hidden=!!HK;$('#tNote').textContent=HK?'Grown-ups pick subjects and levels in the Game Room.':'';
- $('#goldN').textContent=D.gold;$('#qWait').hidden=false;$('#qWait').textContent='Tap Battle to start!';
+ $('#goldN').textContent=D.gold;$('#qWait').hidden=false;$('#qWait').textContent='Tap Start to play!';
  show('title');save()}
+/* confirm box */
+function ask(t,p,yes){$('#cfYes').textContent='Start over';$('#cfT').textContent=t;$('#cfP').textContent=p;$('#cfYes').onclick=()=>{hide('confirm');yes()};$('#cfNo').onclick=()=>hide('confirm');show('confirm')}
+function askNewGame(){const nm=cfg().name;ask('Start a new game?',(nm?nm+"'s":'Your')+' castle goes back to Stage 1 with no gold or upgrades. Learning levels stay the same.',()=>{newGame();SFX.card();toast('New castle! Stage 1');titleScreen()})}
+/* leaderboard */
+function boardRows(cb){const rows=[];
+ if(HK){let h={};try{h=JSON.parse(window.__hubRaw('hub.v1')||'{}')}catch(e){}
+  (h.kids||[]).filter(k=>(k.games||[]).includes('kingswall')).forEach(k=>{const s=k.id===HK.id?D:readSave('kid.'+k.id+'::kingswall.v1');rows.push({id:k.id,name:k.name,em:k.emoji,best:s?s.best||0:0,stage:s?s.stage||1:1,kills:s&&s.stats?s.stats.kills||0:0,me:k.id===HK.id})});
+  let done=false;const fin=()=>{if(!done){done=true;cb(rows)}};setTimeout(fin,2500);
+  try{fetch('/api/board').then(r=>r.json()).then(j=>{for(const id in (j.kids||{})){const r=rows.find(x=>x.id===id);if(r)r.best=Math.max(r.best,j.kids[id].best||0)}fin()}).catch(fin)}catch(e){fin()}}
+ else{PROF.list.forEach(p=>{const s=p.id===PROF.cur?D:readSave('kingswall.v1.'+p.id);rows.push({id:p.id,name:p.name,em:p.em,best:s?s.best||0:0,stage:s?s.stage||1:1,kills:s&&s.stats?s.stats.kills||0:0,me:p.id===PROF.cur})});cb(rows)}}
+function openBoard(){$('#bdList').innerHTML='<p class="sub">Loading…</p>';show('board');
+ boardRows(rows=>{rows.sort((a,b)=>b.best-a.best||b.kills-a.kills);const med=['🥇','🥈','🥉'];
+  $('#bdSub').textContent=HK?'Highest stage beaten. Updates when you play.':'Highest stage beaten on this device';
+  $('#bdList').innerHTML=rows.length?rows.map((r,i)=>`<div class="lb${r.me?' me':''}"><span class="rk">${r.best?med[i]||i+1:'–'}</span><span class="em">${esc(r.em||'🛡️')}</span><span class="nm">${esc(r.name)}<small>${r.kills} monsters bonked</small></span><span class="st">${r.best||0}<small>best stage</small></span></div>`).join(''):'<p class="sub">No players yet.</p>'})}
+/* players (only when King's Wall is played outside the Game Room) */
+const PEMO=['🛡️','🦊','🐺','🐸','🦁','🐯','🐻','🐲','🦄','🤖','👑','🚀'];let pickEm='🦊',renaming=null,firstName=false;
+function openPlayers(first){['title','board','confirm'].forEach(hide);
+ $('#plX').hidden=!!first||!PROF.list.length;
+ $('#plList').innerHTML=PROF.list.map(p=>{const s=readSave('kingswall.v1.'+p.id);return`<div class="pl"><button class="go${p.id===PROF.cur?' on':''}" data-pick="${p.id}"><span>${esc(p.em)}</span><b>${esc(p.name)}</b><small>Stage ${s?s.stage||1:1}</small></button><button class="del" data-ren="${p.id}" aria-label="Rename ${esc(p.name)}">✏️</button><button class="del" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">🗑</button></div>`}).join('');
+ $('#plEm').innerHTML=PEMO.map(e=>`<button class="chip${e===pickEm?' on':''}" data-em="${e}">${e}</button>`).join('');
+ $('#plName').value='';$('#plName').placeholder='Name';renaming=null;$('#plAdd').textContent='Start a new castle';show('players');if(!PROF.list.length)setTimeout(()=>$('#plName').focus(),100)}
+function switchPlayer(id){save();PROF.cur=id;saveProfiles();KEY='kingswall.v1.'+id;load();titleScreen()}
+$('#players').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.pick){SFX.tap();switchPlayer(d.pick)}
+ else if(d.ren){const p=PROF.list.find(x=>x.id===d.ren);renaming=p.id;$('#plName').value=p.name;pickEm=p.em;[...$('#plEm').children].forEach(c=>c.classList.toggle('on',c.dataset.em===pickEm));$('#plAdd').textContent='Save name';$('#plName').focus()}
+ else if(d.em){pickEm=d.em;[...$('#plEm').children].forEach(c=>c.classList.toggle('on',c.dataset.em===pickEm))}
+ else if(d.del){const p=PROF.list.find(x=>x.id===d.del);hide('players');ask('Remove '+p.name+'?','Their castle and progress on this device will be erased.',()=>{try{localStorage.removeItem('kingswall.v1.'+p.id)}catch(e){}PROF.list=PROF.list.filter(x=>x!==p);if(PROF.cur===p.id){PROF.cur=PROF.list[0]?PROF.list[0].id:null}saveProfiles();setupProfiles();load();openPlayers(!PROF.list.length)});$('#cfYes').textContent='Remove';$('#cfNo').onclick=()=>{hide('confirm');openPlayers(false)}}});
+$('#plAdd').onclick=()=>{const n=$('#plName').value.trim().replace(/\s+/g,' ');if(!n){$('#plName').focus();toast('Type a name first');return}
+ if(PROF.list.some(p=>p.id!==renaming&&p.name.toLowerCase()===n.toLowerCase())){toast(n+' already has a castle');return}
+ if(renaming){const p=PROF.list.find(x=>x.id===renaming);renaming=null;if(p){p.name=n;p.em=pickEm;saveProfiles()}if(firstName){firstName=false;titleScreen()}else openPlayers(false);return}
+ save();const id='p'+Date.now().toString(36);PROF.list.push({id,name:n,em:pickEm});PROF.cur=id;saveProfiles();KEY='kingswall.v1.'+id;load();SFX.lvl();titleScreen()};
+$('#plName').addEventListener('keydown',e=>{if(e.key==='Enter')$('#plAdd').click()});
+$('#plX').onclick=()=>{hide('players');titleScreen()};$('#bdX').onclick=()=>{hide('board');titleScreen()};
 function startRun(){audioInit();hide('title');hide('result');hide('shop');newRun(D.stage);goldShown=D.gold;$('#goldN').textContent=D.gold;
  resize();G.paused=false;Music.on=true;if(AC)Music.next=AC.currentTime+.1;
  $('#qWait').hidden=true;$('#jam').hidden=true;setCombo();showQ();
  banner('STAGE '+G.stage,G.boss?'Boss stage!':'Defend the wall!');kingSay(pick(KING_LINES.start),2.6);
  if(!D.seenHelp){D.seenHelp=true;setTimeout(()=>toast('Answer right to fire a volley! 🏹'),1600);if(cfg().speak)setTimeout(()=>say('Answer right to shoot arrows at the monsters!'),900)}}
 function endRun(win){if(G.over)return;G.over=true;Music.on=false;$('#qWait').hidden=false;$('#qWait').textContent=win?'You did it!':'Oh no!';$('#jam').hidden=true;
- const st=G.stage;let earned=G.gold;
+ const st=G.stage;let earned=G.gold;const prevBest=D.best||0;
  if(win){D.stats.wins++;D.best=Math.max(D.best,st);D.stage=st+1;SFX.win();kingSay(pick(KING_LINES.win),4)}else{D.stats.losses++;SFX.lose();earned=Math.round(earned*.7)}
  const bonus=win?Math.round((12+st*4)*(1+.15*D.up.luck)*(st%5===0?2.5:1)):0;
  D.gold+=earned;save();
+ try{if(window.__trk){__trk.ev('stage',{st,win:win?1:0,right:G.right,wrong:G.wrong,wall:Math.round(100*G.wall.hp/G.wall.max),dur:Math.round(G.t),lvl:G.lvl});if(win&&st>prevBest)__trk.ev('kwbest',{st})}}catch(e){}
  setTimeout(()=>{const pc=G.wall.hp/G.wall.max,stars=win?(pc>.7?3:pc>.35?2:1):0;
   $('#rTitle').textContent=win?'STAGE '+st+' CLEARED!':'THE WALL FELL!';$('#rTitle').className=win?'':'lose';
   $('#stars').innerHTML=win?[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">⭐</span>`).join(''):'<span>🧱💥</span>';
@@ -847,9 +938,9 @@ $('#setup').addEventListener('click',e=>{const b=e.target.closest('button');if(!
  else if(d.sp)c.speed=d.sp;else if(d.spk)c.speak=d.spk==='1';else return;save();openSetup()});
 
 /* ================= wiring ================= */
-$('#tPlay').onclick=startRun;$('#tShop').onclick=()=>{audioInit();openShop()};$('#tSet').onclick=openSetup;$('#suX').onclick=()=>{hide('setup');titleScreen()};
+$('#tPlay').onclick=startRun;$('#tNew').onclick=askNewGame;$('#tBoard').onclick=openBoard;$('#tShop').onclick=()=>{audioInit();openShop()};$('#tSet').onclick=openSetup;$('#suX').onclick=()=>{hide('setup');titleScreen()};
 $('#shDone').onclick=$('#shX').onclick=()=>{hide('shop');if($('#result').hidden)titleScreen()};
-$('#rShop').onclick=openShop;$('#rNext').onclick=()=>{const c=$('#chest');if(!$('#chestBox').hidden&&!c.dataset.open)openChest();startRun()};$('#rHome').onclick=()=>{const c=$('#chest');if(!$('#chestBox').hidden&&!c.dataset.open){openChest()}titleScreen()};
+$('#rShop').onclick=openShop;$('#rNext').onclick=()=>{const c=$('#chest');if(!$('#chestBox').hidden&&!c.dataset.open)openChest();startRun()};$('#rHome').onclick=()=>{try{window.__trk&&__trk.flush(false)}catch(e){}const c=$('#chest');if(!$('#chestBox').hidden&&!c.dataset.open){openChest()}titleScreen()};
 $('#chest').onclick=openChest;$('#bPause').onclick=()=>pause(true);$('#pGo').onclick=()=>pause(false);
 $('#pSnd').onclick=()=>{D.sound=!D.sound;applyVol();save();pause(true)};$('#pMus').onclick=()=>{D.music=!D.music;applyVol();save();pause(true)};
 $('#pQuit').onclick=()=>{hide('pause');G.paused=false;G.wall.hp=0};
@@ -860,7 +951,7 @@ function frame(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;
  if(G&&!G.paused&&!G.over){update(dt);tickQ(dt)}else if(G&&G.over)updateFx(dt);
  render();hud();Music.tick();requestAnimationFrame(frame)}
 function updateFx(dt){for(const f of G.fx){if(f.delay>0){f.delay-=dt;continue}f.life-=dt;if(f.coin){f.life=0;continue}if(f.ring||f.stuck)continue;f.vy+=(f.g||0)*dt;f.x+=f.vx*dt;f.y+=f.vy*dt}G.fx=G.fx.filter(f=>f.life>0);for(const t of G.tx){t.life-=dt;t.y-=30*dt}G.tx=G.tx.filter(t=>t.life>0);if(G.shake>0)G.shake=Math.max(0,G.shake-dt*30);if(G.flash>0)G.flash-=dt}
-function init(){load();cv=$('#cv');cx=cv.getContext('2d');resize();addEventListener('resize',()=>{resize()});
+function init(){setupProfiles();load();cv=$('#cv');cx=cv.getContext('2d');resize();addEventListener('resize',()=>{resize()});
  if(window.ResizeObserver)new ResizeObserver(()=>resize()).observe($('#field'));
  titleScreen();requestAnimationFrame(frame)}
 /* test hooks */
