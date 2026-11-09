@@ -7,8 +7,8 @@ function publicUrl(path){const m=TOKEN().match(/^vercel_blob_rw_([A-Za-z0-9]+)_/
 async function put(path,body,{random=true,overwrite=false,maxAge=60}={}){
   const headers=H({'x-content-type':'application/json','x-add-random-suffix':random?'1':'0','x-cache-control-max-age':String(maxAge)});
   if(overwrite)headers['x-allow-overwrite']='1';
-  let r=await fetch(`${API}/?pathname=${encodeURIComponent(path)}`,{method:'PUT',headers,body});
-  if(r.status===404||r.status===405)r=await fetch(`${API}/${path}`,{method:'PUT',headers,body});
+  let r=await fetch(`${API}/${path}`,{method:'PUT',headers,body});
+  if(!r.ok&&r.status<500){const first=await r.text();r=await fetch(`${API}/?pathname=${encodeURIComponent(path)}`,{method:'PUT',headers,body});if(!r.ok)throw new Error('blob put '+r.status+' '+first.slice(0,150)+' | '+(await r.text()).slice(0,150))}
   if(!r.ok)throw new Error('blob put '+r.status+' '+(await r.text()).slice(0,200));
   return r.json()}
 async function list(prefix){const out=[];let cursor='';
