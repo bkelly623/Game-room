@@ -101,19 +101,20 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 </head>
 <body>
 <div class="wrap">
- <div id="gate" class="gate" hidden>
+ <form id="gate" class="gate" hidden autocomplete="on">
   <h1 style="font:400 24px var(--display)">Command Center</h1>
-  <p class="muted">Enter the grown-up key to see the boys' progress.</p>
-  <input id="keyIn" type="password" autocomplete="current-password" aria-label="Grown-up key" placeholder="Grown-up key">
-  <button class="btn" id="keyGo">Open</button>
-  <p id="keyErr" class="muted" style="color:#ff9a93" hidden>That key didn't work.</p>
- </div>
+  <p class="muted">Grown-ups only. Sign in to see the boys' progress.</p>
+  <input id="uIn" name="username" autocomplete="username" aria-label="Username" placeholder="Username" autocapitalize="none" spellcheck="false">
+  <input id="pIn" name="password" type="password" autocomplete="current-password" aria-label="Password" placeholder="Password" style="margin-top:0">
+  <button class="btn" id="keyGo" type="submit">Sign in</button>
+  <p id="keyErr" class="muted" style="color:#ff9a93" hidden></p>
+ </form>
  <div id="app" hidden>
   <header>
    <h1>📊 Command Center</h1><span class="meta" id="meta"></span><span class="sp"></span>
    <div class="seg" id="range"><button data-d="7" class="on">7 days</button><button data-d="30">30 days</button></div>
    <label class="chk"><input type="checkbox" id="showTest"> Include test devices</label>
-   <a class="btn ghost" href="./">← Game Room</a>
+   <a class="btn ghost" href="/">Game Room</a><button class="btn ghost" id="signOut" type="button">Sign out</button>
   </header>
   <div id="body"><div class="load">Loading…</div></div>
   <div class="foot" id="foot"></div>
@@ -138,23 +139,21 @@ function mins(sec){const m=Math.round((sec||0)/60);return m<60?m+' min':Math.flo
 const pct=x=>Math.round(x*100)+'%';
 const median=a=>{if(!a.length)return null;const b=a.slice().sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2};
 /* ---------- key ---------- */
-let KEY='';
-try{const h=new URLSearchParams(location.hash.slice(1));if(h.get('key')){localStorage.setItem('cc.key',h.get('key'));history.replaceState(null,'',location.pathname)}KEY=localStorage.getItem('cc.key')||''}catch(e){}
+try{localStorage.removeItem('cc.key')}catch(e){}if(location.hash)history.replaceState(null,'',location.pathname);
 let RAW=null,RANGE=7,SHOWTEST=false,SEL=null;
-async function fetchData(){const r=await fetch('/api/data?days=60',{headers:{'x-dash-key':KEY},cache:'no-store'});if(r.status===401)throw new Error('key');if(!r.ok)throw new Error('server '+r.status);return r.json()}
-async function start(){if(!KEY){showGate();return}
- $('#gate').hidden=true;$('#app').hidden=false;
- try{RAW=await fetchData();render()}catch(e){if(e.message==='key'){try{localStorage.removeItem('cc.key')}catch(_){}KEY='';showGate(true)}else $('#body').innerHTML='<div class="card">Couldn\'t load data: '+esc(e.message)+'. Try again in a minute.</div>'}}
-function showGate(bad){$('#app').hidden=true;$('#gate').hidden=false;$('#keyErr').hidden=!bad;$('#keyIn').focus()}
-$('#keyGo').onclick=()=>{KEY=$('#keyIn').value.trim();try{localStorage.setItem('cc.key',KEY)}catch(e){}start()};
-$('#keyIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#keyGo').click()});
+async function fetchData(){const r=await fetch('/api/data?days=60',{credentials:'same-origin',cache:'no-store'});if(r.status===401)throw new Error('key');if(!r.ok)throw new Error('server '+r.status);return r.json()}
+async function start(){
+ try{RAW=await fetchData();$('#gate').hidden=true;$('#app').hidden=false;render()}catch(e){if(e.message==='key'){showGate()}else{$('#gate').hidden=true;$('#app').hidden=false; $('#body').innerHTML='<div class="card">Couldn\'t load data: '+esc(e.message)+'. Try again in a minute.</div>'}}}
+function showGate(msg){$('#app').hidden=true;$('#gate').hidden=false;$('#keyErr').hidden=!msg;$('#keyErr').textContent=msg||'';$('#uIn').value?$('#pIn').focus():$('#uIn').focus()}
+$('#gate').onsubmit=async e=>{e.preventDefault();$('#keyGo').disabled=true;try{const r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify({user:$('#uIn').value,pass:$('#pIn').value})});const j=await r.json().catch(()=>({}));if(r.ok){$('#pIn').value='';start()}else showGate(j.error||'Sign-in failed.')}catch(err){showGate('No connection. Try again.')}$('#keyGo').disabled=false};
+async function signOut(){await fetch('/api/login',{method:'DELETE',credentials:'same-origin'}).catch(()=>{});RAW=null;showGate()}
 $('#range').onclick=e=>{const b=e.target.closest('button');if(!b)return;RANGE=+b.dataset.d;[...$('#range').children].forEach(x=>x.classList.toggle('on',x===b));render()};
 $('#showTest').onchange=e=>{SHOWTEST=e.target.checked;render()};
 
 /* ---------- model ---------- */
 function build(){const kids={},devices={};const seen=new Set();
  for(const b of RAW.batches){devices[b.dev.id]={name:b.dev.name,test:b.dev.test,last:b.at};
-  if(b.dev.test&&!SHOWTEST)continue;
+  if((b.dev.test||b.kid==='uncle-b')&&!SHOWTEST)continue;
   const K=kids[b.kid]||(kids[b.kid]={id:b.kid,name:b.name||b.kid,ev:[],snaps:{},devs:{},info:null,lastSync:0});
   if(b.name)K.name=b.name;K.devs[b.dev.id]=b.dev.name;K.lastSync=Math.max(K.lastSync,b.at);
   for(const e of (b.ev||[])){const k=b.kid+'|'+JSON.stringify(e);if(seen.has(k))continue;seen.add(k);e.dev=b.dev.id;K.ev.push(e)}
@@ -305,8 +304,9 @@ function render(){const M=MODEL=build();const ins=analyse(M);if(!SEL||!M.kids.fi
  document.querySelectorAll('.kid').forEach(c=>c.onclick=()=>{SEL=c.dataset.kid;render();setTimeout(()=>document.querySelector('.dhead').scrollIntoView({behavior:'smooth',block:'start'}),30)});
  const saved=M.kids.map(k=>k.saved.q?`${k.name}: ${k.saved.q} answers saved in games so far`:'').filter(Boolean).join(' · ');
  $('#foot').textContent=(saved?saved+'. ':'')+'Play time covers every game. Answer details start from the day tracking was switched on.'}
+$('#signOut').onclick=signOut;
 start();
-setInterval(()=>{if(KEY&&!document.hidden&&RAW)fetchData().then(d=>{RAW=d;render()}).catch(()=>{})},120000);
+setInterval(()=>{if(!document.hidden&&RAW)fetchData().then(d=>{RAW=d;render()}).catch(()=>{})},120000);
 </script>
 </body>
 </html>

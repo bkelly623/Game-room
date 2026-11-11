@@ -217,17 +217,17 @@ const kidWeek=k=>Object.values(S.log[k.id]||{}).reduce((a,e)=>a+H.weekSec(e),0);
 
 /* ---------- who's playing ---------- */
 function renderWho(){const box=$('#kids');box.innerHTML='';
- S.kids.forEach(k=>{const n=k.games.map(H.game).filter(g=>g&&!g.soon).length,w=kidWeek(k);const b=document.createElement('button');b.className='pcard';b.style.setProperty('--c',k.color);
-  b.innerHTML=`<div class="tile"><div class="av">${esc(k.emoji)}</div><b>${esc(k.name)}</b><span class="meta">${n} game${n===1?'':'s'}${w>=60?' · '+H.fmtDur(w)+' this week':''}</span></div>`;
-  b.onclick=()=>{H.say(k.name+'!');openShelf(k.id)};box.appendChild(b)});show('who')}
+ S.kids.forEach(k=>{const n=H.gamesOf(k).map(H.game).filter(g=>g&&!g.soon).length,w=kidWeek(k);const b=document.createElement('button');b.className='pcard';b.style.setProperty('--c',k.color);
+  b.innerHTML=`<div class="tile"><div class="av">${esc(k.emoji)}</div><b>${esc(k.name)}${k.tester?' 🔒':''}</b><span class="meta">${k.tester?'Grown-up · all games':n+' game'+(n===1?'':'s')+(w>=60?' · '+H.fmtDur(w)+' this week':'')}</span></div>`;
+  b.onclick=()=>{if(k.tester)return unlockB(k.id);H.say(k.name+'!');openShelf(k.id)};box.appendChild(b)});show('who')}
 
 /* ---------- shelf ---------- */
 let curKid=null;
-function renderTabs(){const t=$('#tabs');t.innerHTML='';S.kids.forEach(k=>{const b=document.createElement('button');b.className='tab'+(curKid&&k.id===curKid.id?' on':'');b.style.setProperty('--c',k.color);b.innerHTML=`<i>${esc(k.emoji)}</i>${esc(k.name)}`;b.onclick=()=>{if(curKid&&k.id===curKid.id)return;H.say(k.name+'!');openShelf(k.id)};t.appendChild(b)})}
-function openShelf(id){const k=H.kid(id);if(!k){renderWho();return}curKid=k;
+function renderTabs(){const t=$('#tabs');t.innerHTML='';S.kids.forEach(k=>{const b=document.createElement('button');b.className='tab'+(curKid&&k.id===curKid.id?' on':'');b.style.setProperty('--c',k.color);b.innerHTML=`<i>${esc(k.emoji)}</i>${esc(k.name)}${k.tester&&!bOk()?' 🔒':''}`;b.onclick=()=>{if(curKid&&k.id===curKid.id)return;if(k.tester)return unlockB(k.id);H.say(k.name+'!');openShelf(k.id)};t.appendChild(b)})}
+function openShelf(id){const k=H.kid(id);if(!k){renderWho();return}if(k.tester&&!bOk())return unlockB(id);curKid=k;
  try{sessionStorage.setItem('hub.kid',k.id)}catch(e){}if(location.hash!=='#'+k.id)history.replaceState(null,'','#'+k.id);
  renderTabs();$('#meFace').textContent=k.emoji;$('#meHi').textContent=`Hey, ${k.name}!`;
- const list=k.games.map(H.game).filter(Boolean),L=S.log[k.id]||{};
+ const list=H.gamesOf(k).map(H.game).filter(Boolean),L=S.log[k.id]||{};
  const lastG=list.filter(g=>!g.soon&&L[g.id]&&L[g.id].last).sort((a,b)=>L[b.id].last-L[a.id].last)[0];
  $('#meSub').textContent=k.speak?'Tap a game to play!':lastG?`You have ${list.length} games. Pick up where you left off!`:`You have ${list.length} games. Pick one to start!`;
  const cont=$('#cont');cont.innerHTML='';
@@ -244,15 +244,19 @@ function go(k,g){location.href='play.html?g='+encodeURIComponent(g.id)+'&k='+enc
 
 /* ---------- grown-ups: PIN ---------- */
 let pinBuf='',pinMode='enter',pinFirst='';
-function openGrown(){pinBuf='';if(!S.pin){pinMode='new';$('#pinTitle').textContent='Make a grown-up PIN';$('#pinSub').textContent='Pick 4 numbers. Kids need it to change games.'}
+let pinNext=null;
+function bOk(){try{return sessionStorage.getItem('hub.bOk')==='1'}catch(e){return false}}
+function unlockB(id){if(bOk())return openShelf(id);pinNext=()=>{try{sessionStorage.setItem('hub.bOk','1')}catch(e){}openShelf(id)};openGrown(true)}
+function pinDone(){const n=pinNext;pinNext=null;if(n){$('#grown').hidden=true;n()}else openPanel()}
+function openGrown(keep){if(keep!==true)pinNext=null;pinBuf='';if(!S.pin){pinMode='new';$('#pinTitle').textContent='Make a grown-up PIN';$('#pinSub').textContent='Pick 4 numbers. Kids need it to change games.'}
  else{pinMode='enter';$('#pinTitle').textContent='Grown-ups';$('#pinSub').textContent='Enter your PIN.'}
  $('#pinBox').hidden=false;$('#panel').hidden=true;dots();show('grown')}
 function dots(){[...$('#dots').children].forEach((d,i)=>d.classList.toggle('f',i<pinBuf.length))}
 function badPin(msg){const d=$('#dots');d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake');pinBuf='';dots();if(msg)$('#pinSub').textContent=msg}
 function pinKey(v){if(v==='del'){pinBuf=pinBuf.slice(0,-1);dots();return}if(pinBuf.length>=4)return;pinBuf+=v;dots();if(pinBuf.length<4)return;
- setTimeout(()=>{if(pinMode==='enter'){if(pinBuf===S.pin)openPanel();else badPin('That’s not it. Try again.')}
+ setTimeout(()=>{if(pinMode==='enter'){if(pinBuf===S.pin)pinDone();else badPin('That’s not it. Try again.')}
   else if(pinMode==='new'){pinFirst=pinBuf;pinBuf='';pinMode='confirm';$('#pinSub').textContent='Type it one more time.';dots()}
-  else if(pinMode==='confirm'){if(pinBuf===pinFirst){S.pin=pinBuf;H.save();toast('PIN saved');openPanel()}else{pinMode='new';badPin('Those didn’t match. Pick 4 numbers again.')}}},140)}
+  else if(pinMode==='confirm'){if(pinBuf===pinFirst){S.pin=pinBuf;H.save();toast('PIN saved');pinDone()}else{pinMode='new';badPin('Those didn’t match. Pick 4 numbers again.')}}},140)}
 (function(){const p=$('#pad');['1','2','3','4','5','6','7','8','9','','0','del'].forEach(v=>{const b=document.createElement('button');if(!v){b.style.visibility='hidden';p.appendChild(b);return}
  b.textContent=v==='del'?'Delete':v;if(v==='del')b.className='alt';b.onclick=()=>pinKey(v);p.appendChild(b)})})();
 document.addEventListener('keydown',e=>{if($('#grown').hidden||$('#pinBox').hidden)return;if(/^[0-9]$/.test(e.key))pinKey(e.key);else if(e.key==='Backspace')pinKey('del')});
@@ -264,11 +268,10 @@ function openPanel(){$('#pinBox').hidden=true;const P=$('#panel');P.hidden=false
  let h=`<div class="panelTop"><h1>Grown-ups</h1><button class="btn" id="addKid">+ Add a kid</button><button class="btn ghost" id="doneBtn">Done</button></div>`;
  S.kids.forEach(k=>{h+=kidCard(k)});
  const dev=window.__trk&&__trk.device?__trk.device():{name:'This device',test:false};
- h+=`<div class="kcard"><div class="ksec" style="margin-top:0"><h3>📊 Command Center</h3><p class="note">Play time, answers, strengths and weak spots for every kid, from every device, in one place.</p>
-  <div class="row" style="margin-top:10px"><a class="btn small" href="command.html">Open the Command Center</a></div></div>
-  <div class="ksec"><h3>This device: ${esc(dev.name)}</h3>
+ h+=`<div class="kcard">
+  <div class="ksec" style="margin-top:0"><h3>This device: ${esc(dev.name)}</h3>
   <div class="toggle"><button class="tg" aria-pressed="${!!dev.test}" id="devTest" aria-label="Testing device"></button><span>This is a grown-up testing device<small>Turn on for your own phone or computer, so your test games don't count in the kids' numbers.</small></span></div></div>
-  <div class="ksec"><h3>About saves</h3><p class="note">Each kid's progress is saved on the device they play on, and also sent to the Command Center so you can see it from anywhere.</p>
+  <div class="ksec"><h3>About saves</h3><p class="note">Each kid's progress is saved on the device they play on, and also backed up to your private dashboard.</p>
   <div class="row" style="margin-top:10px"><button class="btn ghost small" id="chgPin">Change PIN</button></div></div></div>`;
  P.innerHTML=h;bindPanel();show('grown');$('#pinBox').hidden=true}
 function kwBox(k){const c=H.kw(k),K=window.KW;if(!K)return'';
@@ -289,7 +292,7 @@ function kidCard(k){const L=S.log[k.id]||{};
   <div class="ksec"><h3>Picture</h3><div class="row">${EMOJI.map(e=>`<button class="emo${e===k.emoji?' on':''}" data-emo="${k.id}" data-v="${e}">${e}</button>`).join('')}</div>
    <div class="row" style="margin-top:8px">${COLORS.map(c=>`<button class="col${c===k.color?' on':''}" style="background:${c}" data-col="${k.id}" data-v="${c}" aria-label="Color"></button>`).join('')}</div></div>
   <div class="ksec"><div class="toggle"><button class="tg" aria-pressed="${!!k.speak}" data-speak="${k.id}" aria-label="Read aloud"></button><span>Read things out loud<small>For kids who can't read yet: names and game titles are spoken, and game cards get bigger.</small></span></div></div>
-  <div class="ksec"><h3>Games on ${esc(k.name)}'s shelf</h3><div class="row">${window.CATALOG.map(g=>{const on=k.games.includes(g.id);return`<button class="chk${on?' on':''}" data-game="${k.id}" data-v="${g.id}"><span class="box">${on?'✓':''}</span>${g.emoji} ${esc(g.title)}${g.soon?' <small>(soon)</small>':''}</button>`}).join('')}</div></div>
+  ${k.tester?`<div class="ksec"><h3>Games</h3><p class="note">Every game in the Game Room, including new ones as they're added. Locked with your PIN, and never counted in the kids' numbers.</p></div>`:`<div class="ksec"><h3>Games on ${esc(k.name)}'s shelf</h3><div class="row">${window.CATALOG.map(g=>{const on=k.games.includes(g.id);return`<button class="chk${on?' on':''}" data-game="${k.id}" data-v="${g.id}"><span class="box">${on?'✓':''}</span>${g.emoji} ${esc(g.title)}${g.soon?' <small>(soon)</small>':''}</button>`}).join('')}</div></div>`}
   ${kwBox(k)}
   <div class="ksec"><h3>Progress on this device</h3>${rows?`<div class="tblwrap"><table class="tbl"><thead><tr><th>Game</th><th>Last played</th><th>This week</th><th>All time</th><th>Answers right</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="note">${esc(k.name)} hasn't played anything on this device yet.</p>`}</div>
  </div>`}

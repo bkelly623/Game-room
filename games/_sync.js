@@ -28,6 +28,7 @@ function send(kid,opts){opts=opts||{};if(!ON||!kid)return;var q=queue(kid),dev=d
  var snap=null;if(opts.snap!==false){var s=snapshot(kid),h=hash(JSON.stringify(s)),meta=rjson('trk.h.'+kid,{}),fresh=Date.now()-(meta.at||0)>6*36e5;if(h!==meta.h||fresh){snap=s;snap.h=h}}
  if(snap&&!Object.keys(snap.saves).length&&!snap.log&&!q.length)snap=null;
  if(!q.length&&!snap)return;var I=kidInfo(kid);
+ if((I.k&&I.k.tester)||kid==='uncle-b'){dev=JSON.parse(JSON.stringify(dev));dev.test=true}
  var body=JSON.stringify({kid:kid,name:I.k?I.k.name:'',dev:dev,ev:q,snap:snap});
  var done=function(){var now=queue(kid);rset('trk.q.'+kid,JSON.stringify(now.slice(q.length)));if(snap)rset('trk.h.'+kid,JSON.stringify({h:snap.h,at:Date.now()}))};
  if(opts.beacon&&navigator.sendBeacon&&body.length<60000){if(navigator.sendBeacon('/api/ingest',new Blob([body],{type:'text/plain'})))done();return}
