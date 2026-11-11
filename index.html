@@ -175,6 +175,7 @@ a.btn{text-decoration:none}
     <div class="hello"><div class="big" id="meFace"></div><div><h1 id="meHi"></h1><p id="meSub"></p></div></div>
     <div id="cont"></div>
     <div class="sec" id="allH">YOUR GAMES</div>
+    <a id="ccLink" class="btn" href="/admin" hidden style="margin:0 0 16px">📊 Command Center (stats)</a>
     <div id="gwrap"><div class="games" id="games"></div></div>
   </section>
 
@@ -233,6 +234,7 @@ function openShelf(id){const k=H.kid(id);if(!k){renderWho();return}if(k.tester&&
  const cont=$('#cont');cont.innerHTML='';
  if(lastG&&!k.speak){const b=document.createElement('button');b.className='hero';b.innerHTML=`<div class="shot" style="background-image:url('${cover(lastG)}')"></div><div class="txt"><div class="eyebrow">Jump back in</div><h2>${esc(lastG.title)}</h2><div class="note">Last played ${esc(H.ago(L[lastG.id].last).toLowerCase())}</div><span class="btn play">▶ Play</span></div>`;b.onclick=()=>go(k,lastG);cont.appendChild(b)}
  $('#allH').hidden=!(lastG&&!k.speak);$('#gwrap').className=k.speak?'big':'';
+ const cc=$('#ccLink');if(cc)cc.hidden=!k.tester;
  const box=$('#games');box.innerHTML='';
  if(!list.length)box.innerHTML='<div class="empty">No games yet. Ask a grown-up to pick some.</div>';
  list.forEach(g=>{const e=L[g.id];const b=document.createElement('button');b.className='card'+(g.soon?' soon':'');

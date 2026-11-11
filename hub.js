@@ -4,14 +4,14 @@
 var KEY='hub.v1';
 function defaults(){return{v:1,pin:null,kids:[
   {id:'vinny',name:'Vinny',emoji:'🦊',color:'#E8742E',speak:false,games:['kingswall','kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']},
-  {id:'luca',name:'Luca',emoji:'🐆',color:'#2FA35A',speak:true,games:['kingswall','blocks','glorp','rocket']},
+  {id:'luca',name:'Luca',emoji:'🐆',color:'#2FA35A',speak:true,games:['racer','kingswall','blocks','glorp','rocket']},
   {id:'jack',name:'Jack',emoji:'🐺',color:'#3E7CD6',speak:false,games:['kingswall','kingdoms','ashvale','snortwood','glorp','rocket','echo','lumen','summit']},
   TESTER()
- ],log:{},kwAdded:1,bAdded:1,leopard:1}}
+ ],log:{},kwAdded:1,bAdded:1,leopard:1,racer:1}}
 /* B's own tab: every game, locked with the grown-up PIN, never counted in the kids' numbers */
 function TESTER(){return{id:'uncle-b',name:'B',emoji:'👑',color:'#7C5CFF',speak:false,tester:true,games:[]}}
 var mem=null;
-function load(){if(mem)return mem;try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(d&&Array.isArray(d.kids)){d.log=d.log||{};d.kids.forEach(function(k){var i=k.games.indexOf('letters');if(i>=0)k.games[i]='blocks';if(!d.kwAdded&&k.games.indexOf('kingswall')<0)k.games.unshift('kingswall')});d.kwAdded=1;if(!d.leopard){d.kids.forEach(function(k){if(k.id==='luca'&&k.emoji==='🐸')k.emoji='🐆'});d.leopard=1}if(!d.bAdded){if(!d.kids.some(function(k){return k.tester}))d.kids.push(TESTER());d.bAdded=1}mem=d;return d}}}catch(e){}mem=defaults();return mem}
+function load(){if(mem)return mem;try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(d&&Array.isArray(d.kids)){d.log=d.log||{};d.kids.forEach(function(k){var i=k.games.indexOf('letters');if(i>=0)k.games[i]='blocks';if(!d.kwAdded&&k.games.indexOf('kingswall')<0)k.games.unshift('kingswall')});d.kwAdded=1;if(!d.racer){d.kids.forEach(function(k){if(k.id==='luca'&&k.games.indexOf('racer')<0)k.games.unshift('racer')});d.racer=1}if(!d.leopard){d.kids.forEach(function(k){if(k.id==='luca'&&k.emoji==='🐸')k.emoji='🐆'});d.leopard=1}if(!d.bAdded){if(!d.kids.some(function(k){return k.tester}))d.kids.push(TESTER());d.bAdded=1}mem=d;return d}}}catch(e){}mem=defaults();return mem}
 function kw(k){if(!k.kw&&window.KW)k.kw=window.KW.defaults(k.id);return k.kw}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(e){}}
 function gamesOf(k){return k&&k.tester?(window.CATALOG||[]).filter(function(g){return!g.soon}).map(function(g){return g.id}):(k?k.games:[])}

@@ -245,7 +245,7 @@ function chooseQ(){D.counter++;const due=D.review.find(r=>r.due<=D.counter);if(d
   /* don't ask the same thing twice in a row */
   let q=gen(f);for(let i=0;i<6&&D.lastQ===q.text;i++)q=gen(f);D.lastQ=q.text;return q}
 function tally(ok){D.stats.q++;if(ok)D.stats.correct++;const ds=dayStat();ds.q++;if(ok)ds.c++}
-function grade(q,ok){try{window.__trk&&__trk.ans({s:'math',f:q.s,it:q.text,ok})}catch(e){}const f=q.s;D.n[f]++;if(ok){D.c[f]++;D.m[f]+=(1-D.m[f])*.25}else D.m[f]-=D.m[f]*.35;
+function grade(q,ok){try{window.__trk&&__trk.ans({s:'math',f:q.s,it:q.text,ok})}catch(e){}const f=q.s;D.n[f]++;if(ok){D.c[f]++;D.m[f]+=(1-D.m[f])*.25}else D.m[f]-=D.m[f]*.15;
   D.recent.push(ok?1:0);if(D.recent.length>10)D.recent.shift();if(ok&&D.recent.length>=8&&recentAcc()>=.9)D.m[f]+=(1-D.m[f])*.12;tally(ok);
   const rv=D.review.find(r=>r.key===q.text);
   if(!ok){D.missed[q.text]=(D.missed[q.text]||0)+1;if(rv){rv.need=2;rv.due=D.counter+ri(3,5)}else{const keep={s:q.s,text:q.text,ans:q.ans,choices:q.choices,hint:q.hint,say:q.say};D.review.push({key:q.text,q:keep,due:D.counter+ri(3,5),need:2})}}

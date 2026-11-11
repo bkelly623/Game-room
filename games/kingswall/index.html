@@ -442,7 +442,7 @@ function grade(q,ok){const E=eng(q.s);E.q++;if(ok)E.ok++;
  E.hist.push(ok?1:0);if(E.hist.length>8)E.hist.shift();
  if(ok){E.streak++;const acc=E.hist.reduce((a,b)=>a+b,0)/E.hist.length;
   if(E.streak>=6&&E.hist.length>=6&&acc>=.84&&E.lv<MAXLV[q.s]){E.lv++;E.streak=0;E.hist=[];return'up'}}
- else{E.streak=0;const last=E.hist.slice(-5);if(last.length>=4&&last.filter(x=>!x).length>=3&&E.lv>Math.max(1,E.set-2)){E.lv--;E.hist=[];return'down'}}
+ else{E.streak=0;/* only step down when it's clearly too hard: 2 or fewer right out of the last 8 */if(E.hist.length>=8&&E.hist.filter(x=>x).length<=2&&E.lv>Math.max(1,E.set-1)){E.lv--;E.hist=[];return'down'}}
  return null}
 
 /* ================= sound ================= */
