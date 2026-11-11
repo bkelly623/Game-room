@@ -34,7 +34,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 const q=new URLSearchParams(location.search),k=HUB.kid(q.get('k')||''),g=HUB.game(q.get('g')||'');
 const back=()=>{location.href='./'+(k?'#'+k.id:'')};
 document.getElementById('back').onclick=back;
-if(!k||!g||g.soon||!H.gamesOf(k).includes(g.id)){const m=document.createElement('div');m.id='msg';m.textContent='That game isn’t on this shelf.';document.body.appendChild(m);return}
+if(!k||!g||g.soon||!HUB.gamesOf(k).includes(g.id)){const m=document.createElement('div');m.id='msg';m.textContent='That game isn’t on this shelf.';document.body.appendChild(m);return}
 document.title=g.title+' · Game Room';
 document.getElementById('title').textContent=g.title;
 const w=document.getElementById('who');const i=document.createElement('i');i.textContent=k.emoji;i.style.background=k.color;w.appendChild(i);w.appendChild(document.createTextNode(k.name));
