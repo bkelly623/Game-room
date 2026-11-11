@@ -21,7 +21,7 @@ function hubKid(){try{if(window.__hubRaw){const h=JSON.parse(window.__hubRaw('hu
 let HK=null;
 function cfg(){HK=hubKid();const kw=(HK&&HK.kw)||(HK?window.KW.defaults(HK.id):D.cfg);
  const subj=(kw.subj||[]).filter(s=>window.KW.subjects[s]);
- return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
+ return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',strict:kw.strict!=null?!!kw.strict:(HK?HK.id==='luca':!!D.cfg.strict),speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 /* ================= learning engine (per subject) ================= */
@@ -33,7 +33,8 @@ let lastKey='';
 function nextQ(){const C=cfg();const s=C.subj[D.rot++%C.subj.length];const E=eng(s);E.n++;let q=null;
  const due=E.review.find(r=>r.due<=E.n&&r.q.key!==lastKey);
  if(due){q=JSON.parse(JSON.stringify(due.q));q.opts=shuf(q.opts);q.review=true}
- else for(let i=0;i<6;i++){q=genQ(s,E.lv);if(!q.key)q.key=s+':'+q.ans+':'+(q.prompt.big||q.prompt.word||'');if(q.key!==lastKey)break}
+ else{const recent=E.recent||(E.recent=[]);for(let i=0;i<14;i++){q=genQ(s,E.lv);if(!q.key)q.key=s+':'+q.ans+':'+(q.prompt.big||q.prompt.word||'')+':'+(q.prompt.pics||'');if(q.key!==lastKey&&!recent.includes(q.key))break}
+  recent.push(q.key);if(recent.length>10)recent.shift()}
  q.s=s;q.lv=E.lv;lastKey=q.key;return q}
 /* returns a message when the level changed */
 function grade(q,ok){const E=eng(q.s);E.q++;if(ok)E.ok++;
@@ -61,6 +62,8 @@ function noise(dur,vol,f,at,lp){if(!AC)return;if(!NB){const n=AC.sampleRate;NB=A
  const s=AC.createBufferSource();s.buffer=NB;const fl=AC.createBiquadFilter();fl.type=lp?'lowpass':'highpass';fl.frequency.value=f;const g=AC.createGain();const t0=AC.currentTime+(at||0);g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);s.connect(fl);fl.connect(g);g.connect(sfxG);s.start(t0,rnd()*.5,dur+.05)}
 let sfxCount=0;
 const SFX={
+ thunder(){noise(1.1,.5,420,0,1);noise(.25,.35,3000,0);tone(60,.9,{type:'sawtooth',vol:.18,slide:-25})},
+ heart(){[660,880,1175].forEach((f,i)=>tone(f,.14,{type:'sine',vol:.1,at:i*.07}))},
  bow(){if(sfxCount++>6)return;tone(520,.07,{type:'triangle',vol:.04,slide:-260})},
  hit(){if(sfxCount++>6)return;noise(.06,.12,1600,0)},
  pop(){tone(260,.12,{type:'sine',vol:.14,slide:420});noise(.1,.1,900,0,1)},
@@ -139,7 +142,7 @@ function newRun(stage){const C=cfg();const n=stage;
  G={stage:n,t:0,en:[],pr:[],fx:[],tx:[],zaps:[],spawn:[],total:0,killed:0,wall:{hp:wallMax,max:wallMax,hitT:0},
   xp:0,lvl:1,need:6,pw:{},pending:0,combo:0,jam:0,gold:0,stored:0,over:false,paused:true,
   spd:SPEEDS[C.speed]||.8,jamT:JAMS[C.speed]||2.5,shake:0,flash:0,cannonT:2,knight:null,king:{cd:1,line:null,lineT:0},
-  archers:[],right:0,wrong:0,best:0,talkT:3,lastHitLine:0,bannerQ:[],hpMul:1+.32*(n-1),boss:n%5===0};
+  archers:[],hearts:3,strict:C.strict,bolt:0,heal:0,right:0,wrong:0,best:0,talkT:3,lastHitLine:0,bannerQ:[],hpMul:1+.32*(n-1),boss:n%5===0};
  const nArch=2+D.up.arch;for(let i=0;i<nArch;i++)G.archers.push({cd:rnd()*.8,aim:0});layoutArchers();
  /* waves */
  const count=Math.min(90,12+n*6),dur=Math.min(95,36+n*3.5),waves=3;

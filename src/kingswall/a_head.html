@@ -24,7 +24,8 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;borde
 #stg b{font-family:var(--disp);font-weight:400;font-size:18px;letter-spacing:.02em}
 .bar{flex:1;height:12px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;min-width:50px}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FF8A3C,#FFC93C);border-radius:8px;transition:width .25s}
-#gold{margin-left:auto}
+#hearts{margin-left:auto}#hearts[hidden]+#gold,#gold{margin-left:auto}#hearts:not([hidden])+#gold{margin-left:0}
+#hearts{font-size:20px;letter-spacing:1px}#hearts .off{opacity:.55}#hearts.bump{animation:pop .45s}
 #gold b{font-family:var(--disp);font-weight:400;font-size:19px}
 #xp{position:absolute;left:50%;transform:translateX(-50%);top:calc(max(8px,env(safe-area-inset-top)) + 46px);width:min(70%,330px);display:flex;align-items:center;gap:8px;pointer-events:none}
 #xp .lv{font-family:var(--disp);font-size:17px;background:#5B3FD6;border-radius:10px;padding:2px 9px;box-shadow:0 3px 0 #2F1F86}
@@ -176,6 +177,7 @@ h1,h2{font-family:var(--disp);font-weight:400;margin:0;letter-spacing:.02em}
   <div id="hud">
    <button class="pill" id="bPause" aria-label="Pause">⏸</button>
    <div class="pill" id="stg"><b id="stgN">Stage 1</b><div class="bar"><i id="stgBar"></i></div></div>
+   <div class="pill" id="hearts" hidden></div>
    <div class="pill" id="gold">🪙 <b id="goldN">0</b></div>
   </div>
   <div id="xp"><span class="lv" id="xpLv">Lv 1</span><div class="bar"><i id="xpBar"></i></div></div>
@@ -237,6 +239,7 @@ h1,h2{font-family:var(--disp);font-weight:400;margin:0;letter-spacing:.02em}
  <div class="srow"><h3>Subjects</h3><div class="chips" id="suSubj"></div></div>
  <div class="srow"><h3>Starting level</h3><div id="suLv"></div><p style="font-size:14px;color:#BDB3E8;margin:6px 0 0">The game moves the level up or down as they play.</p></div>
  <div class="srow"><h3>Monster speed</h3><div class="chips" id="suSpd"></div></div>
+ <div class="srow"><h3>⚡ Stop guessing (lightning + 3 hearts)</h3><div class="chips" id="suStr"></div></div>
  <div class="srow"><h3>Read things out loud</h3><div class="chips" id="suSpk"></div></div>
 </div></div>
 <div class="scr" id="board" hidden><div class="card">

@@ -108,8 +108,15 @@ function genRead(lv){
   return{kind:'txt',reveal:true,prompt:{ask:'Which word means the same as',big:q.toUpperCase()},ans:a,opts:shuf([a,...wrong]),fix:q+' = '+a,fixSay:q+' means '+a+'.',key:'syn:'+q}}
  const p=pick(VOC);const wrong=shuf(VOC.filter(x=>x!==p).map(x=>x[1])).slice(0,3);
  return{kind:'txt',small:true,reveal:true,prompt:{ask:'What does this word mean?',big:p[0]},ans:p[1],opts:shuf([p[1],...wrong]),fix:p[0]+' = '+p[1],fixSay:p[0]+' means '+p[1]+'.',key:'voc:'+p[0]}}
-function genSight(lv){const list=SIGHT[lv-1];const w=pick(list);const pool=lv>1?list.concat(SIGHT[lv-2]):list;
- const others=likeOnes(w,pool,3);return{kind:'txt',word:true,listen:true,prompt:{ask:'Find the word you hear',big:'🔊'},say:w==='I'?'I. Find the word I.':'Find the word: '+w,ans:w,opts:shuf([w,...others]),fix:'It was "'+w+'"',fixSay:'This one says '+w+'.',key:'sw:'+w}}
+/* words that sound the same can't be told apart by ear, so they never appear together,
+   and a sound-alike word is always said inside a sentence */
+const HOMO=[['to','two','too'],['for','four'],['there','their'],['one','won'],['no','know'],['right','write'],['by','buy'],['ate','eight'],['red','read'],['new','knew'],['here','hear'],['be','bee'],['see','sea'],['so','sew'],['blue','blew'],['our','are']];
+const homoOf=w=>(HOMO.find(g=>g.includes(w))||[w]);
+const SAYIN={two:'I have two hands.',to:'I go to the park.',too:'Me too!',four:'A dog has four legs.',for:'This gift is for you.',there:'Look over there.',their:'They love their dog.',one:'I have one nose.',eight:'A spider has eight legs.',ate:'I ate a cookie.',right:'Turn right.',write:'I can write my name.',read:'I like to read books.',red:'The apple is red.',new:'I got new shoes.',know:'I know the answer.',no:'No, thank you.',by:'Sit by me.',buy:'Let\'s buy a toy.',here:'Come here.',see:'I can see you.',be:'Be nice.',blue:'The sky is blue.',so:'I am so happy.',our:'This is our house.',are:'We are friends.'};
+function genSight(lv){const list=SIGHT[lv-1];const w=pick(list);const pool=(lv>1?list.concat(SIGHT[lv-2]):list).filter(x=>!homoOf(w).includes(x)&&!homoOf(x).some(h=>h!==x&&h===w));
+ const others=likeOnes(w,pool,3).filter(o=>!homoOf(o).includes(w));
+ const sent=SAYIN[w];const say=w==='I'?'I. Find the word I.':'Find the word: '+w+'.'+(sent?' '+sent+' '+w+'.':'');
+ return{kind:'txt',word:true,listen:true,reveal:true,prompt:{ask:'Find the word you hear',big:'🔊'},say,ans:w,opts:shuf([w,...others]),fix:'It was "'+w+'"',fixSay:'This one says '+w+'.'+(sent?' '+sent:''),key:'sw:'+w}}
 function genSpell(lv){let w,em=null,sent=null;
  if(lv<=3){const rows=lv===1?[0,1,2]:lv===2?[3,4]:[5,6,7,8,9];const t=pick(rows.flatMap(r=>PHON[r]).filter(x=>x.w.length>2));w=t.w;em=t.em}
  else{const t=pick(SPELL_HARD[lv-4]);w=t[0];sent=t[1]}

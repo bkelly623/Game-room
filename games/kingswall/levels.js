@@ -8,7 +8,7 @@ window.KW={
  },
  speeds:{easy:'Easy',normal:'Normal',hard:'Hard'},
  defaults:function(id){
-  if(id==='luca')return{subj:['rd','sw','ma'],lv:{ma:1,rd:1,sw:1,sp:1},speed:'easy'};
+  if(id==='luca')return{subj:['rd','sw','ma'],lv:{ma:1,rd:1,sw:1,sp:1},speed:'easy',strict:true};
   if(id==='jack')return{subj:['ma','sp'],lv:{ma:9,rd:11,sw:4,sp:3},speed:'normal'};
   if(id==='vinny')return{subj:['ma','sp'],lv:{ma:10,rd:12,sw:5,sp:4},speed:'normal'};
   return{subj:['ma','rd'],lv:{ma:4,rd:3,sw:1,sp:2},speed:'normal'}}

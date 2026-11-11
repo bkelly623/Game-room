@@ -25,7 +25,8 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;borde
 #stg b{font-family:var(--disp);font-weight:400;font-size:18px;letter-spacing:.02em}
 .bar{flex:1;height:12px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;min-width:50px}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FF8A3C,#FFC93C);border-radius:8px;transition:width .25s}
-#gold{margin-left:auto}
+#hearts{margin-left:auto}#hearts[hidden]+#gold,#gold{margin-left:auto}#hearts:not([hidden])+#gold{margin-left:0}
+#hearts{font-size:20px;letter-spacing:1px}#hearts .off{opacity:.55}#hearts.bump{animation:pop .45s}
 #gold b{font-family:var(--disp);font-weight:400;font-size:19px}
 #xp{position:absolute;left:50%;transform:translateX(-50%);top:calc(max(8px,env(safe-area-inset-top)) + 46px);width:min(70%,330px);display:flex;align-items:center;gap:8px;pointer-events:none}
 #xp .lv{font-family:var(--disp);font-size:17px;background:#5B3FD6;border-radius:10px;padding:2px 9px;box-shadow:0 3px 0 #2F1F86}
@@ -177,6 +178,7 @@ h1,h2{font-family:var(--disp);font-weight:400;margin:0;letter-spacing:.02em}
   <div id="hud">
    <button class="pill" id="bPause" aria-label="Pause">⏸</button>
    <div class="pill" id="stg"><b id="stgN">Stage 1</b><div class="bar"><i id="stgBar"></i></div></div>
+   <div class="pill" id="hearts" hidden></div>
    <div class="pill" id="gold">🪙 <b id="goldN">0</b></div>
   </div>
   <div id="xp"><span class="lv" id="xpLv">Lv 1</span><div class="bar"><i id="xpBar"></i></div></div>
@@ -238,6 +240,7 @@ h1,h2{font-family:var(--disp);font-weight:400;margin:0;letter-spacing:.02em}
  <div class="srow"><h3>Subjects</h3><div class="chips" id="suSubj"></div></div>
  <div class="srow"><h3>Starting level</h3><div id="suLv"></div><p style="font-size:14px;color:#BDB3E8;margin:6px 0 0">The game moves the level up or down as they play.</p></div>
  <div class="srow"><h3>Monster speed</h3><div class="chips" id="suSpd"></div></div>
+ <div class="srow"><h3>⚡ Stop guessing (lightning + 3 hearts)</h3><div class="chips" id="suStr"></div></div>
  <div class="srow"><h3>Read things out loud</h3><div class="chips" id="suSpk"></div></div>
 </div></div>
 <div class="scr" id="board" hidden><div class="card">
@@ -372,8 +375,15 @@ function genRead(lv){
   return{kind:'txt',reveal:true,prompt:{ask:'Which word means the same as',big:q.toUpperCase()},ans:a,opts:shuf([a,...wrong]),fix:q+' = '+a,fixSay:q+' means '+a+'.',key:'syn:'+q}}
  const p=pick(VOC);const wrong=shuf(VOC.filter(x=>x!==p).map(x=>x[1])).slice(0,3);
  return{kind:'txt',small:true,reveal:true,prompt:{ask:'What does this word mean?',big:p[0]},ans:p[1],opts:shuf([p[1],...wrong]),fix:p[0]+' = '+p[1],fixSay:p[0]+' means '+p[1]+'.',key:'voc:'+p[0]}}
-function genSight(lv){const list=SIGHT[lv-1];const w=pick(list);const pool=lv>1?list.concat(SIGHT[lv-2]):list;
- const others=likeOnes(w,pool,3);return{kind:'txt',word:true,listen:true,prompt:{ask:'Find the word you hear',big:'🔊'},say:w==='I'?'I. Find the word I.':'Find the word: '+w,ans:w,opts:shuf([w,...others]),fix:'It was "'+w+'"',fixSay:'This one says '+w+'.',key:'sw:'+w}}
+/* words that sound the same can't be told apart by ear, so they never appear together,
+   and a sound-alike word is always said inside a sentence */
+const HOMO=[['to','two','too'],['for','four'],['there','their'],['one','won'],['no','know'],['right','write'],['by','buy'],['ate','eight'],['red','read'],['new','knew'],['here','hear'],['be','bee'],['see','sea'],['so','sew'],['blue','blew'],['our','are']];
+const homoOf=w=>(HOMO.find(g=>g.includes(w))||[w]);
+const SAYIN={two:'I have two hands.',to:'I go to the park.',too:'Me too!',four:'A dog has four legs.',for:'This gift is for you.',there:'Look over there.',their:'They love their dog.',one:'I have one nose.',eight:'A spider has eight legs.',ate:'I ate a cookie.',right:'Turn right.',write:'I can write my name.',read:'I like to read books.',red:'The apple is red.',new:'I got new shoes.',know:'I know the answer.',no:'No, thank you.',by:'Sit by me.',buy:'Let\'s buy a toy.',here:'Come here.',see:'I can see you.',be:'Be nice.',blue:'The sky is blue.',so:'I am so happy.',our:'This is our house.',are:'We are friends.'};
+function genSight(lv){const list=SIGHT[lv-1];const w=pick(list);const pool=(lv>1?list.concat(SIGHT[lv-2]):list).filter(x=>!homoOf(w).includes(x)&&!homoOf(x).some(h=>h!==x&&h===w));
+ const others=likeOnes(w,pool,3).filter(o=>!homoOf(o).includes(w));
+ const sent=SAYIN[w];const say=w==='I'?'I. Find the word I.':'Find the word: '+w+'.'+(sent?' '+sent+' '+w+'.':'');
+ return{kind:'txt',word:true,listen:true,reveal:true,prompt:{ask:'Find the word you hear',big:'🔊'},say,ans:w,opts:shuf([w,...others]),fix:'It was "'+w+'"',fixSay:'This one says '+w+'.'+(sent?' '+sent:''),key:'sw:'+w}}
 function genSpell(lv){let w,em=null,sent=null;
  if(lv<=3){const rows=lv===1?[0,1,2]:lv===2?[3,4]:[5,6,7,8,9];const t=pick(rows.flatMap(r=>PHON[r]).filter(x=>x.w.length>2));w=t.w;em=t.em}
  else{const t=pick(SPELL_HARD[lv-4]);w=t[0];sent=t[1]}
@@ -405,7 +415,7 @@ function hubKid(){try{if(window.__hubRaw){const h=JSON.parse(window.__hubRaw('hu
 let HK=null;
 function cfg(){HK=hubKid();const kw=(HK&&HK.kw)||(HK?window.KW.defaults(HK.id):D.cfg);
  const subj=(kw.subj||[]).filter(s=>window.KW.subjects[s]);
- return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
+ return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',strict:kw.strict!=null?!!kw.strict:(HK?HK.id==='luca':!!D.cfg.strict),speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 /* ================= learning engine (per subject) ================= */
@@ -417,7 +427,8 @@ let lastKey='';
 function nextQ(){const C=cfg();const s=C.subj[D.rot++%C.subj.length];const E=eng(s);E.n++;let q=null;
  const due=E.review.find(r=>r.due<=E.n&&r.q.key!==lastKey);
  if(due){q=JSON.parse(JSON.stringify(due.q));q.opts=shuf(q.opts);q.review=true}
- else for(let i=0;i<6;i++){q=genQ(s,E.lv);if(!q.key)q.key=s+':'+q.ans+':'+(q.prompt.big||q.prompt.word||'');if(q.key!==lastKey)break}
+ else{const recent=E.recent||(E.recent=[]);for(let i=0;i<14;i++){q=genQ(s,E.lv);if(!q.key)q.key=s+':'+q.ans+':'+(q.prompt.big||q.prompt.word||'')+':'+(q.prompt.pics||'');if(q.key!==lastKey&&!recent.includes(q.key))break}
+  recent.push(q.key);if(recent.length>10)recent.shift()}
  q.s=s;q.lv=E.lv;lastKey=q.key;return q}
 /* returns a message when the level changed */
 function grade(q,ok){const E=eng(q.s);E.q++;if(ok)E.ok++;
@@ -445,6 +456,8 @@ function noise(dur,vol,f,at,lp){if(!AC)return;if(!NB){const n=AC.sampleRate;NB=A
  const s=AC.createBufferSource();s.buffer=NB;const fl=AC.createBiquadFilter();fl.type=lp?'lowpass':'highpass';fl.frequency.value=f;const g=AC.createGain();const t0=AC.currentTime+(at||0);g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);s.connect(fl);fl.connect(g);g.connect(sfxG);s.start(t0,rnd()*.5,dur+.05)}
 let sfxCount=0;
 const SFX={
+ thunder(){noise(1.1,.5,420,0,1);noise(.25,.35,3000,0);tone(60,.9,{type:'sawtooth',vol:.18,slide:-25})},
+ heart(){[660,880,1175].forEach((f,i)=>tone(f,.14,{type:'sine',vol:.1,at:i*.07}))},
  bow(){if(sfxCount++>6)return;tone(520,.07,{type:'triangle',vol:.04,slide:-260})},
  hit(){if(sfxCount++>6)return;noise(.06,.12,1600,0)},
  pop(){tone(260,.12,{type:'sine',vol:.14,slide:420});noise(.1,.1,900,0,1)},
@@ -523,7 +536,7 @@ function newRun(stage){const C=cfg();const n=stage;
  G={stage:n,t:0,en:[],pr:[],fx:[],tx:[],zaps:[],spawn:[],total:0,killed:0,wall:{hp:wallMax,max:wallMax,hitT:0},
   xp:0,lvl:1,need:6,pw:{},pending:0,combo:0,jam:0,gold:0,stored:0,over:false,paused:true,
   spd:SPEEDS[C.speed]||.8,jamT:JAMS[C.speed]||2.5,shake:0,flash:0,cannonT:2,knight:null,king:{cd:1,line:null,lineT:0},
-  archers:[],right:0,wrong:0,best:0,talkT:3,lastHitLine:0,bannerQ:[],hpMul:1+.32*(n-1),boss:n%5===0};
+  archers:[],hearts:3,strict:C.strict,bolt:0,heal:0,right:0,wrong:0,best:0,talkT:3,lastHitLine:0,bannerQ:[],hpMul:1+.32*(n-1),boss:n%5===0};
  const nArch=2+D.up.arch;for(let i=0;i<nArch;i++)G.archers.push({cd:rnd()*.8,aim:0});layoutArchers();
  /* waves */
  const count=Math.min(90,12+n*6),dur=Math.min(95,36+n*3.5),waves=3;
@@ -755,6 +768,14 @@ function drawKing(){const x=KX,y=WALLY-34;cx.save();cx.translate(x,y);cx.scale(1
  cx.fillStyle='#FFC93C';cx.beginPath();const cy=y-22+b;cx.moveTo(x-9,cy+4);cx.lineTo(x-10,cy-6);cx.lineTo(x-5,cy-1);cx.lineTo(x,cy-8);cx.lineTo(x+5,cy-1);cx.lineTo(x+10,cy-6);cx.lineTo(x+9,cy+4);cx.fill();circle(x,cy-1,1.8,'#E84A5F');
  cx.strokeStyle='#5A3A1A';cx.lineWidth=3;cx.beginPath();cx.arc(x+14,y-2+b,13,-2.3,-.8);cx.stroke();
  cx.restore();if(G.king.lineT>0&&G.king.line)bubble(x,y-62,G.king.line,16)}
+function drawBolt(){const x=KX,y=WALLY-60,top=-(OY/K)-20,a=Math.min(1,G.bolt*1.6);G.bolt-=1/60;
+ const pts=[[x+ri(-30,30),top]];let cy=top;while(cy<y-10){cy+=40+rnd()*40;pts.push([x+(rnd()-.5)*60*(1-(cy-top)/(y-top)),Math.min(cy,y)])}pts[pts.length-1]=[x,y];
+ cx.save();cx.globalAlpha=a;cx.strokeStyle='#BFE3FF';cx.lineWidth=12;cx.shadowColor='#7FD3FF';cx.shadowBlur=30;cx.beginPath();pts.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.stroke();
+ cx.strokeStyle='#fff';cx.lineWidth=4;cx.shadowBlur=0;cx.stroke();
+ /* the King is singed */
+ cx.globalAlpha=a*.75;circle(x,WALLY-48,28,'#1A1030');cx.globalAlpha=1;cx.restore();
+ if(rnd()<.5)G.fx.push({x:x+ri(-14,14),y:WALLY-62,vx:ri(-10,10),vy:-ri(30,60),life:1,max:1,col:'#777',r:5+rnd()*5,g:-10});
+ cx.save();cx.font="400 34px 'Lilita One',Fredoka,sans-serif";cx.textAlign='center';cx.lineWidth=6;cx.strokeStyle='#1A1030';cx.globalAlpha=a;cx.strokeText('ZAP!',x+70,y-50);cx.fillStyle='#FFE45C';cx.fillText('ZAP!',x+70,y-50);cx.restore()}
 function drawKnight(k){const x=k.x,y=k.y;cx.save();cx.translate(x,y);cx.scale(1.4,1.4);cx.translate(-x,-y);ell(x,y+10,12,4,'rgba(0,0,0,.25)');circle(x,y,11,'#5D6178');circle(x,y,9.5,'#B5B9D2');circle(x,y-12,8,'#C9CDE3');cx.fillStyle='#1A1030';cx.fillRect(x-5,y-13,10,2.5);
  cx.fillStyle='#E84A5F';cx.beginPath();cx.moveTo(x,y-20);cx.quadraticCurveTo(x+10,y-30,x+4,y-16);cx.fill();
  cx.save();cx.translate(x+10,y-2);cx.rotate(k.sw>0?-1.6+k.sw*6:-.4);cx.fillStyle='#E9ECF5';cx.fillRect(-2,-22,4,22);cx.fillStyle='#7A4E2A';cx.fillRect(-5,-2,10,3);cx.restore();
@@ -773,7 +794,7 @@ function render(){if(!cx)return;cx.setTransform(DPR,0,0,DPR,0,0);
  if(G.wall.hp<G.wall.max*.66){cx.strokeStyle='rgba(40,30,60,.7)';cx.lineWidth=2.5;const cr=[[70,0],[300,6]];if(G.wall.hp<G.wall.max*.33)cr.push([140,4],[360,2],[20,8]);cr.forEach(([x,o])=>{cx.beginPath();cx.moveTo(x,WALLY-6);cx.lineTo(x+8,WALLY+10+o);cx.lineTo(x-2,WALLY+22);cx.lineTo(x+10,WALLY+36);cx.stroke()})}
  if(G.wall.hitT>0){cx.fillStyle='rgba(255,60,60,'+(G.wall.hitT*1.6)+')';cx.fillRect(-800,WALLY-22,W+1600,68)}
  if(G.pw.cannon)drawCannon();
- for(const a of G.archers)drawArcher(a);drawKing();if(G.knight)drawKnight(G.knight);
+ for(const a of G.archers)drawArcher(a);drawKing();if(G.bolt>0)drawBolt();if(G.knight)drawKnight(G.knight);
  /* wall health */
  const hw=170,hx=KX-hw/2,hy=WALLY+56;cx.fillStyle='rgba(20,14,50,.75)';rr(hx-34,hy-3,hw+42,16,8);cx.fill();cx.font='12px sans-serif';cx.textAlign='left';cx.textBaseline='middle';cx.fillText('🧱',hx-29,hy+5);cx.textBaseline='alphabetic';
  const pc=G.wall.hp/G.wall.max;cx.fillStyle='rgba(255,255,255,.15)';rr(hx,hy,hw,10,5);cx.fill();cx.fillStyle=pc>.5?'#7CF07C':pc>.25?'#FFC93C':'#FF5A5F';if(pc>0){rr(hx,hy,Math.max(10,hw*pc),10,5);cx.fill()}
@@ -809,19 +830,21 @@ function showQ(){if(!G||G.over)return;Q=nextQ();qBusy=false;const C=cfg();const 
   b.textContent=o;b.onpointerdown=ev=>{ev.preventDefault();answer(i,b)};box.appendChild(b)});
  $('#qSay').hidden=!(Q.say||Q.listen||C.speak);
  /* readers must read before the pictures show up */
- revealDur=Q.reveal?(Q.kind==='pic'?1.1:.7):0;revealT=revealDur;qShown=performance.now()+revealDur*1000;
+ revealDur=Q.reveal?(Q.kind==='pic'?1.1:Q.listen?(C.strict?1.6:1):.7):(C.strict&&Q.s==='ma'?.8:0);revealT=revealDur;qShown=performance.now()+revealDur*1000;
  if(revealDur)[...box.children].forEach(b=>b.classList.add('hide'));$('#readBar').style.visibility=revealDur?'visible':'hidden';
  if(Q.listen)setTimeout(()=>say(Q.say,Q.s==='sp'?.85:.8),150);else if(C.speak&&Q.s==='ma')setTimeout(()=>say(Q.say||''),150)}
 function sayAgain(){if(!Q)return;if(Q.listen||Q.s==='ma')say(Q.say||Q.fixSay);else if(cfg().speak&&Q.prompt.ask)say(Q.prompt.ask)}
 function answer(i,b){if(!G||G.paused||G.over||qBusy||G.jam>0||revealT>0)return;audioInit();qBusy=true;const ok=Q.opts[i]===Q.ans;const btns=[...$('#choices').children];
  const ch=grade(Q,ok);try{window.__trk&&__trk.ans({s:Q.s,lv:Q.lv,it:Q.key,ok,ms:Math.max(0,performance.now()-qShown)});if(ch)window.__trk&&__trk.ev('lvl',{s:Q.s,to:eng(Q.s).lv,dir:ch})}catch(e){}
+ if(ok&&G.strict&&G.hearts<3&&++G.heal>=5){G.heal=0;G.hearts++;SFX.heart();toast('❤️ Careful answers earned a heart back!');hearts(true)}
  if(ok){b.classList.add('ok');SFX.right();G.right++;G.combo++;G.best=Math.max(G.best,G.combo);addXp(1);setCombo();
   if(G.combo%3===0){mega();volley(1)}else volley(1);
   if(ch==='up')toast('⬆️ '+window.KW.subjects[Q.s].n+' level '+eng(Q.s).lv+'!');
   setTimeout(showQ,320)}
- else{b.classList.add('no');SFX.wrong();G.wrong++;G.combo=0;setCombo();btns.forEach(x=>{if(Q.opts[btns.indexOf(x)]===Q.ans)x.classList.add('ok');else if(x!==b)x.classList.add('dim')});
+ else{b.classList.add('no');SFX.wrong();G.wrong++;G.combo=0;G.heal=0;setCombo();
+  const zap=G.strict;if(zap){G.hearts--;G.bolt=.9;G.flash=.6;shake(16);SFX.thunder();kingSay(G.hearts>0?pick(['OUCH! Think first!','ZAP! No guessing!','My crown is smoking!']):'Too many guesses!',2.4);hearts(true);if(G.hearts<=0){G.jam=99;say('Zap! Too many guesses. Think, then tap!');setTimeout(()=>{if(G&&!G.over){G.zapped=true;endRun(false)}},1300);save();return}}btns.forEach(x=>{if(Q.opts[btns.indexOf(x)]===Q.ans)x.classList.add('ok');else if(x!==b)x.classList.add('dim')});
   G.jam=G.jamT;say(Q.fixSay||'');
-  setTimeout(()=>{if(!G||G.over)return;const j=$('#jam');j.hidden=false;j.innerHTML=`<div class="t1">🪢 Bow tangled!</div><div class="t2">${esc(Q.fix).replace(esc(Q.ans),'<b>'+esc(Q.ans)+'</b>')}</div><svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="5"/><circle id="jamArc" cx="20" cy="20" r="16" fill="none" stroke="#FFC93C" stroke-width="5" stroke-linecap="round" transform="rotate(-90 20 20)" stroke-dasharray="100.5" stroke-dashoffset="0"/></svg>`},450);
+  setTimeout(()=>{if(!G||G.over)return;const j=$('#jam');j.hidden=false;j.innerHTML=`<div class="t1">${zap?'⚡ ZAP! Lost a heart':'🪢 Bow tangled!'}</div>${zap?`<div style="font-size:26px">${'❤️'.repeat(G.hearts)}${'🖤'.repeat(3-G.hearts)}</div>`:''}<div class="t2">${esc(Q.fix).replace(esc(Q.ans),'<b>'+esc(Q.ans)+'</b>')}</div><svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="5"/><circle id="jamArc" cx="20" cy="20" r="16" fill="none" stroke="#FFC93C" stroke-width="5" stroke-linecap="round" transform="rotate(-90 20 20)" stroke-dasharray="100.5" stroke-dashoffset="0"/></svg>`},450);
   if(ch==='down')setTimeout(()=>toast('Practice time: level '+eng(Q.s).lv),900)}
  save()}
 function tickQ(dt){if(!G||G.paused||G.over)return;
@@ -831,6 +854,7 @@ let toastT=0;function toast(t){const el=$('#toast');el.textContent=t;el.style.op
 function bumpGold(){goldShown=Math.min(D.gold+G.gold,goldShown+1);$('#goldN').textContent=goldShown}
 
 /* ================= HUD ================= */
+function hearts(bump){const h=$('#hearts');if(!G||!G.strict){h.hidden=true;return}h.hidden=false;h.innerHTML='❤️'.repeat(Math.max(0,G.hearts))+'<span class="off">'+'🖤'.repeat(3-Math.max(0,G.hearts))+'</span>';if(bump){h.classList.remove('bump');void h.offsetWidth;h.classList.add('bump')}}
 function hud(){if(!G)return;$('#stgN').textContent=(G.boss?'👹 ':'')+'Stage '+G.stage;$('#stgBar').style.width=(100*G.killed/Math.max(1,G.total))+'%';
  $('#xpLv').textContent='Lv '+G.lvl;$('#xpBar').style.width=(100*G.xp/G.need)+'%';
  const q=$('#quiver');q.hidden=!G.stored;if(G.stored)q.textContent='🏹 '+G.stored+' ready'}
@@ -899,7 +923,8 @@ $('#plName').addEventListener('keydown',e=>{if(e.key==='Enter')$('#plAdd').click
 $('#plX').onclick=()=>{hide('players');titleScreen()};$('#bdX').onclick=()=>{hide('board');titleScreen()};
 function startRun(){audioInit();hide('title');hide('result');hide('shop');newRun(D.stage);goldShown=D.gold;$('#goldN').textContent=D.gold;
  resize();G.paused=false;Music.on=true;if(AC)Music.next=AC.currentTime+.1;
- $('#qWait').hidden=true;$('#jam').hidden=true;setCombo();showQ();
+ $('#qWait').hidden=true;$('#jam').hidden=true;setCombo();hearts();showQ();
+ if(G.strict)setTimeout(()=>{toast('⚡ Guess and the lightning gets the King! 3 hearts.');if(cfg().speak)say('Be careful! Wrong answers make lightning zap the King. Think, then tap.')},2600);
  banner('STAGE '+G.stage,G.boss?'Boss stage!':'Defend the wall!');kingSay(pick(KING_LINES.start),2.6);
  if(!D.seenHelp){D.seenHelp=true;setTimeout(()=>toast('Answer right to fire a volley! 🏹'),1600);if(cfg().speak)setTimeout(()=>say('Answer right to shoot arrows at the monsters!'),900)}}
 function endRun(win){if(G.over)return;G.over=true;Music.on=false;$('#qWait').hidden=false;$('#qWait').textContent=win?'You did it!':'Oh no!';$('#jam').hidden=true;
@@ -910,13 +935,13 @@ function endRun(win){if(G.over)return;G.over=true;Music.on=false;$('#qWait').hid
  try{if(window.__trk){__trk.ev('stage',{st,win:win?1:0,right:G.right,wrong:G.wrong,wall:Math.round(100*G.wall.hp/G.wall.max),dur:Math.round(G.t),lvl:G.lvl});if(win&&st>prevBest)__trk.ev('kwbest',{st})}}catch(e){}
  setTimeout(()=>{const pc=G.wall.hp/G.wall.max,stars=win?(pc>.7?3:pc>.35?2:1):0;
   $('#rTitle').textContent=win?'STAGE '+st+' CLEARED!':'THE WALL FELL!';$('#rTitle').className=win?'':'lose';
-  $('#stars').innerHTML=win?[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">⭐</span>`).join(''):'<span>🧱💥</span>';
-  $('#rLine').textContent=win?(st%5===0?'You beat Big Gary!':'The pudding is safe!'):'The goblins ate the pudding... Try again!';
+  $('#stars').innerHTML=win?[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">⭐</span>`).join(''):G.zapped?'<span>⚡👑💨</span>':'<span>🧱💥</span>';
+  $('#rLine').textContent=win?(st%5===0?'You beat Big Gary!':'The pudding is safe!'):G.zapped?'⚡ The lightning got the King! Think before you tap.':'The goblins ate the pudding... Try again!';
   $('#rStats').innerHTML=`<div><b>${G.right}</b>right answers</div><div><b>${G.best}</b>best streak</div><div><b>${G.killed}</b>monsters</div><div><b>+${earned}</b>gold</div>`;
   const cb=$('#chestBox');cb.hidden=!win;$('#rGold').textContent='';const chest=$('#chest');chest.className='';chest.textContent=st%5===0?'🎁':'📦';chest.dataset.bonus=bonus;chest.dataset.open='';
   $('#rNext').textContent=win?'Next stage ▶':'Try again ↻';$('#rNext').disabled=false;$('#rNext').classList.add('pulse');
   if(win){$('#rLine').textContent+=' Tap the chest!'}
-  show('result');if(cfg().speak)say(win?'You won! Tap the chest!':'Oh no! Try again!')},win?1300:900)}
+  show('result');if(cfg().speak)say(win?'You won! Tap the chest!':G.zapped?'The lightning got the King. Think before you tap! Try again.':'Oh no! Try again!')},win?1300:900)}
 function openChest(){const c=$('#chest');if(c.dataset.open)return;c.dataset.open='1';const b=+c.dataset.bonus;D.gold+=b;save();c.classList.add('open');c.textContent='✨';SFX.lvl();
  let n=0;const iv=setInterval(()=>{n=Math.min(b,n+Math.ceil(b/12));$('#rGold').textContent='+'+n+' 🪙';SFX.coin();if(n>=b)clearInterval(iv)},70)}
 function openShop(){const L=$('#shopList');L.innerHTML='';$('#shGold').textContent=D.gold;
@@ -930,12 +955,13 @@ function openSetup(){const c=D.cfg,K=window.KW;
  $('#suSubj').innerHTML=Object.keys(K.subjects).map(s=>`<button class="chip${c.subj.includes(s)?' on':''}" data-s="${s}">${K.subjects[s].em} ${K.subjects[s].n}</button>`).join('');
  $('#suLv').innerHTML=c.subj.map(s=>{const S=K.subjects[s],l=c.lv[s]||1;return`<div class="lvrow"><span class="nm">${S.n}</span><button data-l="${s}" data-d="-1">−</button><b>${l}</b><button data-l="${s}" data-d="1">+</button><span class="d">${esc(S.lv[l-1])}</span></div>`}).join('');
  $('#suSpd').innerHTML=Object.keys(K.speeds).map(k=>`<button class="chip${c.speed===k?' on':''}" data-sp="${k}">${K.speeds[k]}</button>`).join('');
+ $('#suStr').innerHTML=`<button class="chip${c.strict?' on':''}" data-str="1">On</button><button class="chip${!c.strict?' on':''}" data-str="0">Off</button>`;
  $('#suSpk').innerHTML=`<button class="chip${c.speak?' on':''}" data-spk="1">On</button><button class="chip${!c.speak?' on':''}" data-spk="0">Off</button>`;
  show('setup')}
 $('#setup').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const c=D.cfg,d=b.dataset;
  if(d.s){const i=c.subj.indexOf(d.s);if(i>=0){if(c.subj.length>1)c.subj.splice(i,1)}else c.subj.push(d.s)}
  else if(d.l){c.lv[d.l]=clamp((c.lv[d.l]||1)+(+d.d),1,MAXLV[d.l])}
- else if(d.sp)c.speed=d.sp;else if(d.spk)c.speak=d.spk==='1';else return;save();openSetup()});
+ else if(d.str)c.strict=d.str==='1';else if(d.sp)c.speed=d.sp;else if(d.spk)c.speak=d.spk==='1';else return;save();openSetup()});
 
 /* ================= wiring ================= */
 $('#tPlay').onclick=startRun;$('#tNew').onclick=askNewGame;$('#tBoard').onclick=openBoard;$('#tShop').onclick=()=>{audioInit();openShop()};$('#tSet').onclick=openSetup;$('#suX').onclick=()=>{hide('setup');titleScreen()};

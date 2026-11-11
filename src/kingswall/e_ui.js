@@ -13,19 +13,21 @@ function showQ(){if(!G||G.over)return;Q=nextQ();qBusy=false;const C=cfg();const 
   b.textContent=o;b.onpointerdown=ev=>{ev.preventDefault();answer(i,b)};box.appendChild(b)});
  $('#qSay').hidden=!(Q.say||Q.listen||C.speak);
  /* readers must read before the pictures show up */
- revealDur=Q.reveal?(Q.kind==='pic'?1.1:.7):0;revealT=revealDur;qShown=performance.now()+revealDur*1000;
+ revealDur=Q.reveal?(Q.kind==='pic'?1.1:Q.listen?(C.strict?1.6:1):.7):(C.strict&&Q.s==='ma'?.8:0);revealT=revealDur;qShown=performance.now()+revealDur*1000;
  if(revealDur)[...box.children].forEach(b=>b.classList.add('hide'));$('#readBar').style.visibility=revealDur?'visible':'hidden';
  if(Q.listen)setTimeout(()=>say(Q.say,Q.s==='sp'?.85:.8),150);else if(C.speak&&Q.s==='ma')setTimeout(()=>say(Q.say||''),150)}
 function sayAgain(){if(!Q)return;if(Q.listen||Q.s==='ma')say(Q.say||Q.fixSay);else if(cfg().speak&&Q.prompt.ask)say(Q.prompt.ask)}
 function answer(i,b){if(!G||G.paused||G.over||qBusy||G.jam>0||revealT>0)return;audioInit();qBusy=true;const ok=Q.opts[i]===Q.ans;const btns=[...$('#choices').children];
  const ch=grade(Q,ok);try{window.__trk&&__trk.ans({s:Q.s,lv:Q.lv,it:Q.key,ok,ms:Math.max(0,performance.now()-qShown)});if(ch)window.__trk&&__trk.ev('lvl',{s:Q.s,to:eng(Q.s).lv,dir:ch})}catch(e){}
+ if(ok&&G.strict&&G.hearts<3&&++G.heal>=5){G.heal=0;G.hearts++;SFX.heart();toast('❤️ Careful answers earned a heart back!');hearts(true)}
  if(ok){b.classList.add('ok');SFX.right();G.right++;G.combo++;G.best=Math.max(G.best,G.combo);addXp(1);setCombo();
   if(G.combo%3===0){mega();volley(1)}else volley(1);
   if(ch==='up')toast('⬆️ '+window.KW.subjects[Q.s].n+' level '+eng(Q.s).lv+'!');
   setTimeout(showQ,320)}
- else{b.classList.add('no');SFX.wrong();G.wrong++;G.combo=0;setCombo();btns.forEach(x=>{if(Q.opts[btns.indexOf(x)]===Q.ans)x.classList.add('ok');else if(x!==b)x.classList.add('dim')});
+ else{b.classList.add('no');SFX.wrong();G.wrong++;G.combo=0;G.heal=0;setCombo();
+  const zap=G.strict;if(zap){G.hearts--;G.bolt=.9;G.flash=.6;shake(16);SFX.thunder();kingSay(G.hearts>0?pick(['OUCH! Think first!','ZAP! No guessing!','My crown is smoking!']):'Too many guesses!',2.4);hearts(true);if(G.hearts<=0){G.jam=99;say('Zap! Too many guesses. Think, then tap!');setTimeout(()=>{if(G&&!G.over){G.zapped=true;endRun(false)}},1300);save();return}}btns.forEach(x=>{if(Q.opts[btns.indexOf(x)]===Q.ans)x.classList.add('ok');else if(x!==b)x.classList.add('dim')});
   G.jam=G.jamT;say(Q.fixSay||'');
-  setTimeout(()=>{if(!G||G.over)return;const j=$('#jam');j.hidden=false;j.innerHTML=`<div class="t1">🪢 Bow tangled!</div><div class="t2">${esc(Q.fix).replace(esc(Q.ans),'<b>'+esc(Q.ans)+'</b>')}</div><svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="5"/><circle id="jamArc" cx="20" cy="20" r="16" fill="none" stroke="#FFC93C" stroke-width="5" stroke-linecap="round" transform="rotate(-90 20 20)" stroke-dasharray="100.5" stroke-dashoffset="0"/></svg>`},450);
+  setTimeout(()=>{if(!G||G.over)return;const j=$('#jam');j.hidden=false;j.innerHTML=`<div class="t1">${zap?'⚡ ZAP! Lost a heart':'🪢 Bow tangled!'}</div>${zap?`<div style="font-size:26px">${'❤️'.repeat(G.hearts)}${'🖤'.repeat(3-G.hearts)}</div>`:''}<div class="t2">${esc(Q.fix).replace(esc(Q.ans),'<b>'+esc(Q.ans)+'</b>')}</div><svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="5"/><circle id="jamArc" cx="20" cy="20" r="16" fill="none" stroke="#FFC93C" stroke-width="5" stroke-linecap="round" transform="rotate(-90 20 20)" stroke-dasharray="100.5" stroke-dashoffset="0"/></svg>`},450);
   if(ch==='down')setTimeout(()=>toast('Practice time: level '+eng(Q.s).lv),900)}
  save()}
 function tickQ(dt){if(!G||G.paused||G.over)return;
@@ -35,6 +37,7 @@ let toastT=0;function toast(t){const el=$('#toast');el.textContent=t;el.style.op
 function bumpGold(){goldShown=Math.min(D.gold+G.gold,goldShown+1);$('#goldN').textContent=goldShown}
 
 /* ================= HUD ================= */
+function hearts(bump){const h=$('#hearts');if(!G||!G.strict){h.hidden=true;return}h.hidden=false;h.innerHTML='❤️'.repeat(Math.max(0,G.hearts))+'<span class="off">'+'🖤'.repeat(3-Math.max(0,G.hearts))+'</span>';if(bump){h.classList.remove('bump');void h.offsetWidth;h.classList.add('bump')}}
 function hud(){if(!G)return;$('#stgN').textContent=(G.boss?'👹 ':'')+'Stage '+G.stage;$('#stgBar').style.width=(100*G.killed/Math.max(1,G.total))+'%';
  $('#xpLv').textContent='Lv '+G.lvl;$('#xpBar').style.width=(100*G.xp/G.need)+'%';
  const q=$('#quiver');q.hidden=!G.stored;if(G.stored)q.textContent='🏹 '+G.stored+' ready'}
@@ -103,7 +106,8 @@ $('#plName').addEventListener('keydown',e=>{if(e.key==='Enter')$('#plAdd').click
 $('#plX').onclick=()=>{hide('players');titleScreen()};$('#bdX').onclick=()=>{hide('board');titleScreen()};
 function startRun(){audioInit();hide('title');hide('result');hide('shop');newRun(D.stage);goldShown=D.gold;$('#goldN').textContent=D.gold;
  resize();G.paused=false;Music.on=true;if(AC)Music.next=AC.currentTime+.1;
- $('#qWait').hidden=true;$('#jam').hidden=true;setCombo();showQ();
+ $('#qWait').hidden=true;$('#jam').hidden=true;setCombo();hearts();showQ();
+ if(G.strict)setTimeout(()=>{toast('⚡ Guess and the lightning gets the King! 3 hearts.');if(cfg().speak)say('Be careful! Wrong answers make lightning zap the King. Think, then tap.')},2600);
  banner('STAGE '+G.stage,G.boss?'Boss stage!':'Defend the wall!');kingSay(pick(KING_LINES.start),2.6);
  if(!D.seenHelp){D.seenHelp=true;setTimeout(()=>toast('Answer right to fire a volley! 🏹'),1600);if(cfg().speak)setTimeout(()=>say('Answer right to shoot arrows at the monsters!'),900)}}
 function endRun(win){if(G.over)return;G.over=true;Music.on=false;$('#qWait').hidden=false;$('#qWait').textContent=win?'You did it!':'Oh no!';$('#jam').hidden=true;
@@ -114,13 +118,13 @@ function endRun(win){if(G.over)return;G.over=true;Music.on=false;$('#qWait').hid
  try{if(window.__trk){__trk.ev('stage',{st,win:win?1:0,right:G.right,wrong:G.wrong,wall:Math.round(100*G.wall.hp/G.wall.max),dur:Math.round(G.t),lvl:G.lvl});if(win&&st>prevBest)__trk.ev('kwbest',{st})}}catch(e){}
  setTimeout(()=>{const pc=G.wall.hp/G.wall.max,stars=win?(pc>.7?3:pc>.35?2:1):0;
   $('#rTitle').textContent=win?'STAGE '+st+' CLEARED!':'THE WALL FELL!';$('#rTitle').className=win?'':'lose';
-  $('#stars').innerHTML=win?[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">⭐</span>`).join(''):'<span>🧱💥</span>';
-  $('#rLine').textContent=win?(st%5===0?'You beat Big Gary!':'The pudding is safe!'):'The goblins ate the pudding... Try again!';
+  $('#stars').innerHTML=win?[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">⭐</span>`).join(''):G.zapped?'<span>⚡👑💨</span>':'<span>🧱💥</span>';
+  $('#rLine').textContent=win?(st%5===0?'You beat Big Gary!':'The pudding is safe!'):G.zapped?'⚡ The lightning got the King! Think before you tap.':'The goblins ate the pudding... Try again!';
   $('#rStats').innerHTML=`<div><b>${G.right}</b>right answers</div><div><b>${G.best}</b>best streak</div><div><b>${G.killed}</b>monsters</div><div><b>+${earned}</b>gold</div>`;
   const cb=$('#chestBox');cb.hidden=!win;$('#rGold').textContent='';const chest=$('#chest');chest.className='';chest.textContent=st%5===0?'🎁':'📦';chest.dataset.bonus=bonus;chest.dataset.open='';
   $('#rNext').textContent=win?'Next stage ▶':'Try again ↻';$('#rNext').disabled=false;$('#rNext').classList.add('pulse');
   if(win){$('#rLine').textContent+=' Tap the chest!'}
-  show('result');if(cfg().speak)say(win?'You won! Tap the chest!':'Oh no! Try again!')},win?1300:900)}
+  show('result');if(cfg().speak)say(win?'You won! Tap the chest!':G.zapped?'The lightning got the King. Think before you tap! Try again.':'Oh no! Try again!')},win?1300:900)}
 function openChest(){const c=$('#chest');if(c.dataset.open)return;c.dataset.open='1';const b=+c.dataset.bonus;D.gold+=b;save();c.classList.add('open');c.textContent='✨';SFX.lvl();
  let n=0;const iv=setInterval(()=>{n=Math.min(b,n+Math.ceil(b/12));$('#rGold').textContent='+'+n+' 🪙';SFX.coin();if(n>=b)clearInterval(iv)},70)}
 function openShop(){const L=$('#shopList');L.innerHTML='';$('#shGold').textContent=D.gold;
@@ -134,12 +138,13 @@ function openSetup(){const c=D.cfg,K=window.KW;
  $('#suSubj').innerHTML=Object.keys(K.subjects).map(s=>`<button class="chip${c.subj.includes(s)?' on':''}" data-s="${s}">${K.subjects[s].em} ${K.subjects[s].n}</button>`).join('');
  $('#suLv').innerHTML=c.subj.map(s=>{const S=K.subjects[s],l=c.lv[s]||1;return`<div class="lvrow"><span class="nm">${S.n}</span><button data-l="${s}" data-d="-1">−</button><b>${l}</b><button data-l="${s}" data-d="1">+</button><span class="d">${esc(S.lv[l-1])}</span></div>`}).join('');
  $('#suSpd').innerHTML=Object.keys(K.speeds).map(k=>`<button class="chip${c.speed===k?' on':''}" data-sp="${k}">${K.speeds[k]}</button>`).join('');
+ $('#suStr').innerHTML=`<button class="chip${c.strict?' on':''}" data-str="1">On</button><button class="chip${!c.strict?' on':''}" data-str="0">Off</button>`;
  $('#suSpk').innerHTML=`<button class="chip${c.speak?' on':''}" data-spk="1">On</button><button class="chip${!c.speak?' on':''}" data-spk="0">Off</button>`;
  show('setup')}
 $('#setup').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const c=D.cfg,d=b.dataset;
  if(d.s){const i=c.subj.indexOf(d.s);if(i>=0){if(c.subj.length>1)c.subj.splice(i,1)}else c.subj.push(d.s)}
  else if(d.l){c.lv[d.l]=clamp((c.lv[d.l]||1)+(+d.d),1,MAXLV[d.l])}
- else if(d.sp)c.speed=d.sp;else if(d.spk)c.speak=d.spk==='1';else return;save();openSetup()});
+ else if(d.str)c.strict=d.str==='1';else if(d.sp)c.speed=d.sp;else if(d.spk)c.speak=d.spk==='1';else return;save();openSetup()});
 
 /* ================= wiring ================= */
 $('#tPlay').onclick=startRun;$('#tNew').onclick=askNewGame;$('#tBoard').onclick=openBoard;$('#tShop').onclick=()=>{audioInit();openShop()};$('#tSet').onclick=openSetup;$('#suX').onclick=()=>{hide('setup');titleScreen()};
