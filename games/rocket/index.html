@@ -138,7 +138,7 @@ textarea.log{width:100%;min-height:96px;background:#0E1226;color:var(--ink);bord
   <div id="keys">Run <kbd>←</kbd><kbd>→</kbd> · Jump <kbd>Space</kbd> (again in the air to Toot Boost) · Enter a pipe <kbd>↓</kbd></div>
   <div id="pad">
     <div id="dirs"><button class="pb" id="bL" aria-label="Left"><svg viewBox="0 0 20 20"><path d="M4 10l9-7v14z"/></svg></button><button class="pb" id="bR" aria-label="Right"><svg viewBox="0 0 20 20"><path d="M16 10L7 17V3z"/></svg></button></div>
-    <div id="acts"><button class="pb" id="bD" aria-label="Down into pipe">Pipe<br>↓</button><button class="pb" id="bJ" aria-label="Jump">JUMP<small>tap twice: toot</small></button></div>
+    <div id="acts"><button class="pb" id="bD" aria-label="Down into pipe">Pipe<br>↓</button><button class="pb" id="bF" aria-label="Throw" hidden style="font-size:34px;width:78px;height:78px;border-radius:50%;background:#FF8A2A;box-shadow:0 5px 0 #B5480E">🔥</button><button class="pb" id="bJ" aria-label="Jump">JUMP<small>tap twice: toot</small></button></div>
   </div>
 </div>
 
@@ -165,21 +165,31 @@ const SK=[
  {n:'Place value to 1,000',g:'2'},{n:'Adding and subtracting 3-digit numbers',g:'3'},{n:'Times tables: 2, 5, 10',g:'2-3'},{n:'Times tables: 3, 4, 6',g:'3'},
  {n:'Times tables: 7, 8, 9',g:'3'},{n:'Division facts',g:'3'},{n:'Missing numbers',g:'3'},{n:'2-digit times 1-digit',g:'4'},
  {n:'Fractions',g:'3'},{n:'Area and perimeter',g:'3'},{n:'Two-step word problems',g:'3-4'},{n:'Dividing bigger numbers',g:'4'},
- {n:'Counting to 5',g:'K'},{n:'Counting to 10',g:'K'},{n:'Adding with pictures',g:'K'},{n:'Adding within 10',g:'K-1'},{n:'Taking away within 10',g:'K-1'}];
+ {n:'Reading words (cat, dog)',g:'K'},{n:'Sight words',g:'K'},{n:'Adding within 10',g:'K-1'},{n:'Taking away within 10',g:'K-1'},{n:'Bigger, smaller, what comes next',g:'K-1'}];
 /* early readers (the Game Room's read-aloud kids) start with counting; everyone else starts at adding within 20 */
 const YOUNG=(()=>{try{return !!(window.__young&&window.__young())}catch(e){return false}})();
 const STRICT=(()=>{try{return !!(window.__strict&&window.__strict())}catch(e){return false}})();
 const ORDER=YOUNG?[16,17,18,19,20,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-const THINGS=[['🍎','apples'],['🐸','frogs'],['⭐','stars'],['🍪','cookies'],['🐟','fish'],['🦆','ducks'],['🍌','bananas']];
+const RW=('cat:🐱 hat:🎩 bat:🦇 map:🗺️ van:🚐 can:🥫 rat:🐀 bag:👜 pan:🍳 cab:🚕 pig:🐷 pin:📌 dog:🐶 pot:🍲 fox:🦊 box:📦 log:🪵 bed:🛏️ hen:🐔 net:🥅 web:🕸️ sun:☀️ bug:🐛 cup:☕ bus:🚌 pen:🖊️ egg:🥚 nut:🥜 jet:✈️ '+
+ 'frog:🐸 crab:🦀 drum:🥁 flag:🚩 hand:✋ tent:⛺ milk:🥛 gift:🎁 ship:🚢 fish:🐟 duck:🦆 sock:🧦 lock:🔒 rock:🪨 truck:🚚 clock:⏰ cake:🎂 bike:🚲 bone:🦴 kite:🪁 nose:👃 bee:🐝 tree:🌳 moon:🌙 star:⭐ car:🚗 boat:⛵ goat:🐐 rain:🌧️ cow:🐮').split(' ').map(x=>{const [w,e]=x.split(':');return{w,e}});
+const SWL=['the','and','a','see','can','go','to','is','in','it','my','me','we','up','look','big','red','one','run','you','said','here','jump','not','play','little','come','down','for','have','was','they','like','she','he','with','what','yes','no','good'];
+const HOMO=[['to','two','too'],['for','four'],['here','hear'],['no','know'],['one','won'],['red','read'],['see','sea']];
+const homo=(a,b)=>HOMO.some(g=>g.includes(a)&&g.includes(b));
+const SAYIN={to:'I go to the park.',for:'This is for you.',one:'I have one nose.',red:'The apple is red.',no:'No, thank you.',here:'Come here.',see:'I can see you.'};
+const like=(a,b)=>(a[0]===b[0]?2:0)+(a.slice(-1)===b.slice(-1)?2:0)+(a.length===b.length?1:0)+Math.random()*2.2;
 const MASTER=.8;
 function opt(ans,wr){const a=String(ans),out=[a];for(const w of shuffle(wr.map(String)))if(out.length<3&&!out.includes(w)&&w!==''&&!/^-|NaN|Infinity/.test(w))out.push(w);
   let k=1;while(out.length<3){const v=String(Number(a)+(k%2?k:-k));if(!out.includes(v)&&Number(v)>0)out.push(v);k++}return shuffle(out)}
 function Q(s,text,ans,wr,hint,say,sayText){return{s,text,ans:String(ans),choices:opt(ans,wr),hint,say:!!say||YOUNG,sayText:sayText||null}}
 function gen(s){switch(s){
- case 16:case 17:{const T=pick(THINGS),n=s===16?ri(1,5):ri(4,10);return Q(s,`How many? ${T[0].repeat(n)}`,n,[n+1,n-1,n+2,n-2].filter(x=>x>0),'Touch each one and count out loud: 1, 2, 3…',1,`How many ${T[1]}?`)}
- case 18:{const T=pick(THINGS),a=ri(1,3),b=ri(1,5-a);return Q(s,`${T[0].repeat(a)} + ${T[0].repeat(b)} = ?`,a+b,[a+b+1,a+b-1,a+b+2].filter(x=>x>0),`Count them all: ${a} and ${b} more.`,1,`${a} ${T[1]} and ${b} more. How many in all?`)}
- case 19:{const a=ri(1,8),b=ri(1,10-a);return Q(s,`${a} + ${b} = ?`,a+b,[a+b+1,a+b-1,a+b+2],`Start at ${Math.max(a,b)} and count up ${Math.min(a,b)}.`,1)}
- case 20:{const a=ri(3,10),b=ri(1,a-1);return Q(s,`${a} − ${b} = ?`,a-b,[a-b+1,a-b-1,a+b],`Start at ${a} and count back ${b}.`,1)}
+
+ case 16:{const t=pick(RW),o=RW.filter(x=>x.e!==t.e).sort((a,b)=>like(t.w,b.w)-like(t.w,a.w)).slice(0,2);const q=Q(s,t.w,t.e,o.map(x=>x.e),`It says ${t.w}.`,0,'Read the word. Then jump into its picture.');q.say=false;q.read=true;return q}
+ case 17:{const w=pick(SWL),o=SWL.filter(x=>x!==w&&!homo(x,w)).sort((a,b)=>like(w,b)-like(w,a)).slice(0,2);return Q(s,'🔊 Find the word you hear',w,o,`It was "${w}".`,1,'Find the word: '+w+'.'+(SAYIN[w]?' '+SAYIN[w]+' '+w+'.':''))}
+ case 18:{const a=ri(1,8),b=ri(1,10-a);return Q(s,`${a} + ${b} = ?`,a+b,[a+b+1,a+b-1,a+b+2,a+b-2].filter(x=>x>0),`Start at ${Math.max(a,b)} and count up ${Math.min(a,b)}.`,1)}
+ case 19:{const a=ri(3,10),b=ri(1,a-1);return Q(s,`${a} − ${b} = ?`,a-b,[a-b+1,a-b-1,a+b].filter(x=>x>0),`Start at ${a} and count back ${b}.`,1)}
+ case 20:{const r=rnd();if(r<.4){const a=ri(1,9);let b=ri(1,9);while(b===a)b=ri(1,9);const big=Math.max(a,b);return Q(s,`Which is bigger: ${a} or ${b}?`,big,[Math.min(a,b),big+ri(1,3)],`${big} is more than ${Math.min(a,b)}.`,1)}
+  if(r<.75){const n=ri(1,8);return Q(s,`What comes next? ${n}, ${n+1}, ${n+2}, ?`,n+3,[n+4,n+2,n+5].filter(x=>x>0),`Count: ${n}, ${n+1}, ${n+2}, ${n+3}.`,1,`What comes next? ${n}, ${n+1}, ${n+2}...`)}
+  const n=ri(2,9);return Q(s,`What comes before ${n}?`,n-1,[n+1,n-2>0?n-2:n+2],`Count back: ${n}, ${n-1}.`,1)}
  case 0:{const a=ri(3,12),b=ri(2,Math.min(9,20-a)),t=a+b;return Q(s,`${a} + ${b} = ?`,t,[t+1,t-1,t+10,t-2],`Start at ${Math.max(a,b)} and count up ${Math.min(a,b)}.`)}
  case 1:{const a=ri(9,20),b=ri(2,Math.min(9,a-1)),t=a-b;return Q(s,`${a} − ${b} = ?`,t,[t+1,t-1,a+b,t+2],`Count up from ${b} to ${a}. How many jumps?`)}
  case 2:{const a=ri(17,68),b=ri(14,Math.min(89,99-a)),t=a+b,nc=(a-a%10)+(b-b%10)+((a%10+b%10)%10);return Q(s,`${a} + ${b} = ?`,t,[nc,t+10,t-10,t+1],`Tens first: ${a-a%10} + ${b-b%10} = ${a-a%10+b-b%10}. Then add ${a%10} + ${b%10}.`)}
@@ -220,6 +230,7 @@ let D=fresh();
 function load(){try{const s=localStorage.getItem(KEY);if(s)D=Object.assign(fresh(),JSON.parse(s))}catch(e){}
  ['m','n','c'].forEach(k=>{while(D[k].length<SK.length)D[k].push(0)});
  /* an early reader shouldn't keep getting old questions that were far too hard */
+ if(YOUNG&&D.yv!==2){for(let i=16;i<=20;i++){D.m[i]=0;D.n[i]=0;D.c[i]=0}D.review=D.review.filter(r=>r.q.s<16&&false);D.yv=2}
  if(YOUNG){const fp=ORDER.indexOf(focusS());D.review=D.review.filter(r=>ORDER.indexOf(r.q.s)<=fp+1)}}
 function save(){D.savedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}cloudSchedule()}
 function dayStat(){const k=today();if(!D.stats.days[k])D.stats.days[k]={q:0,c:0,sec:0};return D.stats.days[k]}
@@ -229,6 +240,7 @@ function focusS(){for(const i of ORDER)if(D.m[i]<MASTER)return i;return ORDER[OR
 function recentAcc(){return D.recent.length?D.recent.reduce((a,b)=>a+b,0)/D.recent.length:.8}
 function chooseQ(){D.counter++;const due=D.review.find(r=>r.due<=D.counter);if(due)return Object.assign({},due.q,{choices:shuffle(due.q.choices.slice()),review:true});
   const ff=focusS(),acc=recentAcc(),r=rnd(),pRev=acc<.65?.4:.18,pNext=acc>.88?.2:.1;let f=ff;
+  if(YOUNG){const yp=[16,17,18,19,20].filter(i=>D.m[i]<MASTER);if(yp.length){const c=yp.filter(i=>i!==D.lastS);f=pick(c.length?c:yp);D.lastS=f;let q=gen(f);for(let i=0;i<8&&(D.recentQ||[]).includes(q.text+q.ans);i++)q=gen(f);D.recentQ=(D.recentQ||[]).concat(q.text+q.ans).slice(-12);return q}}
   const fp=ORDER.indexOf(ff);if(r<pRev&&fp>0)f=ORDER[ri(Math.max(0,fp-3),fp-1)];else if(r<pRev+pNext&&fp<ORDER.length-1)f=ORDER[fp+1];
   /* don't ask the same thing twice in a row */
   let q=gen(f);for(let i=0;i<6&&D.lastQ===q.text;i++)q=gen(f);D.lastQ=q.text;return q}
@@ -408,18 +420,27 @@ function moveY(e,dy){e.y+=dy;const l=Math.floor((e.x-e.hw+.5)/16),r=Math.floor((
   if(dy>0){const ty=Math.floor(e.y/16);for(let tx=l;tx<=r;tx++)if(solid(tx,ty)){e.y=ty*16;return 'down'}}
   else if(dy<0){const ty=Math.floor((e.y-e.h)/16);let hit=null,best=99;for(let tx=l;tx<=r;tx++)if(solid(tx,ty)){const dd=Math.abs(tx*16+8-e.x);if(dd<best){best=dd;hit=tx}}if(hit!==null){e.y=(ty+1)*16+e.h;return{tx:hit,ty}}}return null}
 const GRAV=900,JV=-305,RUN=104,ACC=560,DEC=720,AIR=420;
-const P={x:40,y:144,vx:0,vy:0,hw:5,h:20,face:1,ground:false,coy:0,buf:0,boosted:false,cut:false,inv:0,hp:3,shield:false,walk:0,anim:0};
-const K={left:false,right:false,jump:false,down:false};
+const P={x:40,y:144,vx:0,vy:0,hw:5,h:20,face:1,ground:false,coy:0,buf:0,boosted:false,cut:false,inv:0,hp:3,shield:false,walk:0,anim:0,lives:3,pow:null,sc:1,star:0,turbo:0,fireCd:0,streak:0,airY:0};
+const K={left:false,right:false,jump:false,down:false,fire:false};
+/* ===================== SUPER POWERS ===================== */
+const POW={mega:{e:'🍄',n:'MEGA MUSHROOM',m:'You are ENORMOUS! Smash bricks and bad guys!'},tiny:{e:'🧪',n:'SHRINK SODA',m:'Itty bitty! Super high jumps!'},heli:{e:'🚁',n:'PROPELLER BEANIE',m:'Hold JUMP to fly!'},fire:{e:'🌶️',n:'HOT SAUCE',m:'Tap the 🔥 button to throw fireballs!'},ice:{e:'🧊',n:'FREEZE POP',m:'Tap the ❄️ button to freeze bad guys!'},star:{e:'⭐',n:'DISCO STAR',m:'INVINCIBLE! Run into everything!'},turbo:{e:'🌯',n:'BEAN BURRITO',m:'Unlimited toot boosts! Keep tapping JUMP!'},oneup:{e:'💚',n:'1-UP',m:'Extra life!'}};
+const POWPOOL=['mega','mega','heli','heli','fire','fire','ice','tiny','star','turbo'];
 function jumpPress(){audioInit();P.buf=.13}
-function updPlayer(dt){const ax=(K.left?-1:0)+(K.right?1:0);
+function growTick(dt){const tgt=P.pow==='mega'?2.2:P.pow==='tiny'?.55:1;if(Math.abs(P.sc-tgt)<.001)return;let ns=P.sc+(tgt>P.sc?1:-1)*dt*3;ns=tgt>P.sc?Math.min(tgt,ns):Math.max(tgt,ns);
+  if(ns>P.sc){const nh=20*ns,nw=5*ns,t=Math.floor((P.y-nh+1)/16),b=Math.floor((P.y-1)/16),l=Math.floor((P.x-nw)/16),r=Math.floor((P.x+nw)/16);for(let ty=t;ty<=b;ty++)for(let tx=l;tx<=r;tx++)if(ty>=0&&solid(tx,ty))return}
+  P.sc=ns;P.h=20*ns;P.hw=5*ns}
+function updPlayer(dt){growTick(dt);if(P.star>0){P.star-=dt;if(rnd()<.6)parts.push({x:P.x+(rnd()-.5)*12*P.sc,y:P.y-rnd()*P.h,vx:0,vy:-20,life:.4,max:.4,col:pick(['#FF5A6E','#FFC93D','#6BD66B','#5ED0F7','#9A6AF2']),size:2})}if(P.turbo>0)P.turbo-=dt;if(P.fireCd>0)P.fireCd-=dt;
+  const ax=(K.left?-1:0)+(K.right?1:0),SP=(P.star>0?1.35:1)*(P.pow==='mega'?1.15:1);
   if(ax){P.vx+=ax*(P.ground?ACC:AIR)*dt;P.face=ax;if(Math.sign(P.vx)!==ax&&P.ground)P.vx+=ax*DEC*dt*.6}else if(P.ground){const s=Math.sign(P.vx);P.vx-=s*DEC*dt;if(Math.sign(P.vx)!==s)P.vx=0}
-  P.vx=clamp(P.vx,-RUN,RUN);if(P.ground){P.coy=.1;P.boosted=false}else P.coy-=dt;if(P.buf>0)P.buf-=dt;
-  if(P.buf>0){if(P.coy>0){P.vy=JV;P.coy=0;P.buf=0;P.cut=false;P.ground=false;sfx('jump')}else if(!P.boosted){P.vy=-262;P.boosted=true;P.buf=0;P.cut=false;toot()}}
+  P.vx=clamp(P.vx,-RUN*SP,RUN*SP);if(P.ground){P.coy=.1;P.boosted=false}else P.coy-=dt;if(P.buf>0)P.buf-=dt;
+  if(P.buf>0){if(P.coy>0){P.vy=JV*(P.pow==='tiny'?1.15:P.pow==='mega'?1.05:1);P.coy=0;P.buf=0;P.cut=false;P.ground=false;P.airY=P.y;sfx('jump')}else if(!P.boosted||P.turbo>0){P.vy=-262;P.boosted=true;P.buf=0;P.cut=false;toot()}}
+  if(P.pow==='heli'&&K.jump&&!P.ground&&P.coy<=0){P.vy=Math.max(-150,P.vy-1500*dt);P.cut=true;if(rnd()<.3)parts.push({x:P.x+(rnd()-.5)*10,y:P.y-P.h-2,vx:(rnd()-.5)*40,vy:-10,life:.25,max:.25,col:'#DDE6F2',size:1})}
+  if(K.fire&&(P.pow==='fire'||P.pow==='ice')&&P.fireCd<=0&&L.pshots.length<3){P.fireCd=.28;L.pshots.push({k:P.pow,x:P.x+P.face*8*P.sc,y:P.y-P.h*.55,vx:P.face*190,vy:40,t:0});sfx(P.pow==='fire'?'throw':'bean')}
   if(!K.jump&&P.vy<-90&&!P.cut){P.vy=-90;P.cut=true}
-  P.vy=Math.min(430,P.vy+GRAV*dt);
+  P.vy=Math.min(P.pow==='heli'&&K.jump?120:430,P.vy+GRAV*(P.pow==='tiny'?.75:1)*dt);
   if(moveX(P,P.vx*dt))P.vx=0;const hy=moveY(P,P.vy*dt);P.ground=false;
-  if(hy==='down'){P.ground=P.vy>=0;P.vy=0}else if(hy){P.vy=Math.max(P.vy,40);bump(hy.tx,hy.ty)}
-  if(P.x<8){P.x=8;P.vx=0}
+  if(hy==='down'){if(P.pow==='mega'&&P.vy>200){shake=5;sfx('crumble');L.ents.forEach(e=>{if(!e.dead&&Math.abs(e.x-P.x)<70&&Math.abs(e.y-P.y)<20)killEnemy(e,true)})}P.ground=P.vy>=0;P.vy=0}else if(hy){P.vy=Math.max(P.vy,40);bump(hy.tx,hy.ty)}
+  if(P.x<8){P.x=8;P.vx=0}if(P.y-P.h<-30){P.y=P.h-30;if(P.vy<0)P.vy=0}
   if(P.ground&&Math.abs(P.vx)>8)P.walk+=dt*Math.abs(P.vx)/12;
   if(P.inv>0)P.inv-=dt;if(P.y>H*16+24)fallPit()}
 function toot(){sfx('toot');const c=TRAILS[D.outfit.trail]||TRAILS.classic;for(let i=0;i<12;i++)parts.push({x:P.x-P.face*6,y:P.y-6,vx:(rnd()-.5)*60-P.face*20,vy:rnd()*50+10,life:.6,max:.6,col:pick(c),size:2+(rnd()*2|0),puff:1});
@@ -431,16 +452,18 @@ function ftext(t,x,y,col,big){parts.push({x,y,vx:0,vy:-20,life:1.2,max:1.2,text:
 function debris(tx,ty,col){for(let i=0;i<6;i++)parts.push({x:tx*16+8,y:ty*16+8,vx:(rnd()-.5)*140,vy:-rnd()*160-30,g:500,life:.9,max:.9,col,size:3})}
 function bump(tx,ty){if(ty<0||ty>=H)return;const ch=L.g[ty][tx];sfx('bump');L.bumps.push({tx,ty,t:0});
   L.ents.forEach(e=>{if(!e.dead&&Math.abs(e.x-(tx*16+8))<12&&Math.abs(e.y-ty*16)<3){killEnemy(e,true)}});
+  if(ch==='B'&&P.pow==='mega'){L.g[ty][tx]='.';debris(tx,ty,'#C8742E');getBean(1);shake=2;return}
   if(ch==='?'){L.g[ty][tx]='U';getBean(1);L.items.push({type:'pop',x:tx*16+8,y:ty*16-4,vy:-170,life:.45})}
-  else if(ch==='P'){L.g[ty][tx]='U';L.items.push({type:'undies',x:tx*16+8,y:ty*16,vx:0,vy:-90,hw:6,h:11,rise:12})}
+  else if(ch==='P'){L.g[ty][tx]='U';if(rnd()<.25)L.items.push({type:'undies',x:tx*16+8,y:ty*16,vx:0,vy:-90,hw:6,h:11,rise:12});else spawnPow(pick(POWPOOL),tx*16+8,ty*16)}
   else if(ch==='A')answerHit(tx,ty)}
 function getBean(n){D.beans+=n;L.beansGot+=n;sfx('bean');hud()}
 function killEnemy(e,flip){e.dead=true;e.dt=flip?1.2:.45;e.flip=flip;if(flip){e.vy=-200}getBean(1);sfx('stomp')}
-function hurt(){if(P.inv>0||mode!=='play')return;if(P.shield){P.shield=false;P.inv=1.2;sfx('hurt');toast('Your Golden Undies saved you!');return}
+function losePow(why){const had=P.pow;P.pow=null;P.inv=1.6;sfx('hurt');shake=3;ftext('POWER LOST!',P.x,P.y-P.h-6,'#FFB3B5',1);toast(why||'Ouch! You lost your '+POW[had].n.toLowerCase()+'.');hud()}
+function hurt(){if(P.inv>0||mode!=='play'||P.star>0)return;if(P.pow){losePow();return}if(P.shield){P.shield=false;P.inv=1.2;sfx('hurt');toast('Your Golden Undies saved you!');return}
   P.hp--;P.inv=1.5;sfx('hurt');shake=3;P.vy=-160;P.vx=-P.face*80;hud();if(P.hp<=0){P.hp=0;bonked(pick(['You got bonked! Back to the checkpoint.','Ouch! Your pants need a nap. Back to the checkpoint.','A sock goblin got you. Back to the checkpoint.']))}}
 function fallPit(){if(mode!=='play')return;P.hp--;sfx('hurt');hud();bonked(P.hp<=0?'Out of hearts! Back to the checkpoint with full hearts.':pick(['You fell into the Pit of Soggy Cereal!','You fell into a hole. The hole says hi.',L.theme===3?'Lava is hot. Who knew?':'Down the hole! Back to the checkpoint.']))}
 let respawnT=0;function bonked(msg){mode='bonk';respawnT=1.1;toast(msg)}
-function respawn(){if(P.hp<=0)P.hp=3;P.x=L.check.x;P.y=GY*16;P.vx=P.vy=0;P.inv=1.2;P.boosted=false;cam.x=clamp(P.x-VW*.4,0,L.W*16-VW);hud();mode='play'}
+function respawn(){if(P.hp<=0){P.lives--;if(P.lives<=0){gameOver();return}P.hp=3;toast(P.lives===1?'LAST LIFE! Be careful!':P.lives+' lives left.')}P.pow=null;P.sc=1;P.h=20;P.hw=5;P.star=0;P.turbo=0;P.x=L.check.x;P.y=GY*16;P.vx=P.vy=0;P.inv=1.2;P.boosted=false;cam.x=clamp(P.x-VW*.4,0,L.W*16-VW);hud();mode='play'}
 
 /* ===================== math gates ===================== */
 let qbarT=0;
@@ -456,22 +479,22 @@ function firstGrade(G,ok){if(G.graded)return;G.graded=true;L.qTotal++;if(ok)L.qR
 const YES=['BOOM! Broccoli Wall destroyed!','Correct! The broccoli is crying.','YES! Your brain is HUGE.','Nailed it! The Baron just felt a chill.','Correct! Somewhere a pigeon is proud of you.'];
 const NOPE=['BONK! That block was full of broccoli.','Nope! That one smelled like feet.','Not that one! A pigeon laughed at you.','Wrong block! It was stuffed with old socks.'];
 function answerHit(tx,ty){const b=L.ans[tx+','+ty];if(!b)return;const G=b.gate;if(G.state!=='active'||b.used)return;const ok=G.q.choices[b.i]===G.q.ans;firstGrade(G,ok);
-  if(ok){b.ok=true;G.blocks.forEach(x=>x.used=true);sfx('good');for(let i=0;i<5;i++)L.items.push({type:'pop',x:b.tx*16+16+(i-2)*6,y:b.ty*16-4,vy:-150-i*20,life:.5});getBean(5);
+  if(ok){b.ok=true;G.blocks.forEach(x=>x.used=true);sfx('good');if(G.type!=='boss'&&!G.q.survey){spawnPow(pick(POWPOOL),b.tx*16+16,b.ty*16)}if(++P.streak%5===0)spawnPow('oneup',b.tx*16+16,b.ty*16-10);for(let i=0;i<5;i++)L.items.push({type:'pop',x:b.tx*16+16+(i-2)*6,y:b.ty*16-4,vy:-150-i*20,life:.5});getBean(5);
     if(G.type==='boss'){G.state='cool';qMsg('ok',`<b>${pick(YES)}</b> Bean Bomb away!`);L.shots.push({type:'bomb',x:b.tx*16+16,y:b.ty*16,sx:b.tx*16+16,sy:b.ty*16,t:0})}
     else{G.state='done';G.doneAt=now;qMsg('ok',`<b>${pick(YES)}</b>`,1.4);crumble(G);if(L.surveyDone)setTimeout(placementDone,1100)}}
-  else{b.used=true;b.bad=true;sfx('bad');shake=2;L.items.push({type:'brocfall',x:b.tx*16+16,y:b.ty*16+16,vy:40,t:0});qMsg('bad',`<b>${pick(NOPE)}</b> ${esc(G.q.hint)}`);
+  else{P.streak=0;b.used=true;b.bad=true;sfx('bad');shake=2;L.items.push({type:'brocfall',x:b.tx*16+16,y:b.ty*16+16,vy:40,t:0});qMsg('bad',`<b>${pick(NOPE)}</b> ${esc(G.q.hint)}`);
     if(G.type==='boss'&&L.bossE)L.bossE.throwT=0;if(STRICT)zap(G)}}
 /* Stop guessing: lightning hits the hero for every wrong answer. Three hits and it's back to the checkpoint. */
-function zap(G){L.items.push({type:'bolt',t:0});sfx('hurt');shake=6;flash=.3;P.hp--;P.inv=1;hud();qMsg('bad',`<b>⚡ ZAP! No guessing!</b> Think first. ${esc(G.q.hint)}`);speak(P.hp>0?'Zap! No guessing. Think first.':'Zap! Too many guesses.');if(P.hp<=0){P.hp=0;bonked('⚡ Too many guesses! Back to the checkpoint.')}}
+function zap(G){L.items.push({type:'bolt',t:0});shake=6;flash=.3;P.streak=0;if(P.pow){losePow('⚡ ZAP! The lightning took your power!');qMsg('bad',`<b>⚡ ZAP! No guessing!</b> ${esc(G.q.hint)}`);speak('Zap! No guessing.');return}sfx('hurt');P.hp--;P.inv=1;hud();qMsg('bad',`<b>⚡ ZAP! No guessing!</b> Think first. ${esc(G.q.hint)}`);speak(P.hp>0?'Zap! No guessing. Think first.':'Zap! Too many guesses.');if(P.hp<=0){P.hp=0;bonked('⚡ Too many guesses! Back to the checkpoint.')}}
 function crumble(G){sfx('crumble');shake=4;for(let y=0;y<GY;y++){if(L.g[y][G.wallX]==='W'){L.g[y][G.wallX]='.';debris(G.wallX,y,pick(['#2E7A34','#6AC45A','#A8E88A']))}}L.check.x=(G.wallX+1)*16+8}
 function pipeEnter(G,p){mode='pipe';pipeAnim={G,p,t:0,x0:P.x};P.vx=0;sfx('pipe')}
 let pipeAnim=null;
 function pipeResolve(){const {G,p}=pipeAnim;pipeAnim=null;const ok=G.q.choices[p.i]===G.q.ans;firstGrade(G,ok);
-  if(ok){G.state='done';G.doneAt=now;sfx('good');qMsg('ok',`<b>${pick(['Correct pipe! WHOOSH!','Right pipe! Bonus beans!','Pipe power!'])}</b>`,1.4);for(let y=0;y<GY;y++)if(L.g[y][G.wallX]==='W')L.g[y][G.wallX]='.';
+  if(ok){G.state='done';G.doneAt=now;sfx('good');if(++P.streak%5===0)setTimeout(()=>spawnPow('oneup',P.x+40,GY*16-40),300);setTimeout(()=>spawnPow(pick(POWPOOL),P.x+30,GY*16-30),200);qMsg('ok',`<b>${pick(['Correct pipe! WHOOSH!','Right pipe! Bonus beans!','Pipe power!'])}</b>`,1.4);for(let y=0;y<GY;y++)if(L.g[y][G.wallX]==='W')L.g[y][G.wallX]='.';
     P.x=(G.wallX+2)*16+8;P.y=GY*16;P.vx=0;P.vy=0;L.check.x=P.x;for(let i=0;i<8;i++)L.beans.push({x:P.x+30+i*12,y:GY*16-24-Math.abs(Math.sin(i))*20});cam.x=clamp(P.x-VW*.4,0,L.W*16-VW);flash=.5;mode='play'}
   else{p.plug=true;sfx('plug');P.x=p.tx*16+16;P.y=7*16;P.vy=-320;P.ground=false;mode='play';qMsg('bad',`<b>${pick(['That pipe was full of old spaghetti!','WRONG PIPE! It went to Grandma\'s bathroom.','That pipe burped you back out!'])}</b> ${esc(G.q.hint)}`);if(STRICT)zap(G)}}
 let flash=0;
-window.__rp2={chooseQ,focusS,get ORDER(){return ORDER},zap:G=>zap(G)};
+window.__rp2={chooseQ,focusS,get ORDER(){return ORDER},zap:G=>zap(G),spawnPow:(k,x,y)=>spawnPow(k,x,y),applyPow:k=>applyPow(k),gameOver:()=>gameOver(),P};
 function updGates(dt){for(const G of L.gates){
   if(G.state==='idle'&&(G.type==='boss'?P.x>G.trigX:cam.x+VW>G.trigX)){if(G.type==='boss'){if(P.x>G.trigX){G.state='intro';G.t=0;L.check.x=G.trigX+24;for(let y=0;y<GY;y++)L.g[y][G.entryX]='W';setMusic('boss');sfx('roar');L.bossE={x:G.bossX,y:GY*16,vx:-30,hp:3,state:'walk',t:0,throwT:2.5,flash:0,G};
         const qb=$('#qbar');qb.className='bad';drawPF($('#qPf'),'boss');$('#qText').textContent='BARON VON BROCCOLI';$('#qText').classList.remove('long');$('#qHint').innerHTML=pick(['"You\'ll never get your beans back! Eat your vegetables! MWAHAHA!"','"I have stolen every bean in the land! Now everyone must eat BROCCOLI!"']);$('#qSay').hidden=true}}else activate(G)}
@@ -487,14 +510,23 @@ function placementDone(){const p=D.placement;if(!p)return;mode='menu';setMusic('
 function overlapP(l,r,t,b){return P.x+P.hw>l&&P.x-P.hw<r&&P.y>t&&P.y-P.h<b}
 function updEnts(dt){for(const e of L.ents){if(e.gone)continue;
   if(e.dead){e.dt-=dt;if(e.flip){e.vy+=GRAV*dt;e.y+=e.vy*dt}if(e.dt<=0)e.gone=true;continue}
-  if(!e.awake){if(e.x<cam.x+VW+40)e.awake=true;else continue}e.t+=dt;
+  if(!e.awake){if(e.x<cam.x+VW+40)e.awake=true;else continue}if(e.frozen){e.frozen-=dt;if(e.frozen<=0)e.frozen=0;else{if(mode==='play'&&overlapP(e.x-e.hw,e.x+e.hw,e.y-e.h,e.y)&&P.vy>30){killEnemy(e,true);ftext('CRACK!',e.x,e.y-16,'#BFE8FF');P.vy=-220}continue}}e.t+=dt;
   if(e.type==='toaster'){e.x+=e.vx*dt;e.y=e.by+Math.sin(e.t*2.2)*14+6}
   else{e.vy=Math.min(400,e.vy+GRAV*dt);const v=e.vx;if(moveX(e,v*dt))e.vx=-v;if(moveY(e,e.vy*dt)==='down')e.vy=0;if(e.y>H*16+40)e.gone=true}
   if(e.x<cam.x-120)e.gone=true;
+  if(mode==='play'&&overlapP(e.x-e.hw,e.x+e.hw,e.y-e.h,e.y)&&(P.star>0||P.pow==='mega')&&!e.frozen){killEnemy(e,true);ftext(pick(['SMASH!','BONK!','YEET!','KAPOW!']),e.x,e.y-20,'#FFF4B0');shake=2;continue}
+  if(e.frozen){if(mode==='play'&&overlapP(e.x-e.hw,e.x+e.hw,e.y-e.h,e.y)&&P.vy>30){killEnemy(e,true);ftext('CRACK!',e.x,e.y-16,'#BFE8FF');P.vy=-220}continue}
   if(mode==='play'&&overlapP(e.x-e.hw,e.x+e.hw,e.y-e.h,e.y)){if(e.type!=='pickle'&&P.vy>30&&P.y-(e.y-e.h)<9){killEnemy(e,e.type==='toaster');P.vy=K.jump?-300:-200;P.boosted=false;P.cut=false}else hurt()}}
-  L.ents=L.ents.filter(e=>!e.gone)}
+  L.ents=L.ents.filter(e=>!e.gone);
+  for(const s of (L.pshots||[])){s.t+=dt;s.vy=Math.min(400,s.vy+GRAV*dt);s.x+=s.vx*dt;s.y+=s.vy*dt;const tx=Math.floor(s.x/16),ty=Math.floor(s.y/16);if(solid(tx,ty)){if(s.vy>0&&solid(tx,Math.floor((s.y-6)/16))===false){s.y=ty*16-1;s.vy=-170}else s.gone=true}
+    if(s.t>1.8||s.x<cam.x-20||s.x>cam.x+VW+20)s.gone=true;if(rnd()<.6)parts.push({x:s.x,y:s.y,vx:0,vy:0,life:.2,max:.2,col:s.k==='fire'?pick(['#FF8A2A','#FFD866']):pick(['#BFE8FF','#FFFFFF']),size:2});
+    for(const e of L.ents){if(e.dead||e.frozen)continue;if(Math.abs(e.x-s.x)<e.hw+4&&s.y>e.y-e.h-3&&s.y<e.y+2){s.gone=true;if(s.k==='fire'){killEnemy(e,true);ftext('TOASTY!',e.x,e.y-18,'#FFB04A')}else{e.frozen=5;ftext('BRRR!',e.x,e.y-18,'#BFE8FF');sfx('bean')}break}}
+    const B=L.bossE;if(B&&!s.gone&&Math.abs(B.x-s.x)<18&&s.y>B.y-44&&s.y<B.y){s.gone=true;ftext(pick(['I\'M FIREPROOF!','HA! Answer the question!','Nice try!']),B.x,B.y-60,'#FFF4B0')}}
+  if(L.pshots)L.pshots=L.pshots.filter(s=>!s.gone)}
 function updItems(dt){for(const it of L.items){if(it.type==='pop'){it.life-=dt;it.vy+=600*dt;it.y+=it.vy*dt}
   else if(it.type==='bolt'){it.t+=dt;if(it.t>.45)it.gone=true}
+  else if(it.type==='pow'){it.t+=dt;if(it.rise>0){it.y-=dt*28;it.rise-=dt*28;if(it.rise<=0&&it.walk)it.vx=40}else if(it.walk){it.vy=Math.min(400,(it.vy||0)+GRAV*dt);const v=it.vx;if(moveX(it,v*dt))it.vx=-v;if(moveY(it,it.vy*dt)==='down')it.vy=0;if(it.y>H*16+30)it.gone=true}else it.by=(it.by||it.y),it.y=it.by+Math.sin(it.t*4)*3;
+    if(it.t>14)it.gone=true;if(it.rise<=0&&overlapP(it.x-8,it.x+8,it.y-14,it.y+2)){it.gone=true;applyPow(it.k)}}
    else if(it.type==='brocfall'){it.t+=dt;it.vy+=500*dt;it.y+=it.vy*dt;if(it.y>GY*16-6){it.y=GY*16-6;it.vy=0;it.x+=60*dt}if(it.t>2.2)it.gone=true}
   else if(it.type==='undies'){if(it.rise>0){it.y-=dt*30;it.rise-=dt*30;if(it.rise<=0)it.vx=45}else{it.vy=Math.min(400,(it.vy||0)+GRAV*dt);const v=it.vx;if(moveX(it,v*dt))it.vx=-v;if(moveY(it,it.vy*dt)==='down')it.vy=0;if(it.y>H*16+30)it.gone=true}
     if(overlapP(it.x-6,it.x+6,it.y-11,it.y)){it.gone=true;P.shield=true;sfx('power');toast('GOLDEN UNDIES! They block one hit. Very fancy.')}}
@@ -506,6 +538,7 @@ function updBoss(dt){const B=L.bossE;if(!B)return;const G=B.G;B.t+=dt;if(B.flash
   else if(B.state==='stun'){if(B.t>1.4){B.state='walk';if(B.hp>0)setTimeout(()=>{if(L&&L.bossE===B&&G.state==='cool')activate(G)},200)}}
   else if(B.state==='dead'){B.y+=dt*30;if(B.t>2){L.bossE=null;return}}
   if(B.state!=='dead'&&mode==='play'&&overlapP(B.x-16,B.x+16,B.y-44,B.y))hurt();
+  for(const s of (L.pshots||[])){if(s.k==='fire'){disc(ctx,s.x,s.y,4,4,'#141026');disc(ctx,s.x,s.y,3,3,'#FF8A2A');ctx.fillStyle='#FFE27A';ctx.fillRect(Math.round(s.x)-1,Math.round(s.y)-1,2,2)}else{disc(ctx,s.x,s.y,4,4,'#141026');disc(ctx,s.x,s.y,3,3,'#9ED8FF');ctx.fillStyle='#FFFFFF';ctx.fillRect(Math.round(s.x)-1,Math.round(s.y)-2,2,2)}}
   for(const s of L.shots){if(s.type==='broc'){s.t+=dt;s.vy+=520*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;if(s.y>GY*16-4){s.gone=true;debris(Math.floor(s.x/16),GY-1,'#3E9A3E')}if(mode==='play'&&overlapP(s.x-5,s.x+5,s.y-6,s.y+6)){s.gone=true;hurt()}}
     else if(s.type==='bomb'){s.t+=dt/.6;const k=Math.min(1,s.t);s.x=s.sx+(B.x-s.sx)*k;s.y=s.sy+(B.y-30-s.sy)*k-Math.sin(k*Math.PI)*50;if(k>=1){s.gone=true;bossHit(B)}}}
   L.shots=L.shots.filter(s=>!s.gone)}
@@ -516,8 +549,16 @@ function bossHit(B){B.hp--;B.flash=.6;B.state='stun';B.t=0;sfx('boom');shake=5;f
     $('#qText').textContent='Baron Von Broccoli defeated!';$('#qText').classList.remove('long');$('#qSay').hidden=true;qMsg('ok','<b>Baron Von Broccoli:</b> "NOOO! I\'ll be back! With CAULIFLOWER!"',3)}}
 
 /* ===================== level flow ===================== */
-function startLevel(idx){closeCard();L=genLevel(idx);P.x=40;P.y=GY*16;P.vx=P.vy=0;P.hp=3;P.shield=false;P.inv=0;P.face=1;cam.x=0;parts=[];mode='play';L.real=true;qIdle();
-  setMusic(THEMES[L.theme].music);banner(L.placement?'Coach Gerald presents':worldName(Math.floor(idx/4)+1),levelName(idx));hud();D.cur=idx;save()}
+function startLevel(idx){closeCard();L=genLevel(idx);L.pshots=[];P.x=40;P.y=GY*16;P.vx=P.vy=0;P.hp=3;P.lives=3;P.pow=null;P.sc=1;P.h=20;P.hw=5;P.star=0;P.turbo=0;P.streak=0;P.shield=false;P.inv=0;P.face=1;cam.x=0;parts=[];mode='play';L.real=true;qIdle();
+  setMusic(THEMES[L.theme].music);banner(L.placement?'Coach Gerald presents':worldName(Math.floor(idx/4)+1),levelName(idx));hud();if(!L.placement)setTimeout(()=>{if(mode==='play'){toast('Right answers drop POWER-UPS! 3 lives. Wrong answers bring lightning ⚡');if(YOUNG)speak('Right answers give you power ups! Wrong answers bring lightning. You have 3 lives.')}},2900);D.cur=idx;save()}
+function gameOver(){mode='menu';setMusic('clear');const lost=Math.min(D.beans,L.beansGot);D.beans-=lost;save();hud();speak('Game over! Baron Von Broccoli wins this time. Try again!');
+  showCard(`<h2 style="font-size:2.2em;color:#E8414F">GAME OVER</h2><p>${pick(['Baron Von Broccoli is doing a victory dance. It is very bad dancing.','The Baron says: "MWAHAHA! Eat your vegetables!"','Your pants ran out of beans. And lives. And dignity.'])}</p>
+   <div class="res"><div><small>Lives left</small><b>0</b></div><div><small>Beans lost</small><b>${lost}</b></div><div><small>Gates right</small><b>${L.qRight} of ${L.qTotal}</b></div></div>
+   <p class="sub">Right answers give you power-ups. Wrong answers bring lightning. Think, then jump!</p>
+   <div class="center"><button class="btn" id="goAgain">Try again</button><button class="btn ghost" id="goMap">Map</button></div>`);$('#goAgain').onclick=()=>startLevel(L.idx);$('#goMap').onclick=openMap}
+function spawnPow(k,x,y){L.items.push({type:'pow',k,x,y,vx:0,vy:0,hw:6,h:12,rise:14,walk:k==='mega'||k==='oneup',t:0})}
+function applyPow(k){const p=POW[k];sfx('power');flash=.25;ftext(p.e+' '+p.n+'!',P.x,P.y-P.h-10,'#FFF4B0',1);toast(p.e+' '+p.m);if(YOUNG)speak(p.n.toLowerCase()+'!');
+  if(k==='star')P.star=10;else if(k==='turbo')P.turbo=12;else if(k==='oneup'){P.lives++;sfx('good')}else P.pow=k;hud()}
 let flagAnim=null;
 function updFlag(dt){if(mode==='play'&&P.x>=L.flagX*16+4&&!flagAnim){mode='flag';flagAnim={t:0,h:GY*16-P.y};P.x=L.flagX*16+4;P.vx=0;P.vy=0;sfx('flag');setMusic('clear');const bonus=Math.max(1,Math.round((GY*16-P.y)/16));getBean(bonus);ftext('+'+bonus,P.x,P.y-20,'#FFF4B0')}
   if(mode==='flag'){flagAnim.t+=dt;if(P.y<GY*16-.1){P.y=Math.min(GY*16,P.y+dt*90)}else if(flagAnim.t>1){P.y=GY*16;P.x+=dt*60;P.walk+=dt*5;P.face=1;if(flagAnim.t>2.6){flagAnim=null;levelClear()}}}}
@@ -567,19 +608,23 @@ function render(){ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;
   {const fx=L.flagX*16+8;if(fx>cx-40&&fx<cx+VW+40){ctx.fillStyle='#141026';ctx.fillRect(fx-2,16,4,GY*16-22);ctx.fillStyle='#DDE6F2';ctx.fillRect(fx-1,16,2,GY*16-22);ctx.fillStyle='#141026';ctx.fillRect(fx-6,GY*16-6,12,6);ctx.fillStyle=TX[L.theme]?THEMES[L.theme].hard:'#999';ctx.fillRect(fx-5,GY*16-5,10,5);disc(ctx,fx,14,4,4,'#141026');disc(ctx,fx,14,3,3,'#5DBB4A');
     const fy=flagAnim?Math.min((GY-2)*16,24+flagAnim.t*120):24;ctx.drawImage(SPR.flag,fx-17,fy)}}
   for(const b of L.beans){if(b.got||b.x<cx-10||b.x>cx+VW+10)continue;const w=Math.max(1,Math.round(Math.abs(Math.cos(now*4+b.x*.05))*4));disc(ctx,b.x,b.y,w+1,6,'#141026');disc(ctx,b.x,b.y,w,5,'#C8742E');if(w>2){ctx.fillStyle='#F2A866';ctx.fillRect(b.x-1,b.y-3,1,2)}}
-  for(const it of L.items){if(it.type==='pop'){disc(ctx,it.x,it.y,3,5,'#141026');disc(ctx,it.x,it.y,2,4,'#C8742E')}else if(it.type==='undies')ctx.drawImage(SPR.undies,Math.round(it.x-7),Math.round(it.y-12));else if(it.type==='brocfall'){ctx.drawImage(SPR.broc,Math.round(it.x-6),Math.round(it.y-6))}
+  for(const it of L.items){if(it.type==='pop'){disc(ctx,it.x,it.y,3,5,'#141026');disc(ctx,it.x,it.y,2,4,'#C8742E')}else if(it.type==='undies')ctx.drawImage(SPR.undies,Math.round(it.x-7),Math.round(it.y-12));else if(it.type==='pow'){const p=POW[it.k];ctx.globalAlpha=.45+.25*Math.sin(now*8);disc(ctx,it.x,it.y-7,9,9,it.k==='star'?'#FFE27A':'#FFFFFF');ctx.globalAlpha=1;ctx.font="14px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.e,it.x,it.y-7)}else if(it.type==='brocfall'){ctx.drawImage(SPR.broc,Math.round(it.x-6),Math.round(it.y-6))}
     else if(it.type==='bolt'){const px=Math.round(P.x),py=Math.round(P.y-14);let x=px,y=0;ctx.fillStyle='#FFF7A0';while(y<py){const nx=px+((y*13+it.t*300)%22-11)*(1-y/py),ny=Math.min(py,y+12);for(let k=0;k<=12;k++){const u=k/12;ctx.fillRect(Math.round(x+(nx-x)*u)-1,Math.round(y+(ny-y)*u),3,2)}x=nx;y=ny}ctx.fillStyle='#FFFFFF';ctx.fillRect(px-3,py-3,7,7)}}
   for(const e of L.ents){if(!e.awake&&e.x>cx+VW+40)continue;const fr=(e.t*6|0)%2;let img=SPR[e.type][e.dead?0:fr];const x=Math.round(e.x-img.width/2),y=Math.round(e.y-img.height);
     if(e.dead&&!e.flip){ctx.drawImage(img,0,0,img.width,img.height,x,e.y-5,img.width,5)}else if(e.flip){ctx.save();ctx.translate(e.x,e.y-img.height/2);ctx.scale(1,-1);ctx.drawImage(img,-img.width/2,-img.height/2);ctx.restore()}
-    else{if(e.vx>0&&e.type!=='toaster'){ctx.save();ctx.translate(e.x*2,0);ctx.scale(-1,1);ctx.drawImage(img,x,y);ctx.restore()}else ctx.drawImage(img,x,y)}}
+    else{if(e.vx>0&&e.type!=='toaster'){ctx.save();ctx.translate(e.x*2,0);ctx.scale(-1,1);ctx.drawImage(img,x,y);ctx.restore()}else ctx.drawImage(img,x,y)}
+    if(e.frozen&&!e.dead){ctx.fillStyle='rgba(170,225,255,.65)';ctx.fillRect(x-1,y-1,img.width+2,img.height+2);ctx.fillStyle='#FFFFFF';ctx.fillRect(x+1,y+1,2,img.height-2)}}
   const B=L.bossE;if(B){const img=SPR.boss[(B.t*4|0)%2];const bx=Math.round(B.x-24),by=Math.round(B.y-52+(B.state==='stun'?2:0));ctx.save();if(B.state==='dead'){ctx.globalAlpha=Math.max(0,1-B.t/2)}if(B.vx>0){ctx.translate(B.x*2,0);ctx.scale(-1,1)}ctx.drawImage(B.flash>0&&(B.flash*20|0)%2?whiteOf(img):img,bx,by);ctx.restore();
     if(B.state==='stun')for(let i=0;i<3;i++){const a=now*5+i*2.1;ctx.fillStyle='#FFE27A';ctx.fillRect(Math.round(B.x+Math.cos(a)*14),Math.round(B.y-56+Math.sin(a)*4),2,2)}
     for(let i=0;i<3;i++){ctx.fillStyle='#141026';ctx.fillRect(B.x-17+i*12,B.y-64,10,6);ctx.fillStyle=i<B.hp?'#3E9A3E':'#4E4A62';ctx.fillRect(B.x-16+i*12,B.y-63,8,4)}}
   for(const s of L.shots){if(s.type==='broc')ctx.drawImage(SPR.broc,Math.round(s.x-6),Math.round(s.y-6));else{disc(ctx,s.x,s.y,6,7,'#141026');disc(ctx,s.x,s.y,5,6,'#C8742E');ctx.fillStyle='#F2A866';ctx.fillRect(Math.round(s.x)-2,Math.round(s.y)-4,2,3)}}
   if(mode!=='title'){const vis=!(P.inv>0&&(P.inv*14|0)%2&&mode==='play');if(pipeAnim){ctx.save();ctx.beginPath();ctx.rect(cx,0,VW,7*16);ctx.clip()}
     if(vis){const fr=!P.ground&&mode!=='flag'?3:Math.abs(P.vx)>8||mode==='flag'&&flagAnim&&flagAnim.t>1?1+((P.walk|0)%2):0;const img=heroSprite(fr);const x=Math.round(P.x-12),y=Math.round(P.y-31+(pipeAnim?pipeAnim.t*30:0));
-      if(P.shield){ctx.globalAlpha=.35+.2*Math.sin(now*10);disc(ctx,P.x,P.y-9,11,12,'#FFD866');ctx.globalAlpha=1}
-      if(P.face<0){ctx.save();ctx.translate(P.x*2,0);ctx.scale(-1,1);ctx.drawImage(img,x,y);ctx.restore()}else ctx.drawImage(img,x,y)}if(pipeAnim)ctx.restore()}
+      if(P.shield){ctx.globalAlpha=.35+.2*Math.sin(now*10);disc(ctx,P.x,P.y-9*P.sc,11*P.sc,12*P.sc,'#FFD866');ctx.globalAlpha=1}
+      if(P.star>0){ctx.globalAlpha=.5;disc(ctx,P.x,P.y-10*P.sc,13*P.sc,14*P.sc,['#FF5A6E','#FFC93D','#6BD66B','#5ED0F7','#9A6AF2'][(now*12|0)%5]);ctx.globalAlpha=1}
+      if(P.pow==='fire'||P.pow==='ice'){ctx.globalAlpha=.35;disc(ctx,P.x,P.y-10*P.sc,10*P.sc,12*P.sc,P.pow==='fire'?'#FF8A2A':'#9ED8FF');ctx.globalAlpha=1}
+      const yo=pipeAnim?pipeAnim.t*30:0;ctx.save();ctx.translate(Math.round(P.x),Math.round(P.y+yo));ctx.scale(P.face<0?-P.sc:P.sc,P.sc);ctx.drawImage(img,-12,-31);ctx.restore();
+      if(P.pow==='heli'){const hy=P.y-P.h-3+yo,w=Math.round(Math.abs(Math.cos(now*30))*9)+1;ctx.fillStyle='#141026';ctx.fillRect(Math.round(P.x)-1,Math.round(hy),3,4);ctx.fillRect(Math.round(P.x)-w-1,Math.round(hy)-1,w*2+3,3);ctx.fillStyle='#E8414F';ctx.fillRect(Math.round(P.x)-w,Math.round(hy),w*2+1,1);ctx.fillStyle='#F7C548';ctx.fillRect(Math.round(P.x),Math.round(hy)+1,1,2)}}if(pipeAnim)ctx.restore()}
   for(const p of parts){const a=clamp(p.life/p.max,0,1);if(p.text){ctx.globalAlpha=Math.min(1,a*2);label(p.text,p.x,p.y,p.col,p.big?10:7);ctx.globalAlpha=1;continue}ctx.globalAlpha=p.puff?a*.85:Math.min(1,a*1.5);
     if(p.puff){disc(ctx,p.x,p.y,Math.round(p.size+(1-a)*3),Math.round(p.size+(1-a)*3),p.col)}else{ctx.fillStyle=p.col;ctx.fillRect(Math.round(p.x),Math.round(p.y),p.size,p.size)}ctx.globalAlpha=1}
   ctx.setTransform(S,0,0,S,0,0);if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash})`;ctx.fillRect(0,0,VW,VH)}if(mode==='bonk'){ctx.fillStyle=`rgba(10,8,24,${clamp(1-respawnT,0,1)*.9})`;ctx.fillRect(0,0,VW,VH)}}
@@ -587,7 +632,8 @@ function render(){ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;
 /* ===================== UI ===================== */
 const HEART=['0110110','1111111','1111111','0111110','0011100','0001000'];
 function heartSVG(on){let o='',r='';HEART.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==='1'){o+=`<rect x="${x}" y="${y}" width="3" height="3" fill="#141026"/>`;r+=`<rect x="${x+1}" y="${y+1}" width="1" height="1" fill="${on?'#E8414F':'#3A3F66'}"/>`}}));return`<svg viewBox="0 0 9 8">${o}${r}</svg>`}
-function hud(){$('#hearts').innerHTML=[0,1,2].map(i=>heartSVG(i<P.hp)).join('')+(P.shield?'<svg viewBox="0 0 14 12" style="width:16px"><rect x="1" y="2" width="12" height="4" fill="#F7C548"/><rect x="1" y="6" width="5" height="4" fill="#F7C548"/><rect x="8" y="6" width="5" height="4" fill="#F7C548"/></svg>':'');$('#beanN').textContent=D.beans}
+function hud(){const bf=$('#bF');if(bf){const on=P.pow==='fire'||P.pow==='ice';bf.hidden=!on;bf.textContent=P.pow==='ice'?'❄️':'🔥'}
+  $('#hearts').innerHTML=[0,1,2].map(i=>heartSVG(i<P.hp)).join('')+`<b style="margin-left:6px">×${P.lives}</b>`+(P.pow?`<span style="margin-left:6px">${POW[P.pow].e}</span>`:'')+(P.shield?'<svg viewBox="0 0 14 12" style="width:16px"><rect x="1" y="2" width="12" height="4" fill="#F7C548"/><rect x="1" y="6" width="5" height="4" fill="#F7C548"/><rect x="8" y="6" width="5" height="4" fill="#F7C548"/></svg>':'');$('#beanN').textContent=D.beans}
 let toastT=0;function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;toastT=2.8}
 function banner(small,big){const b=$('#banner');b.innerHTML=`<small>${esc(small)}</small>${esc(big)}`;b.hidden=false;b.style.animation='none';void b.offsetWidth;b.style.animation='';clearTimeout(banner.t);banner.t=setTimeout(()=>b.hidden=true,2700)}
 let prevMode='play';
@@ -633,16 +679,17 @@ $('#sndBtn').onclick=()=>{D.sound=!D.sound;audioInit();applyVol();$('#sndWave').
 /* ===================== input ===================== */
 const KM={arrowleft:'left',a:'left',arrowright:'right',d:'right',arrowdown:'down',s:'down'};
 addEventListener('keydown',e=>{if(document.activeElement&&document.activeElement.tagName==='INPUT')return;const k=e.key.toLowerCase();if(k.startsWith('arrow')||k===' ')e.preventDefault();audioInit();
-  if(KM[k])K[KM[k]]=true;if((k===' '||k==='arrowup'||k==='w'||k==='z'||k==='k')&&!e.repeat){K.jump=true;if(mode==='play')jumpPress()}
+  if(KM[k])K[KM[k]]=true;if(k==='x'||k==='f'||k==='j'||k==='shift')K.fire=true;if((k===' '||k==='arrowup'||k==='w'||k==='z'||k==='k')&&!e.repeat){K.jump=true;if(mode==='play')jumpPress()}
   if(k==='escape'&&mode==='menu'&&L)closeCard()});
-addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])K[KM[k]]=false;if(k===' '||k==='arrowup'||k==='w'||k==='z'||k==='k')K.jump=false});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(KM[k])K[KM[k]]=false;if(k==='x'||k==='f'||k==='j'||k==='shift')K.fire=false;if(k===' '||k==='arrowup'||k==='w'||k==='z'||k==='k')K.jump=false});
 addEventListener('blur',()=>Object.keys(K).forEach(k=>K[k]=false));
 const dirs=$('#dirs');const dp=new Map();
 function dirsUpd(){let l=false,r=false;for(const [,x] of dp){const b=dirs.getBoundingClientRect();if(x<b.left+b.width/2)l=true;else r=true}K.left=l;K.right=r;$('#bL').classList.toggle('down',l);$('#bR').classList.toggle('down',r)}
 dirs.addEventListener('pointerdown',e=>{e.preventDefault();audioInit();try{dirs.setPointerCapture(e.pointerId)}catch(_){}dp.set(e.pointerId,e.clientX);dirsUpd()});
 dirs.addEventListener('pointermove',e=>{if(dp.has(e.pointerId)){dp.set(e.pointerId,e.clientX);dirsUpd()}});
 ['pointerup','pointercancel','lostpointercapture'].forEach(t=>dirs.addEventListener(t,e=>{dp.delete(e.pointerId);dirsUpd()}));
-const bJ=$('#bJ'),bD=$('#bD');
+const bJ=$('#bJ'),bD=$('#bD'),bF=$('#bF');
+bF.addEventListener('pointerdown',e=>{e.preventDefault();audioInit();bF.classList.add('down');K.fire=true});['pointerup','pointercancel','pointerleave'].forEach(t=>bF.addEventListener(t,()=>{bF.classList.remove('down');K.fire=false}));
 bJ.addEventListener('pointerdown',e=>{e.preventDefault();bJ.classList.add('down');K.jump=true;if(mode==='play')jumpPress()});['pointerup','pointercancel','pointerleave'].forEach(t=>bJ.addEventListener(t,()=>{bJ.classList.remove('down');K.jump=false}));
 bD.addEventListener('pointerdown',e=>{e.preventDefault();audioInit();bD.classList.add('down');K.down=true});['pointerup','pointercancel','pointerleave'].forEach(t=>bD.addEventListener(t,()=>{bD.classList.remove('down');K.down=false}));
 
@@ -683,7 +730,9 @@ function frame(t){const dt=Math.min(.033,(t-last)/1000);last=t;now+=dt;
     if(activeT>0&&!document.hidden&&mode!=='title'){activeT-=dt;dayStat().sec+=dt}
     render();musicTick()}catch(e){console.error(e)}requestAnimationFrame(frame)}
 buildCommon();THEMES.forEach((_,i)=>buildTheme(i));buildSprites();load();
-function applyLoaded(){$('#nameIn').value=D.name||'';$('#contBtn').hidden=!D.started;$('#sndWave').style.display=D.sound?'':'none';hud()}
+function applyLoaded(){$('#nameIn').value=D.name||'';$('#contBtn').hidden=!D.started;
+  /* returning players: Continue is the big button and picks up on the level they were on; New game needs two taps */
+  if(D.started&&D.placed){$('#contBtn').className='btn';$('#contBtn').textContent='▶ Continue · '+levelName(D.maxIdx||0);$('#goBtn').className='btn ghost';$('#goBtn').textContent='New game';$('#contBtn').parentNode.insertBefore($('#contBtn'),$('#goBtn'))}$('#sndWave').style.display=D.sound?'':'none';hud()}
 applyLoaded();cloudInit();
 L=genLevel(0);cam.x=0;
 function begin(isNew){audioInit();if(isNew){const nm=$('#nameIn').value.trim().slice(0,12);if(D.started){const keepKeys=['placed','m','n','c','counter','review','missed','recent','stats','placement','survey','sound'];const keep={};keepKeys.forEach(k=>keep[k]=D[k]);D=fresh();keepKeys.forEach(k=>{if(keep[k]!==undefined)D[k]=keep[k]})}D.name=nm||'Hero';D.started=true;save()}
@@ -694,8 +743,8 @@ function begin(isNew){audioInit();if(isNew){const nm=$('#nameIn').value.trim().s
      {who:'COACH GERALD',pf:'coach',html:'First, <b>Training Day</b>. I\'ll throw math at you to see how strong your brain muscles are. Some of it will be WAY too hard. That\'s on purpose! Do your best and keep running.'},
      {who:'COACH GERALD',pf:'coach',html:'Pro tip: press jump again in the air for a <b>Toot Boost</b>. Yes. It\'s exactly what it sounds like.'}];
     if(D.survey)startTraining();else dialog(intro,startTraining)}
-  else openMap()}
-$('#goBtn').onclick=()=>begin(true);$('#contBtn').onclick=()=>begin(false);$('#nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')begin(true)});
+  else if(!isNew&&D.maxIdx!=null){startLevel(D.maxIdx||0)}else openMap()}
+let newArm=0;$('#goBtn').onclick=()=>{if(D.started&&D.placed&&Date.now()-newArm>3000){newArm=Date.now();$('#goBtn').textContent='Tap again to erase progress';setTimeout(()=>{$('#goBtn').textContent='New game'},3000);return}begin(true)};$('#contBtn').onclick=()=>begin(false);$('#nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')begin(true)});
 layout();requestAnimationFrame(frame);
 window.__rp={get D(){return D},get L(){return L},get mode(){return mode},P,K,startLevel,startTraining,answerHit,gen,SK,jumpPress,genLevel,get cam(){return cam},placementDone,begin,pipeResolve,get pipeAnim(){return pipeAnim}};
 })();
