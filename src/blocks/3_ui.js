@@ -51,7 +51,7 @@ function readWord(word,who,opt={}){return new Promise(res=>{let help=false,done=
  btns.forEach(b=>b.onclick=async()=>{if(done||!ready)return;done=true;const o=opts[+b.dataset.i];btns.forEach(x=>x.disabled=true);
   if(o===word){b.classList.add('yes');btns.forEach(x=>{if(x!==b)x.classList.add('no')});sfx('yay');spans.forEach(s=>s.classList.add('lit'));await say([pick(PRAISE),word.w+'!']);await wait(200);closeCard();res({ok:true,help})}
   else{b.classList.add('bad');sfx('oops');shakeCard();const c=btns.find(x=>opts[+x.dataset.i]===word);btns.forEach(x=>{if(x!==b&&x!==c)x.classList.add('no')});
-   await say(pick(['Not quite. Listen.','Oops! That one says something else. Listen.','Hmm, not that one. Listen.']));await soundOut(word.seg,spans,word.w,true);c&&c.classList.add('glow');await say(`That's ${/^[aeiou]/.test(word.w)?'an':'a'} ${word.w}.`);await wait(700);closeCard();res({ok:false,help:true})}})})}
+   await say(pick(['Not quite. Listen.','Oops! That one says something else. Listen.','Hmm, not that one. Listen.']));await soundOut(word.seg,spans,word.w,true);c&&c.classList.add('glow');await say(`That's ${/^[aeiou]/.test(word.w)?'an':'a'} ${word.w}.`);await wait(700);closeCard();if(strictOn())zapHit();res({ok:false,help:true})}})})}
 let sillyCount=0;
 function readSilly(item,who,opt={}){const [text,silly,ms]=item;return new Promise(res=>{let help=false,done=false,ready=false;const toks=text.replace('.','').split(' ');const wait0=opt.quick?1800:2600+toks.length*300;
  openCard(`<div class="chead"><div class="who">${who||'⛏️'}</div><div class="what">Read it. Silly or makes sense?</div><span style="width:66px"></span></div>
@@ -64,7 +64,7 @@ function readSilly(item,who,opt={}){const [text,silly,ms]=item;return new Promis
  const answer=async isSilly=>{if(done||!ready)return;done=true;$('#ynS').disabled=$('#ynY').disabled=true;const btn=isSilly?$('#ynS'):$('#ynY');
   if(isSilly===!!silly){btn.style.background='#B8F0A0';sfx('yay');await say([silly?'Ha ha! So silly!':'Yes! That makes sense.']);closeCard();res({ok:true,help})}
   else{sfx('oops');shakeCard();btn.style.opacity=.35;await say('Hmm. Listen.');const g=++sayGen;for(let i=0;i<spans.length;i++){if(g!==sayGen)break;spans[i].classList.add('lit');await speakOne(toks[i],{rate:.85});spans[i].classList.remove('lit')}
-   const other=isSilly?$('#ynY'):$('#ynS');other.style.animation='glow 1s infinite';await say(silly?'That is silly!':'That makes sense!');await wait(500);closeCard();res({ok:false,help:true})}};
+   const other=isSilly?$('#ynY'):$('#ynS');other.style.animation='glow 1s infinite';await say(silly?'That is silly!':'That makes sense!');await wait(500);closeCard();if(strictOn())zapHit();res({ok:false,help:true})}};
  $('#ynS').onclick=()=>answer(true);$('#ynY').onclick=()=>answer(false)})}
 /* one reading turn: a word, or now and then a silly sentence. First-try answers build a combo. */
 async function readTurn(who,opt={}){const E=D.rd;const s=chooseSkill(E);const sillyOK=E.placed&&focusOf(E)>=3;let r;
@@ -181,6 +181,9 @@ function gloomTick(e,dt,t){const P=e.P;if(e.grow<1){e.grow=Math.min(1,e.grow+dt*
  const mv=walkTick(e,dt,1.55);settleY(e,dt);if(mv&&e.hopY<=0&&rnd()<.3)hop(e,4);
  if(rnd()<dt*.15&&d<12)sfx('grumble');
  if(d<.95&&Math.abs(player.y-e.y)<1.5&&e.hitCd<=0){e.hitCd=1.6;hurtPlayer(e)}}
+/* Stop guessing: a wrong answer zaps you (Game Room setting, on for Luca) */
+function strictOn(){try{return !!(window.__strict&&window.__strict())}catch(e){return false}}
+function zapHit(){const fl=$('#fade');fl.style.transition='opacity .08s';fl.style.background='#fff';fl.classList.add('on');setTimeout(()=>{fl.classList.remove('on');setTimeout(()=>{fl.style.background='';fl.style.transition=''},300)},140);sfx('zap');floatText('⚡',player.x,player.y+2.5,player.z);hurtPlayer(null);say(D.hearts>0?pick(['Zap! No guessing. Read it first!','Zap! Think before you tap!']):'Zap!',{remember:false})}
 function hurtPlayer(src){D.hearts=Math.max(0,D.hearts-1);sfx('hurt');const fl=$('#hurt');fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on');floatText('💔',player.x,player.y+2,player.z);
  if(src){const a=Math.atan2(player.z-src.z,player.x-src.x);const nx=Math.floor(player.x+Math.cos(a)),nz=Math.floor(player.z+Math.sin(a));if(standY(nx,nz)>0&&Math.abs(standY(nx,nz)-player.y)<=1){player.path=[[nx,nz]];player.job=null}hop(player,5)}
  updateHUD();if(D.hearts<=0)faint();else if(D.hearts===2)say(`Ouch! Get to the light!`,{remember:false})}
