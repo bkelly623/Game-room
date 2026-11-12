@@ -5,17 +5,24 @@ function setCombo(){[...$('#combo').children].forEach((d,i)=>d.classList.toggle(
 function showQ(){if(!G||G.over)return;Q=nextQ();qBusy=false;const C=cfg();const S=window.KW.subjects[Q.s];
  $('#qSub').textContent=S.em+' '+S.n+' · Lv '+Q.lv+(Q.review?' · again':'');
  const p=Q.prompt;let h='';if(p.ask)h+=`<div class="ask">${esc(p.ask)}</div>`;
- if(p.pics)h+=`<div class="pics${[...p.pics].length<=2&&!/[0-9+]/.test(p.pics)?' solo':''}">${p.pics}</div>`;if(p.big2)h+=`<div class="big" style="font-size:clamp(26px,5vh,44px)">${esc(p.big2)}</div>`;
- if(p.word)h+=`<div class="word">${esc(p.word)}</div>`;if(p.big)h+=`<div class="big"${Q.small?' style="font-size:clamp(30px,6vh,52px)"':''}>${esc(p.big)}</div>`;if(p.sent)h+=`<div class="sent">${p.sent}</div>`;
+ if(p.pics)h+=`<div class="pics${[...p.pics].length<=2&&!/[0-9+]/.test(p.pics)?' solo':''}">${p.pics}</div>`;if(p.big2)h+=`<div class="big" style="font-size:calc(var(--k,1)*clamp(26px,5vh,44px))">${esc(p.big2)}</div>`;
+ if(p.word)h+=`<div class="word">${esc(p.word)}</div>`;if(p.big)h+=`<div class="big"${Q.small?' style="font-size:calc(var(--k,1)*clamp(30px,6vh,52px))"':''}>${esc(p.big)}</div>`;if(p.sent)h+=`<div class="sent">${p.sent}</div>`;
  $('#qPrompt').innerHTML=h;
  const box=$('#choices');box.innerHTML='';Q.opts.forEach((o,i)=>{const b=document.createElement('button');b.className='ch'+(Q.kind==='pic'?' pic':Q.kind==='txt'?' txt':'');
-  if(Q.word)b.style.fontFamily='Andika,Fredoka,sans-serif';if(Q.small&&Q.kind==='txt')b.style.fontSize='clamp(15px,2.4vh,20px)';
+  if(Q.word)b.style.fontFamily='Andika,Fredoka,sans-serif';if(Q.small&&Q.kind==='txt')b.style.fontSize='calc(var(--k,1)*clamp(15px,2.4vh,20px))';
   b.textContent=o;b.onpointerdown=ev=>{ev.preventDefault();answer(i,b)};box.appendChild(b)});
  $('#qSay').hidden=!(Q.say||Q.listen||C.speak);
  /* readers must read before the pictures show up */
  revealDur=Q.reveal?(Q.kind==='pic'?1.1:Q.listen?(C.strict?1.6:1):.7):(C.strict&&Q.s==='ma'?.8:0);revealT=revealDur;qShown=performance.now()+revealDur*1000;
  if(revealDur)[...box.children].forEach(b=>b.classList.add('hide'));$('#readBar').style.visibility=revealDur?'visible':'hidden';
+ fitQ();
  if(Q.listen)setTimeout(()=>say(Q.say,Q.s==='sp'?.85:.8),150);else if(C.speak&&Q.s==='ma')setTimeout(()=>say(Q.say||''),150)}
+/* make every answer button and the prompt fit, whatever the screen, zoom or fonts */
+function qFits(){const qp=$('#qp'),r=qp.getBoundingClientRect(),pb=parseFloat(getComputedStyle(qp).paddingBottom)||0,c=$('#choices').getBoundingClientRect(),p=$('#qPrompt');
+ if(c.bottom>r.bottom-pb+1||c.right>r.right+1)return false;if(p.scrollHeight>p.clientHeight+2||p.scrollWidth>p.clientWidth+2)return false;
+ for(const b of $('#choices').children)if(b.scrollWidth>b.clientWidth+2||b.scrollHeight>b.clientHeight+2)return false;return true}
+function fitQ(){const qp=$('#qp');if(!qp||!$('#choices').children.length)return;qp.classList.remove('tight');let k=1;qp.style.setProperty('--k',k);
+ if(qFits())return;qp.classList.add('tight');for(let i=0;i<14&&!qFits();i++){k=Math.max(.4,k-.05);qp.style.setProperty('--k',k)}}
 function sayAgain(){if(!Q)return;if(Q.listen||Q.s==='ma')say(Q.say||Q.fixSay);else if(cfg().speak&&Q.prompt.ask)say(Q.prompt.ask)}
 function answer(i,b){if(!G||G.paused||G.over||qBusy||G.jam>0||revealT>0)return;audioInit();qBusy=true;const ok=Q.opts[i]===Q.ans;const btns=[...$('#choices').children];
  const ch=grade(Q,ok);try{window.__trk&&__trk.ans({s:Q.s,lv:Q.lv,it:Q.key,ok,ms:Math.max(0,performance.now()-qShown)});if(ch)window.__trk&&__trk.ev('lvl',{s:Q.s,to:eng(Q.s).lv,dir:ch})}catch(e){}
@@ -160,7 +167,7 @@ function frame(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;
  if(G&&!G.paused&&!G.over){update(dt);tickQ(dt)}else if(G&&G.over)updateFx(dt);
  render();hud();Music.tick();requestAnimationFrame(frame)}
 function updateFx(dt){for(const f of G.fx){if(f.delay>0){f.delay-=dt;continue}f.life-=dt;if(f.coin){f.life=0;continue}if(f.ring||f.stuck)continue;f.vy+=(f.g||0)*dt;f.x+=f.vx*dt;f.y+=f.vy*dt}G.fx=G.fx.filter(f=>f.life>0);for(const t of G.tx){t.life-=dt;t.y-=30*dt}G.tx=G.tx.filter(t=>t.life>0);if(G.shake>0)G.shake=Math.max(0,G.shake-dt*30);if(G.flash>0)G.flash-=dt}
-function init(){setupProfiles();load();cv=$('#cv');cx=cv.getContext('2d');resize();addEventListener('resize',()=>{resize()});
+function init(){setupProfiles();load();cv=$('#cv');cx=cv.getContext('2d');resize();addEventListener('resize',()=>{resize();fitQ()});try{document.fonts&&document.fonts.ready.then(fitQ);document.fonts&&document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',fitQ)}catch(e){}
  if(window.ResizeObserver)new ResizeObserver(()=>resize()).observe($('#field'));
  titleScreen();requestAnimationFrame(frame)}
 /* test hooks */
