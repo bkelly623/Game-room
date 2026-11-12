@@ -395,13 +395,14 @@ const LETTERS=[
 /* ===================== save ===================== */
 const KEY='dawnkingdoms.v1';const MASTER=.8;
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function newRivalState(i){return{o:i,alive:true,army:3,age:0,wonder:0,wonderOn:false,peace:0,nextRaid:420+i*170,attackCd:0}}
 function freshEng(n){return{m:Array(n).fill(0),n:Array(n).fill(0),c:Array(n).fill(0),counter:0,review:[],missed:{},recent:[],survey:null,placed:false,placement:null,q:0,ok:0}}
 function fresh(){return{v:2,name:'',started:false,sound:true,music:true,voice:true,ma:freshEng(MSK.length),rd:freshEng(RSK.length),gr:freshEng(GSK.length),days:{},readlog:[],
  clock:0,res:{food:200,wood:250,stone:100,gold:0},age:0,techs:{},research:null,aging:null,b:{},u:[],nodes:null,nid:1,seasonIdx:0,seasonGather:{food:0,wood:0,stone:0,gold:0},rally:'food',
- rival:{army:3,age:0,wonder:0,wonderOn:false,peace:0,nextRaid:420,attackCd:0},raid:null,assault:null,wonder:0,letters:{},events:{},nextEvent:240,mods:{},flags:{},result:'',savedAt:0,geo:{q:0,ok:0},
+ rivals:[],setup:{rivals:1,seed:1},raid:null,assault:null,wonder:0,letters:{},events:{},nextEvent:240,mods:{},flags:{},result:'',savedAt:0,geo:{q:0,ok:0},
  stats:{raidsWon:0,raidsLost:0,attacks:0,attacksWon:0,trained:0,kills:0,lost:0,gathered:{food:0,wood:0,stone:0,gold:0}}}}
 let D=fresh();
-function migrate(o){if(o&&o.v!==2)o={name:o.name,ma:o.ma,rd:o.rd,gr:o.gr,days:o.days,readlog:o.readlog,started:o.started,sound:o.sound,music:o.music,voice:o.voice,flags:{council:o.flags&&o.flags.council}};const n=Object.assign(fresh(),o||{});[['ma',MSK.length],['rd',RSK.length],['gr',GSK.length]].forEach(([k,L])=>{const E=n[k];['m','n','c'].forEach(f=>{while(E[f].length<L)E[f].push(0)})});return n}
+function migrate(o){if(o&&o.v!==2)o={name:o.name,ma:o.ma,rd:o.rd,gr:o.gr,days:o.days,readlog:o.readlog,started:o.started,sound:o.sound,music:o.music,voice:o.voice,flags:{council:o.flags&&o.flags.council}};if(o&&o.rival&&!o.rivals){o.rivals=[Object.assign({},o.rival,{o:0,alive:true})];delete o.rival}if(o&&o.rb)Object.values(o.rb).forEach(b=>{if(b.o==null)b.o=0});const n=Object.assign(fresh(),o||{});if(!n.rivals.length)n.rivals=[newRivalState(0)];[['ma',MSK.length],['rd',RSK.length],['gr',GSK.length]].forEach(([k,L])=>{const E=n[k];['m','n','c'].forEach(f=>{while(E[f].length<L)E[f].push(0)})});return n}
 function load(){try{const s=localStorage.getItem(KEY);if(s)D=migrate(JSON.parse(s))}catch(e){}}
 function save(){if(!D.started)return;D.savedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}cloudSchedule()}
 function dayStat(){const k=today();if(!D.days[k])D.days[k]={math:{q:0,c:0},read:{q:0,c:0},gram:{q:0,c:0},sec:0};const d=D.days[k];['math','read','gram'].forEach(x=>{if(!d[x])d[x]={q:0,c:0}});return d}
@@ -412,14 +413,16 @@ const ENG={math:{len:()=>MSK.length,E:()=>D.ma,name:i=>MSK[i].n,make:(s,c)=>make
 function focusOf(subj){const E=ENG[subj].E(),L=ENG[subj].len();for(let i=0;i<L;i++)if(E.m[i]<MASTER)return i;return L-1}
 function accOf(E){return E.recent.length?E.recent.reduce((a,b)=>a+b,0)/E.recent.length:.8}
 function masteredCount(subj){return ENG[subj].E().m.filter(v=>v>=MASTER).length}
-function pickSkill(subj){const E=ENG[subj].E(),L=ENG[subj].len(),ff=focusOf(subj),acc=accOf(E),r=rnd(),pRev=acc<.65?.4:.15,pNext=acc>.88?.25:.1;let f=ff;if(r<pRev&&ff>0)f=ri(Math.max(0,ff-3),ff-1);else if(r<pRev+pNext&&ff<L-1)f=ff+1;return f}
+function pickSkill(subj){const E=ENG[subj].E(),L=ENG[subj].len(),ff=focusOf(subj),acc=accOf(E),r=rnd(),pRev=acc<.65?.4:.15,pNext=acc>.88?.25:.1;let f=ff;
+ if(E.park&&E.park.f===ff&&E.counter<E.park.until){const alt=[ff-1,ff-2,ff-3,ff+1].filter(i=>i>=0&&i<L&&i!==ff);return alt[Math.floor(rnd()*alt.length)]}if(r<pRev&&ff>0)f=ri(Math.max(0,ff-3),ff-1);else if(r<pRev+pNext&&ff<L-1)f=ff+1;return f}
 function nextQ(subj,ctx){const E=ENG[subj].E();if(E.survey){const q=ENG[subj].make(E.survey.fi,ctx);q.survey=true;return q}
  E.counter++;const due=E.review.find(r=>r.due<=E.counter);if(due){const q=subj==='math'?makeLike(due.q,ctx):Object.assign({},due.q);q.review=true;return q}return ENG[subj].make(pickSkill(subj),ctx)}
 function makeLike(q,ctx){return Object.assign(makeM(q.s,ctx),{})}
 /* reading: choose, from the questions a passage offers, the one nearest the reader's current skill */
 function pickReadQ(list){const want=pickSkill('read');let best=list[0],bd=99;shuffle(list.slice()).forEach(q=>{const d=Math.abs(q.s-want)+(q.s>want?.5:0);if(d<bd){bd=d;best=q}});return best}
 function tally(subj,ok){const E=ENG[subj].E();E.q++;if(ok)E.ok++;const ds=dayStat();ds[subj].q++;if(ok)ds[subj].c++}
-function grade(q,ok){try{window.__trk&&__trk.ans({s:q.subj,f:q.s,it:q.text,ok})}catch(e){}const subj=q.subj,E=ENG[subj].E(),f=q.s;E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.35;
+function grade(q,ok){try{window.__trk&&__trk.ans({s:q.subj,f:q.s,it:q.text,ok})}catch(e){}const subj=q.subj,E=ENG[subj].E(),f=q.s;E.n[f]++;if(ok){E.c[f]++;E.m[f]+=(1-E.m[f])*.25}else E.m[f]-=E.m[f]*.2;
+ if(f===focusOf(subj)){if(ok)E.fs=0;else{E.fs=(E.fs||0)+1;if(E.fs>=3){E.fs=0;E.park={f,until:E.counter+10}}}}
  E.recent.push(ok?1:0);if(E.recent.length>10)E.recent.shift();if(ok&&E.recent.length>=8&&accOf(E)>=.9)E.m[f]+=(1-E.m[f])*.12;tally(subj,ok);
  if(subj!=='read'){const key=q.subj==='math'?'s'+q.s+':'+q.text:q.text,rv=E.review.find(r=>r.key===key||(subj==='math'&&r.q.s===q.s&&q.review));
   if(!ok){E.missed[String(q.text).slice(0,80)]=(E.missed[String(q.text).slice(0,80)]||0)+1;if(rv){rv.need=2;rv.due=E.counter+ri(3,5)}else{const keep=Object.assign({},q);delete keep.review;delete keep.survey;E.review.push({key,q:keep,due:E.counter+ri(3,5),need:2})}}
@@ -508,7 +511,7 @@ addEventListener('pagehide',()=>{if(D.started&&mode==='play')save();if(cloud.ok&
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&D.started&&mode==='play')save();if(document.hidden&&cloud.ok&&cloud.dirty){clearTimeout(cloud.t);cloudFlush()}if(AC){if(document.hidden)AC.suspend();else AC.resume()}});
 
 /* ===================== the hex map (pure data, no graphics) ===================== */
-const MAP_SRC=[
+let MAP_SRC=[
  "~~~..fff..mm.f.~",
  "~~..ff...hm..R.~",
  "~...f.h..f..fff.",
@@ -521,9 +524,9 @@ const MAP_SRC=[
  "~..T..f....h.~~~",
  "~.ff.h..ff..~~~~",
  "~~~~~~~~~~~~~~~~"];
-const MW=16,MH=12,TYPE={'~':'water','.':'grass','f':'forest','h':'rock','m':'mountain','T':'grass','R':'grass'};
+const HAND_MAP=MAP_SRC.slice();let MW=16,MH=12;const TYPE={'~':'water','.':'grass','f':'forest','h':'rock','m':'mountain','T':'grass','R':'grass','1':'grass','2':'grass','3':'grass','4':'grass'};
 const TERR={water:{n:'Water'},grass:{n:'Grassland'},forest:{n:'Forest'},rock:{n:'Rocky Hills'},mountain:{n:'Mountain'}};
-let TILES=[],PLAYER_TC,RIVAL_TC;
+let TILES=[],PLAYER_TC,RIVAL_TC,RIVAL_TCS=[];
 const tkey=(c,r)=>c+','+r;
 const tileAt=(c,r)=>(c<0||r<0||c>=MW||r>=MH)?null:TILES[r*MW+c];
 const tpos=(c,r)=>({x:(c+.5*(r&1))*2-MW+1,z:r*1.732-MH*.866+.866});
@@ -532,8 +535,25 @@ function hexDist(a,b){const A=toCube(a.c,a.r),B=toCube(b.c,b.r);return Math.max(
 function neighbors(t){const odd=t.r&1,d=odd?[[1,0],[-1,0],[0,-1],[1,-1],[0,1],[1,1]]:[[1,0],[-1,0],[-1,-1],[0,-1],[-1,1],[0,1]];return d.map(([dc,dr])=>tileAt(t.c+dc,t.r+dr)).filter(Boolean)}
 function pickTile(x,z){let best=null,bd=9;TILES.forEach(t=>{const d=Math.hypot(t.x-x,t.z-z);if(d<bd){bd=d;best=t}});return bd<1.2?best:null}
 
-function initTiles(){TILES=[];for(let r=0;r<MH;r++)for(let c=0;c<MW;c++){const ch=MAP_SRC[r][c],p=tpos(c,r);const t={c,r,x:p.x,z:p.z,type:TYPE[ch]};TILES.push(t);if(ch==='T')PLAYER_TC=t;if(ch==='R')RIVAL_TC=t}
- TILES.forEach(t=>{t.bush=t.type==='grass'&&(t.c*73+t.r*37)%7===0&&t!==PLAYER_TC&&t!==RIVAL_TC&&hexDist(t,PLAYER_TC)>1});
+/* Bigger maps for more rivals. One rival keeps the hand-made Red Hills map. */
+function genMap(setup){const n=setup&&setup.rivals||1;if(n<=1){MAP_SRC=HAND_MAP.slice();MW=16;MH=12;return}
+ const dims={2:[24,17],3:[28,19],4:[32,21]}[n];MW=dims[0];MH=dims[1];let seed=(setup.seed||1)>>>0;const rr=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ const g=Array.from({length:MH},(_,r)=>Array.from({length:MW},(_,c)=>(r===0||c===0||r===MH-1||c===MW-1)?'~':'.'));
+ const T={c:3,r:MH-3},S=[{c:MW-4,r:2},{c:MW-4,r:MH-3},{c:3,r:2},{c:Math.floor(MW/2),r:1}].slice(0,n);
+ const spots=[T].concat(S);const near=(c,r,k)=>spots.some(s=>hexDist({c,r},s)<=k);
+ const blob=(ch,count,rad,avoid)=>{for(let i=0;i<count;i++){const c0=1+Math.floor(rr()*(MW-2)),r0=1+Math.floor(rr()*(MH-2));if(near(c0,r0,avoid))continue;for(let r=1;r<MH-1;r++)for(let c=1;c<MW-1;c++){if(hexDist({c,r},{c:c0,r:r0})<=rad&&rr()<.8&&!near(c,r,2))g[r][c]=ch}}};
+ blob('~',Math.round(n*1.2),1,4);blob('m',Math.round(MW*MH/90),1,3);blob('h',Math.round(MW*MH/70),0,3);blob('f',Math.round(MW*MH/22),1,2);
+ /* every kingdom gets wood and stone close by */
+ spots.forEach(s=>{let f=0,h=0;for(let r=1;r<MH-1;r++)for(let c=1;c<MW-1;c++){const d=hexDist({c,r},s);if(d>=3&&d<=5){if(g[r][c]==='f')f++;if(g[r][c]==='h')h++}}
+  for(let k=0;k<40&&(f<4||h<1);k++){const c=1+Math.floor(rr()*(MW-2)),r=1+Math.floor(rr()*(MH-2)),d=hexDist({c,r},s);if(d>=3&&d<=5&&g[r][c]==='.'){if(f<4){g[r][c]='f';f++}else{g[r][c]='h';h++}}}});
+ /* make sure you can walk to every rival */
+ const pass=(c,r)=>g[r]&&g[r][c]&&g[r][c]!=='~'&&g[r][c]!=='m';
+ const reach=()=>{const seen=new Set([T.c+','+T.r]),q=[T];while(q.length){const t=q.shift();const odd=t.r&1,dd=odd?[[1,0],[-1,0],[0,-1],[1,-1],[0,1],[1,1]]:[[1,0],[-1,0],[-1,-1],[0,-1],[-1,1],[0,1]];for(const [dc,dr] of dd){const c=t.c+dc,r=t.r+dr,k=c+','+r;if(!seen.has(k)&&pass(c,r)){seen.add(k);q.push({c,r})}}}return seen};
+ S.forEach(s=>{if(reach().has(s.c+','+s.r))return;const steps=Math.max(Math.abs(s.c-T.c),Math.abs(s.r-T.r));for(let i=0;i<=steps;i++){const c=Math.round(T.c+(s.c-T.c)*i/steps),r=Math.round(T.r+(s.r-T.r)*i/steps);if(g[r][c]==='~'||g[r][c]==='m')g[r][c]='.'}});
+ g[T.r][T.c]='T';S.forEach((s,i)=>g[s.r][s.c]=String(i+1));MAP_SRC=g.map(row=>row.join(''))}
+function initTiles(){TILES=[];RIVAL_TCS=[];for(let r=0;r<MH;r++)for(let c=0;c<MW;c++){const ch=MAP_SRC[r][c],p=tpos(c,r);const t={c,r,x:p.x,z:p.z,type:TYPE[ch]};TILES.push(t);if(ch==='T')PLAYER_TC=t;if(ch==='R'||ch==='1')RIVAL_TCS[0]=t;if(ch>='2'&&ch<='4')RIVAL_TCS[+ch-1]=t}
+ RIVAL_TC=RIVAL_TCS[0];
+ TILES.forEach(t=>{t.bush=t.type==='grass'&&(t.c*73+t.r*37)%7===0&&t!==PLAYER_TC&&!RIVAL_TCS.includes(t)&&hexDist(t,PLAYER_TC)>1});
  TILES.filter(t=>t.type==='grass'&&hexDist(t,PLAYER_TC)===2).slice(0,2).forEach(t=>t.bush=true)}
 
 /* ===================== renderer + hex map ===================== */
@@ -567,7 +587,7 @@ function buildMap(){initTiles();
  const sea=new THREE.Mesh(new THREE.PlaneGeometry(220,220),new THREE.MeshStandardMaterial({color:0x2A6A92,roughness:.3,metalness:.1}));sea.rotation.x=-Math.PI/2;sea.position.y=-.32;scene.add(sea);
  /* decorations, instanced by kind */
  const lists={};const add=(name,t,s,ry,dx=0,dz=0)=>{(lists[name]=lists[name]||[]).push({t,x:t.x+dx,z:t.z+dz,s,ry});};
- TILES.forEach(t=>{if(t===PLAYER_TC||t===RIVAL_TC)return;const h=(t.c*73+t.r*37)%7;
+ TILES.forEach(t=>{if(t===PLAYER_TC||RIVAL_TCS.includes(t))return;const h=(t.c*73+t.r*37)%7;
   if(t.type==='forest')add(h%2?'trees_A_medium':'trees_B_medium',t,1,h);
   else if(t.type==='mountain')add(h%2?'mountain_A_grass_trees':'mountain_B_grass_trees',t,1,h);
   else if(t.type==='rock'){add('mountain_A',t,.62,h);add('rock_single_C',t,1.6,h,.55,.45)}
@@ -689,11 +709,14 @@ const UPG={bw:{n:'Bronze Weapons',age:1,cost:{food:100,gold:50},d:`Warriors, swo
 const ITEMS={boots:{n:'Boots of Speed',i:'👢',d:`Your hero runs 30% faster.`},ring:{n:'Ring of Health',i:'💍',d:`+80 health.`},sword:{n:'Runed Sword',i:'🗡️',d:`+6 attack.`},horn:{n:'War Horn',i:'📯',d:`Battle Cry lasts twice as long and reaches farther.`}};
 const ABIL={cry:{n:'Battle Cry',i:'📣',lvl:1,cd:45,d:`Nearby soldiers hit 50% harder for 12 seconds.`},slam:{n:'Shield Slam',i:'🛡️',lvl:2,cd:25,d:`Smash nearby enemies and stun them.`},heal:{n:'Healing Light',i:'✨',lvl:3,cd:60,d:`Heal everyone nearby by half their health.`}};
 const XPN=[0,0,100,250,450,700];
-const CAMPS=[{id:'a',c:1,r:4,mob:['skel','skel'],item:'boots',gold:120},{id:'b',c:10,r:9,mob:['skel','skel','skelw'],item:'ring',gold:150},{id:'c',c:8,r:6,mob:['skel','skelw','skel','skelw'],item:'sword',gold:200},{id:'d',c:7,r:1,mob:['skelw','skelw','skel','skelw','skel'],item:'horn',gold:250}];
+const HAND_CAMPS=[{id:'a',c:1,r:4,mob:['skel','skel'],item:'boots',gold:120},{id:'b',c:10,r:9,mob:['skel','skel','skelw'],item:'ring',gold:150},{id:'c',c:8,r:6,mob:['skel','skelw','skel','skelw'],item:'sword',gold:200},{id:'d',c:7,r:1,mob:['skelw','skelw','skel','skelw','skel'],item:'horn',gold:250}];
+let CAMPS=HAND_CAMPS.slice();
+function makeCamps(){if(D.rivals.length<=1||!D.setup||D.setup.rivals<=1){CAMPS=HAND_CAMPS.slice();return}const tcs=[PLAYER_TC].concat(RIVAL_TCS);const out=[];const ok=t=>t.type==='grass'&&!t.bush&&tcs.every(x=>hexDist(t,x)>=4)&&out.every(c=>hexDist(t,tileAt(c.c,c.r))>=4);
+ let seed=(D.setup.seed||7)>>>0;const rr=()=>{seed=(seed*1103515245+12345)>>>0;return seed/4294967296};const cand=TILES.filter(ok);for(let k=0;k<400&&out.length<6;k++){const t=cand[Math.floor(rr()*cand.length)];if(t&&ok(t)){const lv=out.length;out.push({id:'abcdef'[lv],c:t.c,r:t.r,mob:[['skel','skel'],['skel','skel','skelw'],['skel','skelw','skel','skelw'],['skelw','skelw','skel','skelw','skel'],['skelw','skelw','skelw','skel','skel'],['skelw','skelw','skelw','skelw','skel','skel']][lv],item:['boots','ring','sword','horn','boots','ring'][lv],gold:120+lv*40})}}CAMPS=out}
 const RB_HP={tc:6000,tower:900,barracks:1000,house:400,farm:250,market:700,wonder:2500};
 const RIVAL_PLAN=['barracks','house','house','farm','tower','house','farm','market','house'];
 const DIRS={N:'north',NE:'northeast',E:'east',SE:'southeast',S:'south',SW:'southwest',W:'west',NW:'northwest'};
-const DIR_CLUE={N:`from the direction of the North Star`,NE:`from halfway between the North Star and the rising sun`,E:`from the direction where the sun rises each morning`};
+const DIR_CLUE={N:`from the direction of the North Star`,NE:`from halfway between the North Star and the rising sun`,E:`from the direction where the sun rises each morning`,SE:`from halfway between the rising sun and the opposite of the North Star`,S:`from the direction opposite the North Star`,SW:`from halfway between the setting sun and the opposite of the North Star`,W:`from the direction where the sun sets each evening`,NW:`from halfway between the North Star and the setting sun`};
 const DIRV={N:[0,-1],NE:[.72,-.7],E:[1,0],SE:[.72,.7],S:[0,1],SW:[-.72,.7],W:[-1,0],NW:[-.72,-.7]};
 const NODE_RES={forest:"wood",rock:"stone",mountain:"gold"},NODE_AMT={wood:400,stone:400,gold:600,food:200,fish:350};
 
@@ -715,7 +738,11 @@ const pay=(c,m=1)=>Object.entries(c||{}).forEach(([k,v])=>D.res[k]-=Math.ceil(v*
 const gain=(c,m=1)=>Object.entries(c||{}).forEach(([k,v])=>D.res[k]+=Math.floor(v*m));
 const costTxt=(c,m=1)=>Object.entries(c||{}).map(([k,v])=>`${Math.ceil(v*m)} ${RI[k]}`).join('  ');
 const techCount=a=>Object.keys(D.techs).filter(k=>TECHS[k].age===a).length;
-const inRival=t=>hexDist(t,RIVAL_TC)<=3;
+const KINGS=[{king:'King Varric',realm:'the Red Hills',short:'Red Hills',col:'#E8302A'},{king:'Queen Mirela',realm:'the Frost Fen',short:'Frost Fen',col:'#3AC8E8'},{king:'Lord Grubb',realm:'the Swamp of Snort',short:'Snort Swamp',col:'#6AC83A'},{king:'Baroness Vex',realm:'the Iron Coast',short:'Iron Coast',col:'#B85AE8'}];
+const RV=o=>D.rivals[o||0]||D.rivals[0];const liveR=()=>D.rivals.filter(r=>r.alive!==false);
+const rivalOf=t=>{let b=-1,bd=4;RIVAL_TCS.forEach((r,i)=>{if(!r)return;if(D.rivals&&D.rivals[i]&&D.rivals[i].alive===false)return;const d=hexDist(t,r);if(d<=3&&d<bd){bd=d;b=i}});return b};
+const inRival=t=>rivalOf(t)>=0;
+function dirTo(o){const a=RIVAL_TCS[o],p=PLAYER_TC,dx=a.x-p.x,dz=a.z-p.z;const ang=Math.atan2(dx,-dz);const i=((Math.round(ang/(Math.PI/4))%8)+8)%8;return['N','NE','E','SE','S','SW','W','NW'][i]}
 const campAt=t=>CAMPS.find(c=>c.c===t.c&&c.r===t.r);
 const maxHp=b=>b.t==='tc'?BD.tc.hp+(D.flags.walls?1000:0):BD[b.t].hp;
 const nodeOf=t=>D.nodes&&D.nodes[tkey(t.c,t.r)];
@@ -733,26 +760,26 @@ function armorOf(u){if(!MILITARY.includes(u.k)&&!UT[u.k].naval)return 0;const up
 function spdOf(u){const U=UT[u.k];let s=U.spd;if(u.k==='hero'&&D.hero.items.includes('boots'))s*=1.3;return s}
 
 /* ---------- a new game ---------- */
-function newGame(){const keep={name:D.name,ma:D.ma,rd:D.rd,gr:D.gr,days:D.days,readlog:D.readlog,sound:D.sound,music:D.music,voice:D.voice,drag:D.drag,started:true,games:(D.games||0)+(D.clock>60?1:0)};const council=D.flags&&D.flags.council;
- D=Object.assign(fresh(),keep);D.flags.council=council;E=[];P=[];initNodes();
+function newGame(){const keep={name:D.name,ma:D.ma,rd:D.rd,gr:D.gr,days:D.days,readlog:D.readlog,sound:D.sound,music:D.music,voice:D.voice,drag:D.drag,started:true,games:(D.games||0)+(D.clock>60?1:0),setup:D.setup||{rivals:1,seed:1}};const council=D.flags&&D.flags.council;
+ D=Object.assign(fresh(),keep);D.flags.council=council;D.rivals=Array.from({length:Math.max(1,RIVAL_TCS.length)},(_,i)=>newRivalState(i));if(D.rivals.length>1)D.rivals.forEach(R=>{R.nextRaid+=60});E=[];P=[];makeCamps();initNodes();
  const t=PLAYER_TC;D.b[tkey(t.c,t.r)]={id:tkey(t.c,t.r),t:'tc',c:t.c,r:t.r,x:t.x,z:t.z,hp:BD.tc.hp,prog:1,q:[],qt:0};
  for(let i=0;i<4;i++){const a=i/4*6.28+.5;addUnit('vil',t.x+Math.cos(a)*1.3,t.z+Math.sin(a)*1.3+.4)}
  initExtras();spawnCreeps()}
 function initNodes(){D.nodes={};TILES.forEach(t=>{if(inRival(t)||campAt(t))return;const k=t.bush?'food':NODE_RES[t.type];if(k)D.nodes[tkey(t.c,t.r)]={k,a:NODE_AMT[k],max:NODE_AMT[k]};
  if(t.type==='water'&&coastal(t)&&(t.c*31+t.r*17)%4===0)D.nodes[tkey(t.c,t.r)]={k:'fish',a:NODE_AMT.fish,max:NODE_AMT.fish}})}
 function initExtras(){if(!D.hero||D.hero.lvl==null){D.hero={lvl:1,xp:0,items:[],dead:false,respawn:0,cd:{cry:0,slam:0,heal:0},wisdom:0}}if(!heroU()&&!D.hero.dead){const t=PLAYER_TC;addUnit('hero',t.x,t.z+1.5)}
- if(!D.up)D.up={};if(!D.camps){D.camps={};CAMPS.forEach(c=>D.camps[c.id]={cleared:false,opened:false,tries:0})}if(!D.rb)initRival();
+ if(!D.up)D.up={};if(!D.camps)D.camps={};CAMPS.forEach(c=>{if(!D.camps[c.id])D.camps[c.id]={cleared:false,opened:false,tries:0}});if(!D.rb)initRival();
  if(D.nodes&&!Object.values(D.nodes).some(n=>n.k==='fish'))TILES.forEach(t=>{if(t.type==='water'&&coastal(t)&&(t.c*31+t.r*17)%4===0)D.nodes[tkey(t.c,t.r)]={k:'fish',a:NODE_AMT.fish,max:NODE_AMT.fish}})}
-function rivalSpots(){return neighbors(RIVAL_TC).filter(n=>n.type==='grass').concat(TILES.filter(t=>hexDist(t,RIVAL_TC)===2&&t.type==='grass'))}
-function addRB(t,type){const id='r'+tkey(t.c,t.r);D.rb[id]={id,t:type,c:t.c,r:t.r,x:t.x,z:t.z,hp:RB_HP[type],max:RB_HP[type]};return D.rb[id]}
-function initRival(){D.rb={};const ns=rivalSpots();addRB(RIVAL_TC,'tc');for(let i=0;i<3;i++)addRB(ns[i],RIVAL_PLAN[i]);D.rival.built=3}
+function rivalSpots(o){const T=RIVAL_TCS[o||0];return neighbors(T).filter(n=>n.type==='grass').concat(TILES.filter(t=>hexDist(t,T)===2&&t.type==='grass'))}
+function addRB(t,type,o){const id='r'+tkey(t.c,t.r);D.rb[id]={id,t:type,o:o||0,c:t.c,r:t.r,x:t.x,z:t.z,hp:RB_HP[type],max:RB_HP[type]};return D.rb[id]}
+function initRival(){D.rb={};D.rivals.forEach((R,o)=>{const ns=rivalSpots(o);addRB(RIVAL_TCS[o],'tc',o);for(let i=0;i<3;i++)if(ns[i])addRB(ns[i],RIVAL_PLAN[i],o);R.built=3})}
 function afterLoad(){E=[];P=[];if(!D.nodes)initNodes();if(!D.b[tkey(PLAYER_TC.c,PLAYER_TC.r)]){newGame();return}initExtras();
  D.u.forEach(u=>{u.path=null;u.inTC=false;if(u.task.t==='attack'||u.task.t==='assault'||u.task.t==='flee')u.task={t:'idle'};if(u.task.t==='gather')u.task.ph=u.carry>=carryCap(u)?'drop':'go'});D.bell=false;
- if(D.raid&&D.raid.ph==='attack'){D.raid=null;D.rival.nextRaid=D.clock+90}if(D.raid&&D.raid.ph==='warn'&&!D.raid.asked)D.raid.at=Math.max(D.raid.at,D.clock+30);D.assault=null;spawnCreeps()}
+ if(D.raid&&D.raid.ph==='attack'){D.raid=null;liveR().forEach(R=>R.nextRaid=Math.max(R.nextRaid,D.clock+90))}if(D.raid&&D.raid.ph==='warn'&&!D.raid.asked)D.raid.at=Math.max(D.raid.at,D.clock+30);D.assault=null;spawnCreeps()}
 
 /* ---------- units ---------- */
 function addUnit(k,x,z){const u={id:D.nid++,k,x,z,hp:0,ry:0,task:{t:'idle'},carry:0,ck:null,cd:0,path:null};u.hp=k==='hero'&&D.hero?uMax(u):UT[k].hp;D.u.push(u);fx('unitAdd',u);return u}
-function addEnemy(x,z,o={}){const k=o.k||'raider',a=o.creep?0:D.rival.age,U=UT[k],e={id:'e'+(eid++),k,x,z,hp:U.hp+18*a,maxHp:U.hp+18*a,atk:U.atk+2.5*a,cd:rnd(),ry:0,path:null,raid:!!o.raid,garrison:!!o.garrison,creep:o.creep||null,home:o.home||null,retarget:0};E.push(e);fx('enemyAdd',e);return e}
+function addEnemy(x,z,o={}){const k=o.k||'raider',a=o.creep?0:RV(o.o).age,U=UT[k],e={id:'e'+(eid++),k,x,z,hp:U.hp+18*a,maxHp:U.hp+18*a,atk:U.atk+2.5*a,cd:rnd(),ry:0,path:null,raid:!!o.raid,garrison:!!o.garrison,o:o.o||0,creep:o.creep||null,home:o.home||null,retarget:0};E.push(e);fx('enemyAdd',e);return e}
 function getEnt(ref){if(!ref)return null;if(ref.k==='e')return E.find(e=>e.id===ref.id)||null;if(ref.k==='u')return D.u.find(u=>u.id===ref.id)||null;if(ref.k==='b')return D.b[ref.id]||null;if(ref.k==='rb')return D.rb[ref.id]||null;return null}
 function nearestEnemy(x,z,r,o={}){let b=null,bd=r;E.forEach(e=>{if(e.leaving)return;if(o.noCreep&&e.creep&&!e.angry)return;const d=Math.hypot(e.x-x,e.z-z);if(d<bd){bd=d;b=e}});return b}
 function nearestRB(x,z,r){let b=null,bd=r;Object.values(D.rb).forEach(t=>{const d=Math.hypot(t.x-x,t.z-z);if(d<bd){bd=d;b=t}});return b}
@@ -899,8 +926,8 @@ function solThink(u,dt){const U=UT[u.k];u.moving=false;u.act=null;u.cd-=dt;const
  if(t.t==='idle'){if(U.siege)return;const en=nearestEnemy(u.x,u.z,scan,{noCreep:1});if(en){u.task={t:'attack',ref:{k:'e',id:en.id},back:{x:u.x,z:u.z}};return}if(U.ranged){const rb=nearestRB(u.x,u.z,U.rng);if(rb)u.task={t:'attack',ref:{k:'rb',id:rb.id},back:{x:u.x,z:u.z}}}return}
  if(t.t==='move'){if(t.aggro&&!U.siege){const en=nearestEnemy(u.x,u.z,scan,{noCreep:1});if(en){u.task={t:'attack',ref:{k:'e',id:en.id},then:t};u.path=null;return}}if(!u.path)goTo(u,t.x,t.z);if(moveAlong(u,dt,spd))u.task={t:'idle'};return}
  if(t.t==='assault'){if(!U.siege){const en=nearestEnemy(u.x,u.z,scan,{noCreep:1});if(en){u.task={t:'attack',ref:{k:'e',id:en.id},then:t};u.path=null;return}}
-  const rb=nearestRB(u.x,u.z,U.siege?99:9)||nearestRB(u.x,u.z,99);if(rb&&(dist(u,RIVAL_TC)<9||U.siege)){u.task={t:'attack',ref:{k:'rb',id:rb.id},then:t};u.path=null;return}
-  if(!rb){u.task={t:'idle'};return}if(!u.stand)u.stand=standPt(RIVAL_TC.x,RIVAL_TC.z,u,2.4,U.naval);if(dist(u,u.stand)>.3){if(!u.path)goTo(u,u.stand.x,u.stand.z);moveAlong(u,dt,spd)}return}}
+  if(RV(t.o).alive===false){u.task={t:'idle'};return}const TT=RIVAL_TCS[t.o||0]||RIVAL_TC;const rb=nearestRB(u.x,u.z,U.siege?99:9)||nearestRB(TT.x,TT.z,99);if(rb&&(dist(u,TT)<9||U.siege)){u.task={t:'attack',ref:{k:'rb',id:rb.id},then:t};u.path=null;return}
+  if(!rb){u.task={t:'idle'};return}if(!u.stand)u.stand=standPt(TT.x,TT.z,u,2.4,U.naval);if(dist(u,u.stand)>.3){if(!u.path)goTo(u,u.stand.x,u.stand.z);moveAlong(u,dt,spd)}return}}
 function enThink(e,dt){e.moving=false;e.act=null;e.cd-=dt;e.retarget-=dt;const U=UT[e.k];if(e.stunUntil>D.clock)return;
  if(e.leaving){if(!e.path)e.path=findPath(e.x,e.z,e.exit.x,e.exit.z);if(moveAlong(e,dt,U.spd*1.1)){E.splice(E.indexOf(e),1);fx('enemyGone',e)}return}
  let tg=getEnt(e.tref);if(tg&&e.tref.k==='u'&&(tg.inTC||UT[tg.k].naval))tg=null;
@@ -918,14 +945,15 @@ function enThink(e,dt){e.moving=false;e.act=null;e.cd-=dt;e.retarget-=dt;const U
 function strike(src,ref,tg,dmg){const ranged=(src.k&&UT[src.k]&&UT[src.k].ranged)||src.shooter;if(ranged){const p={x:src.x,z:src.z,y:src.shooter?2:.6,ref,dmg,t:0,T:Math.max(.25,Math.hypot(tg.x-src.x,tg.z-src.z)/14),by:src.id,src};P.push(p);fx('arrow',p,src)}else{damage(ref,dmg,src);fx('swing',src,ref)}}
 function damage(ref,dmg,src){const t=getEnt(ref);if(!t)return;if(ref.k==='u'&&src&&src.creep)src.angry=true;if(ref.k==='u'&&t.k==='vil'&&src&&src.creep){if(!D.danger)D.danger={};const vt=nearestTile(t.x,t.z);TILES.forEach(x=>{if(hexDist(x,vt)<=1)D.danger[tkey(x.c,x.r)]=D.clock+180})}if(ref.k==='u')dmg*=1-armorOf(t);t.hp-=dmg;if(ref.k==='e'&&t.creep&&!t.angry){t.angry=true;E.forEach(o=>{if(o.creep===t.creep)o.angry=true})}fx('hit',ref,t);if(t.hp<=0)kill(ref,t,src)}
 function kill(ref,t,src){if(ref.k==='u'){const i=D.u.indexOf(t);if(i>=0)D.u.splice(i,1);D.stats.lost++;t.killer=src?(src.creep?'creep':src.garrison?'garrison':src.raid?'raider':src.shooter?'arrow':src.k):'arrow';if(t.k==='hero'){D.hero.dead=true;D.hero.respawn=D.clock+45;ask(()=>ASK.say('Elder Maela',`Our chief has fallen! Don't worry: after 45 seconds of rest at the Town Center, ${D.name||'the chief'} will return. You can pay 100 gold at the Town Center to bring them back sooner.`))}fx('unitDie',t)}
- else if(ref.k==='e'){const i=E.indexOf(t);if(i>=0)E.splice(i,1);D.stats.kills++;if(t.garrison)D.rival.army=Math.max(1,D.rival.army-2.5);gainXP(UT[t.k].xp||25,t.x,t.z);fx('enemyDie',t)}
+ else if(ref.k==='e'){const i=E.indexOf(t);if(i>=0)E.splice(i,1);D.stats.kills++;if(t.garrison)RV(t.o).army=Math.max(1,RV(t.o).army-2.5);gainXP(UT[t.k].xp||25,t.x,t.z);fx('enemyDie',t)}
  else if(ref.k==='b'){if(t.t==='tc'){t.hp=1;return}delete D.b[t.id];D.u.forEach(u=>{if(u.task.t==='gather'&&u.task.key==='b:'+t.id)u.task={t:'idle'}});fx('bDestroyed',t);save()}
- else if(ref.k==='rb'){delete D.rb[t.id];D.stats.razed=(D.stats.razed||0)+1;gainXP(40,t.x,t.z);fx('rbDestroyed',t);const R=D.rival;
-  if(t.t==='tc'&&!D.result){D.result='win';D.winType='conquest';ask(()=>fx('victory','conquest'))}
-  else if(t.t==='wonder'){R.wonder=0;R.wonderOn=false;R.restartAt=D.clock+180;ask(()=>ASK.say('Your Advisor',`You smashed Varric's Great Tower! He must start all over again. It will take him time to gather the stone.`))}
-  else ask(()=>{ASK.toast(`🔥 You destroyed Varric's ${({barracks:'barracks',house:'house',farm:'farm',tower:'watchtower',market:'market'})[t.t]||'building'}!`)});save()}}
+ else if(ref.k==='rb'){delete D.rb[t.id];D.stats.razed=(D.stats.razed||0)+1;gainXP(40,t.x,t.z);fx('rbDestroyed',t);const R=RV(t.o),KG=KINGS[t.o||0];
+  if(t.t==='tc'&&!D.result){R.alive=false;R.wonderOn=false;Object.values(D.rb).forEach(b=>{if((b.o||0)===(t.o||0))delete D.rb[b.id]});E.filter(e=>(e.o||0)===(t.o||0)&&(e.garrison||e.raid)).forEach(e=>{e.hp=0;E.splice(E.indexOf(e),1)});if(D.raid&&D.raid.o===(t.o||0))D.raid=null;if(D.assault&&D.assault.o===(t.o||0))D.assault=null;fx('overlays');
+   const left=liveR().length;if(!left){D.result='win';D.winType='conquest';ask(()=>fx('victory','conquest'))}else ask(()=>ASK.say('Your Advisor',`${KG.king}'s castle has fallen! ${KG.realm[0].toUpperCase()+KG.realm.slice(1)} is yours. ${left} kingdom${left>1?'s':''} still stand against you.`))}
+  else if(t.t==='wonder'){R.wonder=0;R.wonderOn=false;R.restartAt=D.clock+180;ask(()=>ASK.say('Your Advisor',`You smashed ${KG.king}'s Great Tower! They must start all over again.`))}
+  else ask(()=>{ASK.toast(`🔥 You destroyed ${KG.king.split(' ')[1]}'s ${({barracks:'barracks',house:'house',farm:'farm',tower:'watchtower',market:'market'})[t.t]||'building'}!`)});save()}}
 function shootTick(dt){blist().forEach(b=>{const sh=BD[b.t].shoot;if(!sh||!isDone(b))return;b.cd=(b.cd||0)-dt;if(b.cd>0)return;const en=nearestEnemy(b.x,b.z,sh.rng,{noCreep:1});if(!en)return;b.cd=sh.cd;let atk=sh.atk+(D.up.bf?2:0);if(b.t==='tc')atk*=(D.flags.walls?2:1)*(1+D.u.filter(u=>u.inTC).length/5);if(D.raid&&D.raid.gateOK)atk*=1.25;strike({x:b.x,z:b.z,shooter:true},{k:'e',id:en.id},en,atk)});
- Object.values(D.rb).forEach(b=>{if(b.t!=='tc'&&b.t!=='tower')return;b.cd=(b.cd||0)-dt;if(b.cd>0)return;let tg=null,bd=7;D.u.forEach(u=>{if(u.inTC)return;if(!MILITARY.includes(u.k)&&u.k!=='galley'&&!inRival(nearestTile(u.x,u.z)))return;const d=dist(u,b);if(d<bd){bd=d;tg=u}});if(!tg)return;b.cd=b.t==='tc'?1.1:1.5;strike({x:b.x,z:b.z,shooter:true,enemy:true},{k:'u',id:tg.id},tg,(b.t==='tc'?10:6)+D.rival.age*3)})}
+ Object.values(D.rb).forEach(b=>{if(b.t!=='tc'&&b.t!=='tower')return;b.cd=(b.cd||0)-dt;if(b.cd>0)return;let tg=null,bd=7;D.u.forEach(u=>{if(u.inTC)return;if(!MILITARY.includes(u.k)&&u.k!=='galley'&&!inRival(nearestTile(u.x,u.z)))return;const d=dist(u,b);if(d<bd){bd=d;tg=u}});if(!tg)return;b.cd=b.t==='tc'?1.1:1.5;strike({x:b.x,z:b.z,shooter:true,enemy:true},{k:'u',id:tg.id},tg,(b.t==='tc'?10:6)+RV(b.o).age*3)})}
 function projTick(dt){for(let i=P.length-1;i>=0;i--){const p=P[i];p.t+=dt;if(p.t>=p.T){P.splice(i,1);damage(p.ref,p.dmg,p.src);fx('arrowHit',p)}}}
 function separate(){const all=D.u.filter(u=>!u.inTC).concat(E);for(let i=0;i<all.length;i++){const a=all[i];const na=a.k&&UT[a.k]&&UT[a.k].naval;for(let j=i+1;j<all.length;j++){const b=all[j];if(na!==!!(b.k&&UT[b.k]&&UT[b.k].naval))continue;const rr=na?.55:.3;const dx=b.x-a.x,dz=b.z-a.z,d2=dx*dx+dz*dz;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2),push=(rr-d)*.5,nx=dx/d,nz=dz/d;if(!a.act||a.moving){a.x-=nx*push;a.z-=nz*push}if(!b.act||b.moving){b.x+=nx*push;b.z+=nz*push}}}}}
 
@@ -933,38 +961,39 @@ function separate(){const all=D.u.filter(u=>!u.inTC).concat(E);for(let i=0;i<all
 function ringBell(){D.bell=!D.bell;if(D.bell){vils().forEach(u=>{if(u.task.t!=='flee'){u.prev=u.task;u.task={t:'flee'};u.path=null}})}fx('bell',D.bell);fx('hud')}
 
 /* ---------- the rival ---------- */
-function rivalTick(dt){const R=D.rival,min=D.clock/60;if(min>=10&&R.age<1){R.age=1;fx('rivalAge')}if(min>=22&&R.age<2){R.age=2;fx('rivalAge')}
- const hasBk=Object.values(D.rb).some(b=>b.t==='barracks');R.army+=[.8,1.3,1.9][R.age]*(hasBk?1:.45)*dt/60;if(R.peace>0)R.peace=Math.max(0,R.peace-dt);if(R.attackCd>0)R.attackCd-=dt;
- if((R.built||0)<RIVAL_PLAN.length&&D.clock>=(R.built||0)*150){const ns=rivalSpots(),i=R.built||0;if(ns[i]&&!D.rb['r'+tkey(ns[i].c,ns[i].r)])addRB(ns[i],RIVAL_PLAN[i]);R.built=i+1;fx('rivalBuilt')}
- Object.values(D.rb).forEach(b=>{if(b.hp<b.max&&!D.assault)b.hp=Math.min(b.max,b.hp+dt*3)});
- if(!R.wonderOn&&D.clock>=Math.max(RIVAL_START,R.restartAt||0)&&!D.result){R.wonderOn=true;const ns=rivalSpots(),wt=ns[ns.length-1];if(wt){const old=D.rb['r'+tkey(wt.c,wt.r)];if(!old||old.t!=='wonder')addRB(wt,'wonder')}
-  ask(()=>ASK.say('Your Advisor',R.restartAt?`Varric has started building his Great Tower again!`:`Terrible news! King Varric has begun building his Great Tower. If he finishes it before your Sun Tower stands, he wins. Attack the Red Hills to slow him down, or smash the tower itself!`))}
- if(R.wonderOn&&!D.result){R.wonder+=dt;if(R.wonder>=RIVAL_WONDER){D.result='lose';ask(()=>fx('defeat'))}}}
-function raidDir(){const n=D.stats.raidsWon+D.stats.raidsLost;return n===0?'NE':pick(['N','NE','E'])}
-function raidTick(){const R=D.rival;if(D.result)return;
- if(!D.raid){if(R.peace>0){R.nextRaid=Math.max(R.nextRaid,D.clock+R.peace+45);return}if(D.clock>=R.nextRaid-45){const n=clamp(Math.round(R.army*.45)+1,2,12);D.raid={ph:'warn',dir:raidDir(),n,at:R.nextRaid,scout:false,gateOK:false};fx('raidWarn');ask(raidWarning)}return}
+function rivalTick(dt){const min=D.clock/60,many=D.rivals.length>1;Object.values(D.rb).forEach(b=>{if(b.hp<b.max&&!D.assault)b.hp=Math.min(b.max,b.hp+dt*3)});
+ D.rivals.forEach((R,o)=>{if(R.alive===false)return;const KG=KINGS[o];if(min>=10+o*2&&R.age<1){R.age=1;fx('rivalAge')}if(min>=22+o*2&&R.age<2){R.age=2;fx('rivalAge')}
+  const hasBk=Object.values(D.rb).some(b=>b.t==='barracks'&&(b.o||0)===o);R.army+=[.8,1.3,1.9][R.age]*(hasBk?1:.45)*(many?.7:1)*dt/60;if(R.peace>0)R.peace=Math.max(0,R.peace-dt);if(R.attackCd>0)R.attackCd-=dt;
+  if((R.built||0)<RIVAL_PLAN.length&&D.clock>=(R.built||0)*150+o*40){const ns=rivalSpots(o),i=R.built||0;if(ns[i]&&!D.rb['r'+tkey(ns[i].c,ns[i].r)])addRB(ns[i],RIVAL_PLAN[i],o);R.built=i+1;fx('rivalBuilt')}
+  if(!R.wonderOn&&D.clock>=Math.max(RIVAL_START+o*300,R.restartAt||0)&&!D.result){R.wonderOn=true;const ns=rivalSpots(o),wt=ns[ns.length-1];if(wt){const old=D.rb['r'+tkey(wt.c,wt.r)];if(!old||old.t!=='wonder')addRB(wt,'wonder',o)}
+   ask(()=>ASK.say('Your Advisor',R.restartAt?`${KG.king} has started building a Great Tower again!`:`Terrible news! ${KG.king} has begun building a Great Tower. If it is finished before your Sun Tower stands, ${KG.king.split(' ')[0]==='Queen'||KG.king.split(' ')[0]==='Baroness'?'she':'he'} wins. Attack ${KG.realm} to slow them down, or smash the tower itself!`))}
+  if(R.wonderOn&&!D.result){R.wonder+=dt;if(R.wonder>=RIVAL_WONDER){D.result='lose';D.loser=o;ask(()=>fx('defeat'))}}})}
+function raidDir(o){if(D.rivals.length>1)return dirTo(o);const n=D.stats.raidsWon+D.stats.raidsLost;return n===0?'NE':pick(['N','NE','E'])}
+function raidTick(){if(D.result)return;
+ if(!D.raid){if(D.clock<(D.raidGap||0))return;let R=null;liveR().forEach(x=>{if(x.peace>0){x.nextRaid=Math.max(x.nextRaid,D.clock+x.peace+45);return}if(!R||x.nextRaid<R.nextRaid)R=x});if(!R)return;if(D.clock>=R.nextRaid-45){const n=clamp(Math.round(R.army*.45)+1,2,12);D.raid={ph:'warn',o:R.o||0,dir:raidDir(R.o||0),n,at:R.nextRaid,scout:false,gateOK:false};fx('raidWarn');ask(raidWarning)}return}
+ const R=RV(D.raid.o);
  const r=D.raid;
  if(r.ph==='warn'&&D.clock>=r.at){const v=DIRV[r.dir],tc=PLAYER_TC;let sp=null;for(let k=9;k>=4&&!sp;k--){const t=nearestTile(tc.x+v[0]*2*k,tc.z+v[1]*2*k);if(t.type!=='water'&&!inRival(t)&&!campAt(t))sp=t}sp=sp||nearestLand(tc.x+v[0]*8,tc.z+v[1]*8);r.exit={x:sp.x,z:sp.z};
-  for(let i=0;i<r.n;i++)addEnemy(sp.x+(rnd()-.5)*1.4,sp.z+(rnd()-.5)*1.4,{raid:true});R.army=Math.max(1,R.army-r.n);r.ph='attack';r.t0=D.clock;fx('raidStart',r);
+  for(let i=0;i<r.n;i++)addEnemy(sp.x+(rnd()-.5)*1.4,sp.z+(rnd()-.5)*1.4,{raid:true,o:r.o});R.army=Math.max(1,R.army-r.n);r.ph='attack';r.t0=D.clock;fx('raidStart',r);
   if(r.gateOK)soldiers().filter(u=>u.task.t==='idle'&&!UT[u.k].siege).forEach(u=>{u.task={t:'move',x:tc.x+v[0]*2.6+(rnd()-.5),z:tc.z+v[1]*2.6+(rnd()-.5),aggro:true}})}
  if(r.ph==='attack'){const raiders=E.filter(e=>e.raid&&!e.leaving);const tc=TCB();if(!raiders.length){endRaid(true)}else if(D.clock-r.t0>100||tc.hp<maxHp(tc)*.25){endRaid(false)}}}
-function endRaid(win){const r=D.raid;const R=D.rival;const stolen={};let loot=0;
+function endRaid(win){const r=D.raid;const R=RV(r.o);const stolen={};let loot=0;
  if(win){D.stats.raidsWon++;loot=ri(25,50);D.res.gold+=loot}else{D.stats.raidsLost++;['food','wood','gold'].forEach(k=>{const v=Math.floor(D.res[k]*.25);D.res[k]-=v;if(v)stolen[k]=v});E.filter(e=>e.raid).forEach(e=>{e.leaving=true;e.exit=r.exit;e.path=null;R.army+=1})}
- D.raid=null;R.nextRaid=D.clock+ri(230,290)-R.age*20;soldiers().forEach(u=>{if(u.task.t==='move'&&u.task.aggro)u.task={t:'idle'}});fx('raidEnd',win);
+ D.raid=null;R.nextRaid=D.clock+ri(230,290)-R.age*20+(D.rivals.length>1?90:0);D.raidGap=D.clock+(D.rivals.length>1?110:0);soldiers().forEach(u=>{if(u.task.t==='move'&&u.task.aggro)u.task={t:'idle'}});fx('raidEnd',win);
  ask(()=>fx('battleReport',{attack:false,win,loot,stolen,dir:r.dir,gateOK:r.gateOK,scout:r.scout,n:r.n}));save()}
 async function raidWarning(){const r=D.raid;if(!r||r.ph!=='warn')return;r.asked=1;const plain=D.stats.raidsWon+D.stats.raidsLost<2;
- await ASK.say('Scout',`Chief! ${r.n} raiders from the Red Hills are marching toward us ${plain?`from the ${DIRS[r.dir]}`:DIR_CLUE[r.dir]}! They will be here in less than a minute.`);
+ await ASK.say('Scout',`Chief! ${r.n} raiders from ${KINGS[r.o||0].realm} are marching toward us ${plain?`from the ${DIRS[r.dir]}`:DIR_CLUE[r.dir]}! They will be here in less than a minute.`);
  const q=nextQ('math','battle');const ok=await ASK.math(q,{mode:'scout'});answer(q,ok);if(ok){r.scout=true;if(r.n>2)r.n--}
  const dir=await ASK.compass({plain,dir:r.dir});r.gateOK=dir===r.dir;D.geo.q++;if(r.gateOK)D.geo.ok++;
  await ASK.say('Scout',`${ok?`Your count matches mine, so I set traps on the road and one raider turned back. `:`Our counts don't match, so I could not set traps. `}${r.gateOK?`The gate faces ${DIRS[r.dir]}, exactly the right way! Our soldiers and towers will fight 25% harder.`:`Hmm, they're coming from the ${DIRS[r.dir]}, not the ${DIRS[dir]}. We'll fight without the gate's help.`} ${soldiers().length>1?'':'We have almost no soldiers! Ring the bell to hide the villagers, and train warriors at the Barracks!'}`);fx('hud')}
 
 /* ---------- attacking the Red Hills ---------- */
-function sendAssault(list){list.filter(u=>MILITARY.includes(u.k)||u.k==='galley').forEach(u=>{u.task={t:'assault'};u.path=null;u.stand=null});fx('hud')}
-function attackersNear(){return D.u.filter(u=>(MILITARY.includes(u.k)||u.k==='galley')&&dist(u,RIVAL_TC)<9.5)}
-function assaultTick(dt){const R=D.rival;const near=attackersNear();
- if(!D.assault){if(near.length){let n=clamp(Math.ceil(R.army/2.5),2,12);if(R.attackCd>0)n=Math.max(2,Math.ceil(n/2));const rt=RIVAL_TC;for(let i=0;i<n;i++){const a=i/n*6.28,h={x:rt.x+Math.cos(a)*1.3,z:rt.z+Math.sin(a)*1.3};addEnemy(h.x,h.z,{garrison:true,home:h})}R.army=Math.max(1,R.army-n*.5);D.assault={t0:D.clock,n,rein:D.clock+30,guardsDown:false,away:0};fx('assaultStart')}return}
- const A=D.assault,g=E.filter(e=>e.garrison);
- if(near.length&&D.clock>=A.rein&&R.army>4&&g.length<10){A.rein=D.clock+22;for(let i=0;i<2;i++){const h={x:RIVAL_TC.x+(rnd()-.5),z:RIVAL_TC.z+(rnd()-.5)};addEnemy(h.x,h.z,{garrison:true,home:h})}R.army-=4;fx('reinforce')}
+function sendAssault(list,o){if(o==null||o<0)o=liveR()[0]?liveR()[0].o||0:0;list.filter(u=>MILITARY.includes(u.k)||u.k==='galley').forEach(u=>{u.task={t:'assault',o};u.path=null;u.stand=null});fx('hud')}
+function attackersNear(o){const T=RIVAL_TCS[o];return D.u.filter(u=>(MILITARY.includes(u.k)||u.k==='galley')&&dist(u,T)<9.5)}
+function assaultTick(dt){let o=D.assault?D.assault.o:-1;if(o<0){for(const x of liveR()){if(attackersNear(x.o||0).length){o=x.o||0;break}}if(o<0)return}const R=RV(o),RT=RIVAL_TCS[o];const near=attackersNear(o);
+ if(!D.assault){if(near.length){let n=clamp(Math.ceil(R.army/2.5),2,12);if(R.attackCd>0)n=Math.max(2,Math.ceil(n/2));const rt=RT;for(let i=0;i<n;i++){const a=i/n*6.28,h={x:rt.x+Math.cos(a)*1.3,z:rt.z+Math.sin(a)*1.3};addEnemy(h.x,h.z,{garrison:true,home:h,o})}R.army=Math.max(1,R.army-n*.5);D.assault={o,t0:D.clock,n,rein:D.clock+30,guardsDown:false,away:0};fx('assaultStart')}return}
+ const A=D.assault,g=E.filter(e=>e.garrison&&(e.o||0)===o);
+ if(near.length&&D.clock>=A.rein&&R.army>4&&g.length<10){A.rein=D.clock+22;for(let i=0;i<2;i++){const h={x:RT.x+(rnd()-.5),z:RT.z+(rnd()-.5)};addEnemy(h.x,h.z,{garrison:true,home:h,o})}R.army-=4;fx('reinforce')}
  if(!g.length&&!A.guardsDown){A.guardsDown=true;D.stats.attacks++;D.stats.attacksWon++;const loot=ri(80,150);D.res.gold+=loot;R.army=Math.max(2,R.army*.6);const knock=R.wonderOn?Math.min(R.wonder,90):0;R.wonder-=knock;R.attackCd=120;ask(()=>fx('battleReport',{attack:true,win:true,loot,knock}));save()}
  if(!near.length){A.away+=dt;if(A.away>8){if(!A.guardsDown){D.stats.attacks++;ask(()=>fx('battleReport',{attack:true,win:false}))}D.assault=null;R.attackCd=Math.max(R.attackCd,60);E.filter(e=>e.garrison).forEach(e=>{e.leaving=true;e.exit=e.home;R.army+=2})}}else A.away=0}
 
@@ -977,11 +1006,11 @@ function seasonTick(){const idx=Math.floor(D.clock/SEASON_LEN);if(idx<=D.seasonI
 async function steward(g,prev,notes){const top=RES.reduce((a,k)=>g[k]>g[a]?k:a,'food');const q=nextQ('math','harvest');const ok=await ASK.math(q,{mode:'steward'});answer(q,ok);
  let msg='';if(ok){D.flags.streak=(D.flags.streak||0)+1;const bonus=Math.max(15,Math.round(g[top]*(.12+.04*Math.min(4,D.flags.streak-1))));D.res[top]+=bonus;msg=`⭐ The steward's count was right! +${bonus} ${RI[top]}${D.flags.streak>1?` (streak ${D.flags.streak})`:''}`}else D.flags.streak=0;
  if(msg)ASK.toast(msg);for(const n of notes)await ASK.say('Your Steward',n);fx('hud')}
-function storyTick(){if(D.result)return;const min=D.clock/60;const L=LETTERS.find(l=>!D.letters[l.id]&&min>=l.turn);if(L&&!D.raid){D.letters[L.id]=1;ask(()=>doLetter(L));return}
+function storyTick(){if(D.result||RV(0).alive===false)return;const min=D.clock/60;const L=LETTERS.find(l=>!D.letters[l.id]&&min>=l.turn);if(L&&!D.raid){D.letters[L.id]=1;ask(()=>doLetter(L));return}
  if(D.clock>=D.nextEvent){D.nextEvent=D.clock+ri(150,210);if(!D.raid&&rnd()<.65){const ev=EVENTS.filter(e=>!D.events[e.id]&&min>=e.minTurn&&(e.season==null||e.season===season()));if(ev.length){const e=pick(ev);D.events[e.id]=1;ask(()=>doEvent(e))}}}}
 async function doLetter(L){const q=rq(L.p,`A letter from ${RIVAL.king}`,L.q);const ok=await ASK.read(q,{mode:'letter'});answer(q,ok);logRead(q);
  const ch=L.choices.filter(c=>c.eff!=='tribute'||D.res.gold>=100);const i=await ASK.say('Your Advisor',ok?`You understood the letter well. How will you answer King Varric?`:`Read it again carefully: ${q.why} How will you answer?`,{choices:ch.map(c=>c.t)});const c=ch[i]||ch[ch.length-1];
- const g=nextQ('gram');const gok=await ASK.gram(g,{mode:'letter'});answer(g,gok);const R=D.rival;let msg=c.msg;const peaceT=240+(gok?60:0)+(D.techs.writing?60:0);
+ const g=nextQ('gram');const gok=await ASK.gram(g,{mode:'letter'});answer(g,gok);const R=RV(0);let msg=c.msg;const peaceT=240+(gok?60:0)+(D.techs.writing?60:0);
  if(c.eff==='peace'||c.eff==='tribute'){if(c.eff==='tribute')D.res.gold-=100;R.peace=peaceT;if(D.raid&&D.raid.ph==='warn')D.raid=null;msg=`${c.eff==='tribute'?'Varric takes the gold. ':'Varric agrees to a truce. '}No raids for ${Math.round(peaceT/60)} minutes${gok?'. Your well-written letter earned an extra minute':''}.`}
  else if(c.eff==='anger'){R.army+=gok?1:3;R.nextRaid=Math.max(D.clock+70,R.nextRaid-(gok?30:70));msg+=gok?` Your well-written reply makes him think twice, so he is a little less angry.`:''}
  else if(c.eff==='trade'){if(D.res.stone>=100){D.res.stone-=100;D.res.gold+=150+(gok?25:0);msg=`The trade is done: −100 🪨, +${150+(gok?25:0)} 🪙.${gok?' Your polite letter earned 25 extra gold.':''}`}else msg=`You do not have 100 stone to send, so the trade cannot happen.`}
@@ -1119,8 +1148,8 @@ function drawSel(){const L=selUnits();SEL=L.map(u=>u.id);const el=$('#selBox');i
 function formation(list,g,rad=.45){list.forEach((u,i)=>{const a=i*2.4,r=i?rad+.11*i:0;u.task={t:'move',x:g.x+Math.cos(a)*r,z:g.z+Math.sin(a)*r};u.path=null;u.stand=null})}
 function commandAt(t,g){const L=selUnits();if(!L.length)return false;const vl=L.filter(u=>u.k==='vil'),ml=L.filter(u=>MILITARY.includes(u.k)),fb=L.filter(u=>u.k==='fboat'),gl=L.filter(u=>u.k==='galley');let what='',col=0xFFD47A;
  const rb=t&&D.rb[ 'r'+tkey(t.c,t.r)];
- if(ml.length||gl.length){const war=ml.concat(gl);if(rb){war.forEach(u=>{u.task={t:'attack',ref:{k:'rb',id:rb.id},then:{t:'assault'}};u.path=null});what=`⚔️ Attack Varric's ${RBN[rb.t]}!`;col=0xFF5A4A}
-  else if(t&&(inRival(t)||t===RIVAL_TC)){sendAssault(war);what=`⚔️ ${war.length} march on the Red Hills!`;col=0xFF5A4A}
+ if(ml.length||gl.length){const war=ml.concat(gl);if(rb){war.forEach(u=>{u.task={t:'attack',ref:{k:'rb',id:rb.id},then:{t:'assault',o:rb.o||0}};u.path=null});what=`⚔️ Attack ${KINGS[rb.o||0].king}'s ${RBN[rb.t]}!`;col=0xFF5A4A}
+  else if(t&&inRival(t)){const o=rivalOf(t);sendAssault(war,o);what=`⚔️ ${war.length} march on ${KINGS[o].realm}!`;col=0xFF5A4A}
   else{if(ml.length)formation(ml.filter(u=>t&&t.type!=='water'),g);if(gl.length&&t&&t.type==='water')formation(gl,g,.7);}}
  if(fb.length&&t){const n=nodeOf(t),b=D.b[tkey(t.c,t.r)];if(n&&n.k==='fish'&&n.a>0){fb.forEach(u=>setGather(u,tkey(t.c,t.r),1));what='🎣 Off to fish!'}else if(t.type==='water')formation(fb,g,.7);else if(b&&b.t==='dock'){fb.forEach(u=>{if(!assignJob(u,'food',1))u.task={t:'idle'}})}else if(!vl.length&&!ml.length)what=`Boats can only sail on water.`}
  if(gl.length&&t&&t.type!=='water'&&!rb&&!inRival(t)&&!ml.length&&!vl.length)what=`War galleys can only sail on water.`;
@@ -1145,7 +1174,7 @@ function selectHero(){const h=heroU();if(!h){toast(`🦸 Your hero is resting an
 function updateHUD(){if(mode!=='play')return;const cnt={food:0,wood:0,stone:0,gold:0};D.u.forEach(u=>{if(u.task.t==='gather')cnt[u.task.kind]++});
  $('#resBar').innerHTML=RES.map(k=>`<div class="rc" id="rc_${k}"><b><i>${RI[k]}</i>${Math.floor(D.res[k])}</b><small class="mid">${cnt[k]} 🧑</small></div>`).join('')+`<div class="rc"><b><i>👥</i>${popUsed()}/${capOf()}</b><small class="${popUsed()>=capOf()?'neg':'mid'}">${popUsed()>=capOf()?'need house':'people'}</small></div>`;
  const sf=seasonFrac();$('#timeBox').innerHTML=`<div>${SICON[season()]} ${SEASONS[season()]} · Year ${year()}</div><div class="tbar s"><i style="width:${sf*100}%"></i></div><div class="age">${AGES[D.age].n}${D.aging?` → ${AGES[D.aging.n].short} ${Math.round(100-D.aging.t/D.aging.total*100)}%`:''}</div>${D.research?`<div class="age">📜 ${TECHS[D.research.k].n} ${Math.round(100-D.research.t/D.research.total*100)}%</div>`:''}`;
- const R=D.rival,cas=D.rb&&Object.values(D.rb).find(b=>b.t==='tc');$('#rivalBox').innerHTML=`<div>⚔️ ${RIVAL.king}</div><small>Army ~${Math.round(R.army)} · ${AGES[R.age].short} Age${cas&&cas.hp<cas.max?` · Castle ${Math.round(cas.hp/cas.max*100)}%`:''}</small>${R.wonderOn?`<small>Great Tower ${Math.round(R.wonder/RIVAL_WONDER*100)}%</small><div class="tbar"><i style="width:${R.wonder/RIVAL_WONDER*100}%"></i></div>`:''}`;
+ $('#rivalBox').innerHTML=D.rivals.map((R,o)=>{const KG=KINGS[o];if(R.alive===false)return`<div style="opacity:.5;text-decoration:line-through">🏳️ ${KG.king}</div>`;const cas=Object.values(D.rb||{}).find(b=>b.t==='tc'&&(b.o||0)===o);return`<div><span style="color:${KG.col}">⚔️</span> ${KG.king}</div><small>Army ~${Math.round(R.army)} · ${AGES[R.age].short} Age${cas&&cas.hp<cas.max?` · Castle ${Math.round(cas.hp/cas.max*100)}%`:''}</small>${R.wonderOn?`<small>Great Tower ${Math.round(R.wonder/RIVAL_WONDER*100)}%</small><div class="tbar"><i style="width:${R.wonder/RIVAL_WONDER*100}%"></i></div>`:''}`}).join('');
  const g=curGoal();$('#goal').hidden=!g||!D.flags.council;if(g)$('#goalT').textContent=g.t;if(g!==lastGoal){if(lastGoal&&D.flags.council){sfx('lvl');toast(`✅ Goal complete!${g?' Next: '+g.t:''}`)}lastGoal=g}
  const r=D.raid;$('#raidBox').hidden=!r;if(r){$('#raidBox').innerHTML=r.ph==='warn'?`<b>⚠️ RAIDERS COMING</b>${r.n} raiders · ${Math.max(0,Math.ceil(r.at-D.clock))}s · from the ${r.asked?DIRS[r.dir]:'?'}`:`<b>⚔️ RAID!</b>${E.filter(e=>e.raid&&!e.leaving).length} raiders in your kingdom`}
  $('#peaceBox').hidden=!(R.peace>0&&!r);$('#peaceBox').textContent=`🕊️ Truce: ${Math.ceil(R.peace/60)} min`;
@@ -1168,8 +1197,8 @@ function openBuildMenu(t){const sel=selUnits().filter(u=>u.k==='vil');const opts
   if(t){doPlace(t,k,sel)}else{placing={k,sel:sel.map(u=>u.id)};$('#sheet').hidden=true;toast(`Tap an empty grass tile to place the ${bd.n}.${BD[k].coast?' It must be right beside the water.':''}`)}})}
 function doPlace(t,k,sel){const why=placeWhy(t,k);if(why){sfx('bad');toast(why+(inRival(t)?' That is the Red Hills.':''));return false}const b=place(t,k,sel);if(!b){sfx('bad');return false}closeSheet();sfx('dig');select([]);toast(`🔨 Building the ${BD[k].n}…`);updateHUD();return true}
 function openTile(t){if(!t)return closeSheet();const b=D.b[tkey(t.c,t.r)];if(b)return openBuilding(b);const n=nodeOf(t),rb=D.rb['r'+tkey(t.c,t.r)],camp=campAt(t);
- if(rb)return showSheet(t,`⚔️ ${RBN[rb.t]}`,`King Varric's`,`<div class="hpline">❤️ ${Math.ceil(rb.hp)}/${rb.max}</div><div class="sub">${rb.t==='tc'?`<b>Destroy Varric's castle to conquer the Red Hills and win!</b> Battering rams and swordsmen smash buildings fastest.`:rb.t==='wonder'?`Smash the Great Tower and Varric must start building it all over again!`:`Select your army, then tap this building to attack it.`}</div>`);
- if(t===RIVAL_TC||inRival(t))return showSheet(t,`⚔️ The Red Hills`,`King Varric's land`,`<div class="sub">You cannot build here. Varric's army: about <b>${Math.round(D.rival.army)}</b>.${D.rival.wonderOn?` His Great Tower is ${Math.round(D.rival.wonder/RIVAL_WONDER*100)}% built.`:''}</div><div class="sub" style="margin-top:6px">To attack: tap ⚔️ Army, then tap one of his buildings.</div>`);
+ if(rb)return showSheet(t,`⚔️ ${RBN[rb.t]}`,`${KINGS[rb.o||0].king}'s`,`<div class="hpline">❤️ ${Math.ceil(rb.hp)}/${rb.max}</div><div class="sub">${rb.t==='tc'?`<b>Destroy this castle to conquer ${KINGS[rb.o||0].realm}${D.rivals.length>1?'. Conquer every kingdom to win!':' and win!'}</b> Battering rams and swordsmen smash buildings fastest.`:rb.t==='wonder'?`Smash the Great Tower and Varric must start building it all over again!`:`Select your army, then tap this building to attack it.`}</div>`);
+ if(inRival(t)){const o=rivalOf(t),KG=KINGS[o],R=RV(o);return showSheet(t,`⚔️ ${KG.realm[0].toUpperCase()+KG.realm.slice(1)}`,`${KG.king}'s land`,`<div class="sub">You cannot build here. ${KG.king}'s army: about <b>${Math.round(R.army)}</b>.${R.wonderOn?` The Great Tower is ${Math.round(R.wonder/RIVAL_WONDER*100)}% built.`:''}</div><div class="sub" style="margin-top:6px">To attack: tap ⚔️ Army, then tap one of the buildings.</div>`)}
  if(camp){const S=D.camps[camp.id];return showSheet(t,S.cleared?`🎁 Treasure Camp`:`💀 Skeleton Camp`,'',`<div class="sub">${S.cleared?(S.opened?`The chest is empty. This land is free to build on.`:`The skeletons are gone! Walk any unit onto the chest to open it. A magic ${ITEMS[camp.item].n} for your hero is locked inside.`):`Skeletons guard a treasure chest with ${camp.gold} gold and a magic ${ITEMS[camp.item].i} ${ITEMS[camp.item].n}. They are tough! Bring your hero and several soldiers, then tap a skeleton to attack.`}</div>`)}
  if(t.type==='water'){if(n&&n.k==='fish'&&n.a>0)return showSheet(t,'🐟 School of Fish',`${Math.ceil(n.a)} food left`,`<div class="sub">Fishing boats from a Dock can catch these fish, even in winter. Select fishing boats, then tap here.</div>`);return showSheet(t,'🌊 Water','',`<div class="sub">Boats can sail here. Build a Dock on the shore to make boats.</div>`)}
  if(n&&n.a>0){const name={wood:'🌲 Forest',food:'🍎 Apple Trees',stone:'🪨 Rocky Hills',gold:'⛰️ Gold Mountain'}[n.k],verb={wood:'chop wood',food:'pick apples',stone:'mine stone',gold:'mine gold'}[n.k],cmp={wood:'Lumber Camp',food:'Mill',stone:'Mining Camp',gold:'Mining Camp'}[n.k];const here=D.u.filter(u=>u.task.t==='gather'&&u.task.key===tkey(t.c,t.r)).length;const idle=vils().filter(u=>u.task.t==='idle'&&!u.inTC).length;const near=dropSite(n.k,t.x,t.z),nd=near?Math.round(dist(near,t)/2):9;
@@ -1234,7 +1263,7 @@ function openBook(){const tabs=[['goals','Kingdom'],['how','How to Play'],['lear
  const n=$('#newG');if(n)n.onclick=()=>{showCard(head('Start over?','')+`<p class="sub">Your buildings and army will be gone, but all learning progress is kept.</p><div class="center"><button class="btn" id="no">Cancel</button> <button class="btn red" id="yes">Start a new kingdom</button></div>`);wireClose();$('#no').onclick=()=>{closeCard();openBook()};$('#yes').onclick=()=>{closeCard();newRealm()}}}
 const guard=f=>()=>{if(cardOpen||dlgOpen||interActive||mode!=='play')return;audioInit();sfx('tap');f()};
 $('#bIdle').onclick=guard(selectIdle);$('#bArmy').onclick=guard(selectArmy);$('#bHero').onclick=guard(selectHero);$('#bBell').onclick=guard(()=>{ringBell();toast(D.bell?`🔔 Ding, ding! Villagers run to the Town Center.`:`🔔 All clear! Back to work.`)});$('#bRes').onclick=guard(openResearch);$('#bBook').onclick=guard(openBook);$('#bPause').onclick=guard(()=>{paused=!paused;updateHUD()});
-$('#goal').onclick=()=>{const g=curGoal();if(g&&!cardOpen&&!dlgOpen)say('Elder Maela',g.tip)};$('#rivalBox').onclick=guard(()=>openTile(RIVAL_TC));$('#raidBox').onclick=guard(selectArmy);
+$('#goal').onclick=()=>{const g=curGoal();if(g&&!cardOpen&&!dlgOpen)say('Elder Maela',g.tip)};$('#rivalBox').onclick=guard(()=>{const r=liveR()[0];if(r)openTile(RIVAL_TCS[r.o||0])});$('#raidBox').onclick=guard(selectArmy);
 $('#sheet').addEventListener('pointerdown',()=>sheetTouch=performance.now());$('#sheet').addEventListener('pointerup',()=>sheetTouch=performance.now());
 $('#selBox').addEventListener('pointerdown',()=>selTouch=performance.now());
 $('#pauseVeil').onclick=()=>{paused=false;updateHUD()};
@@ -1293,7 +1322,7 @@ function buildingsVisUpdate(){const live=new Set();blist().forEach(b=>{live.add(
   if(b.prog<1)v.g.children[0].scale.y=.15+.85*b.prog;const mh=maxHp(b);v.bar.visible=b.prog<1||b.hp<mh-1;if(v.bar.visible){v.bar.fg.material.color.set(b.prog<1?0xF2C84A:0x6AD86A);setBar(v.bar,b.prog<1?b.prog:b.hp/mh)}});
  VB.forEach((v,id)=>{if(!live.has(id)){scene.remove(v.g);VB.delete(id);const t=tileAt(v.b.c,v.b.r);hideDecor(t,true);rubble(v.b.x,v.b.z)}})}
 function rubble(x,z){const p=piece('destroyed');p.position.set(x,0,z);p.scale.setScalar(.9);scene.add(p);RUBBLE.push(p);burst(x,.6,z,0x6A5A4A,26,.45,2.5,{life:1.1});burst(x,.9,z,0xFF7A2A,16,.4,2,{life:.9})}
-function rLevel(b){const R=D.rival;return b.t==='wonder'?Math.min(3,Math.floor(R.wonder/RIVAL_WONDER*4)):(b.t==='house'||b.t==='tc')?R.age:0}
+function rLevel(b){const R=RV(b.o);return b.t==='wonder'?Math.min(3,Math.floor(R.wonder/RIVAL_WONDER*4)):(b.t==='house'||b.t==='tc')?R.age:0}
 function rivalVisUpdate(){const live=new Set();Object.values(D.rb||{}).forEach(b=>{live.add(b.id);let v=VR.get(b.id);const lvl=rLevel(b);if(!v||v.lvl!==lvl){if(v)scene.remove(v.g);const t=tileAt(b.c,b.r);const g=placeModel(t,b.t,'red',lvl);t.obj=null;const bar=barSprite(0xE8503A);bar.position.y=b.t==='tc'?(lvl===2?4.4:2.4):b.t==='wonder'?3.6:2.1;bar.scale.setScalar(2.2);g.add(bar);v={g,b,lvl,bar};VR.set(b.id,v)}
   v.bar.visible=b.hp<b.max-1;if(v.bar.visible)setBar(v.bar,b.hp/b.max)});VR.forEach((v,id)=>{if(!live.has(id)){scene.remove(v.g);VR.delete(id);rubble(v.b.x,v.b.z)}})}
 function nodesVis(){Object.entries(D.nodes||{}).forEach(([k,n])=>{const [c,r]=k.split(',').map(Number),t=tileAt(c,r);if(n.k==='fish'){const f=FISHV.get(k);if(f)f.visible=n.a>0;return}if(n.a<=0&&!t.emptied){t.emptied=1;hideDecor(t,false);if(t.type==='forest'){const p=piece('trees_A_cut');p.position.set(t.x,0,t.z);scene.add(p);t.stump=p}else if(t.type!=='grass'){const p=piece('rock_single_E');p.position.set(t.x,0,t.z);p.scale.setScalar(1.6);scene.add(p);t.stump=p}}})}
@@ -1343,7 +1372,7 @@ Object.assign(HOOK,{
  learned(k){sfx('lvl');toast(`💡 Your scholars finished: ${TECHS[k].n}! ${TECHS[k].eff}`);updateHUD()},
  upgrade(k){sfx('clank');burst(PLAYER_TC.x,1,PLAYER_TC.z,0xFFB84A,10,.3,2)},
  season(s){setSeasonLook(s);seasonBanner()},
- hud(){updateHUD()},walls(){makeWalls();burst(PLAYER_TC.x,.5,PLAYER_TC.z,0xD8D0C0,24,.35,2.5)},
+ hud(){updateHUD()},overlays(){try{refreshOverlays();miniBase=null}catch(e){}},walls(){makeWalls();burst(PLAYER_TC.x,.5,PLAYER_TC.z,0xD8D0C0,24,.35,2.5)},
  arrow(p,src){const m=new THREE.Mesh(arrowGeo,arrowMat);scene.add(m);ARR.push({m,p,sx:src.x,sz:src.z,sy:p.y,tx:src.x,tz:src.z});if(rnd()<.4)sfx('swing')},
  arrowHit(p){},hit(ref,t){if((ref.k==='b'||ref.k==='rb')&&rnd()<.3){burst(t.x+(rnd()-.5),1,t.z+(rnd()-.5),0xFF7A2A,4,.3,1.2,{life:.6})}else if(rnd()<.3)sfx('hit')},
  swing(src,ref){if(ref&&ref.k==='rb'&&src.k==='ram'){sfx('boom');const t=getEnt(ref);if(t)burst(t.x,.6,t.z,0xB89A6A,8,.35,1.8)}else if(rnd()<.3)sfx('clank')},
@@ -1363,8 +1392,13 @@ Object.assign(HOOK,{
   else{L.push(o.win?`Your defenders drove off all ${o.n} raiders! They left behind ${o.loot} 🪙.`:`The raiders carried off ${Object.entries(o.stolen).map(([k,v])=>`${v} ${RI[k]}`).join(' ')||'some goods'} and ran home.`);L.push(o.gateOK?`🧭 Your gate faced the ${DIRS[o.dir]}. Your defenders fought 25% harder!`:`🧭 The raiders came from the ${DIRS[o.dir]}.`);if(o.scout)L.push(`🔭 Your scout's count was right, so one raider turned back.`);if(!o.win)L.push(`Tip: ring the Town Bell, train more warriors, and build watchtowers.`)}
   await report(o.win?(o.attack?'⚔️ The Guards Are Beaten!':'🛡️ Raid Defeated!'):(o.attack?'⚔️ The Attack Failed':'🔥 The Raiders Got Away With Loot'),L);setMusic('village');updateHUD()},
  async victory(type){setMusic('win');sfx('win');const conq=type==='conquest';const spot=conq?RIVAL_TC:(()=>{const w=blist().find(b=>b.t==='wonder');return tileAt(w.c,w.r)})();focusTile(spot,16);for(let i=0;i<10;i++)setTimeout(()=>burst(spot.x+(rnd()-.5)*2,3+rnd()*2,spot.z+(rnd()-.5)*2,[0xFFD47A,0x7AC8FF,0xFF8A7A,0x9AFF9A][i%4],30,.4,4.5,{up:2,g:2.5,life:1.4}),i*300);await sleep(1800);
-  await new Promise(res=>{showCard(head(conq?`⚔️ The Red Hills Are Yours!`:`☀️ The Sun Tower Stands!`,'',{close:false})+`<p class="sub" style="font-size:18px">${conq?`Varric's castle has fallen! King Varric surrenders and kneels before ${esc(D.name)}. The Red Hills join your kingdom, and the whole land is at peace.`:`The Sun Tower rises above ${esc(D.name)}'s kingdom, shining gold in the morning light. People travel from every land to see it. King Varric sends a letter: <i>"You have won the race, Chief. The Red Hills will trade with you in peace."</i>`}</p><ul class="loglist"><li>🏆 ${conq?'Conquest':'Wonder'} victory in ${Math.round(D.clock/60)} minutes</li><li>🦸 Hero level ${D.hero.lvl} · items ${D.hero.items.map(i=>ITEMS[i].i).join(' ')||'none'}</li><li>🧮 Math answered right: ${D.ma.ok}</li><li>📖 Reading answered right: ${D.rd.ok}</li><li>✍️ Grammar fixed: ${D.gr.ok}</li><li>🧭 Compass: ${D.geo.ok}/${D.geo.q}</li><li>🛡️ Raids defeated: ${D.stats.raidsWon}</li></ul><div class="center"><button class="btn big" id="goB">Admire my kingdom</button></div><div class="center"><button class="btn" id="newB">Start a new kingdom</button></div>`);$('#goB').onclick=()=>{closeCard();res()};$('#newB').onclick=()=>{closeCard();res();newRealm()}})},
- async defeat(){setMusic('fight');sfx('horn');focusTile(RIVAL_TC,16);await sleep(1200);await new Promise(res=>{showCard(head(`🏰 Varric's Great Tower Is Finished`,'',{close:false})+`<p class="sub" style="font-size:18px">The Great Tower of the Red Hills rises over the land. King Varric has won the race this time. But your people remember everything you learned, and they are ready to try again.</p><div class="sub">Tip: keep training villagers, build camps next to the work, and smash Varric's Great Tower with your army to make him start over.</div><div class="center"><button class="btn big" id="newB">Found a new kingdom</button></div><div class="center"><button class="btn" id="goB">Look around</button></div>`);$('#goB').onclick=()=>{closeCard();res()};$('#newB').onclick=()=>{closeCard();res();newRealm()}})}});
+  await new Promise(res=>{showCard(head(conq?`⚔️ The Red Hills Are Yours!`:`☀️ The Sun Tower Stands!`,'',{close:false})+`<p class="sub" style="font-size:18px">${conq?`Varric's castle has fallen! King Varric surrenders and kneels before ${esc(D.name)}. The Red Hills join your kingdom, and the whole land is at peace.`:`The Sun Tower rises above ${esc(D.name)}'s kingdom, shining gold in the morning light. People travel from every land to see it. King Varric sends a letter: <i>"You have won the race, Chief. The Red Hills will trade with you in peace."</i>`}</p><ul class="loglist"><li>🏆 ${conq?'Conquest':'Wonder'} victory in ${Math.round(D.clock/60)} minutes</li><li>🦸 Hero level ${D.hero.lvl} · items ${D.hero.items.map(i=>ITEMS[i].i).join(' ')||'none'}</li><li>🧮 Math answered right: ${D.ma.ok}</li><li>📖 Reading answered right: ${D.rd.ok}</li><li>✍️ Grammar fixed: ${D.gr.ok}</li><li>🧭 Compass: ${D.geo.ok}/${D.geo.q}</li><li>🛡️ Raids defeated: ${D.stats.raidsWon}</li></ul><div class="center"><button class="btn big" id="newB">▶ Play again</button></div><div class="center"><button class="btn" id="chB">Change number of enemies</button> <button class="btn" id="goB">Admire my kingdom</button></div>`);$('#goB').onclick=()=>{closeCard();res()};$('#newB').onclick=()=>{closeCard();res();restartSame()};$('#chB').onclick=()=>{closeCard();res();setupCard()}})},
+ async defeat(){const o=D.loser||0,KG=KINGS[o];setMusic('fight');sfx('horn');focusTile(RIVAL_TCS[o]||RIVAL_TC,16);await sleep(1200);await new Promise(res=>{showCard(head(`🏰 ${KG.king}'s Great Tower Is Finished`,'',{close:false})+`<p class="sub" style="font-size:18px">${KG.king} won the race this time. Your people remember everything you learned, and they're ready to try again.</p><div class="sub">Tip: smash a rival's Great Tower with your army to make them start over, and keep training villagers.</div><div class="center"><button class="btn big" id="newB">▶ Play again</button></div><div class="center"><button class="btn" id="chB">Change number of enemies</button></div>`);$('#newB').onclick=()=>{closeCard();res();restartSame()};$('#chB').onclick=()=>{closeCard();res();setupCard()}})}});
+/* choose 1-4 enemy kingdoms; more enemies means a bigger map (the page reloads to build it) */
+function setupCard(){const cur=(D.setup&&D.setup.rivals)||1;showCard(head('⚔️ New Kingdom','How many enemy kingdoms?',{close:true})+`<div class="sub">More enemies means a bigger map. Conquer every castle or build the Sun Tower to win.</div><div class="center" style="gap:10px;flex-wrap:wrap">${[1,2,3,4].map(n=>`<button class="btn${n===cur?' big':''}" data-n="${n}">${'⚔️'.repeat(n)}<br>${n} enem${n>1?'ies':'y'}</button>`).join('')}</div>`);wireClose();
+ document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{closeCard();startSetup(+b.dataset.n)})}
+function startSetup(n){const same=((D.setup&&D.setup.rivals)||1)===n&&n===1;D.setup={rivals:n,seed:Math.floor(Math.random()*1e9)};if(same){restartSame();return}genMap(D.setup);initTiles();newGame();D.result='';save();try{sessionStorage.setItem('dok.auto','1')}catch(e){}location.reload()}
+function restartSame(){const n=(D.setup&&D.setup.rivals)||1;if(n>1){startSetup(n);return}newRealm()}
 function newRealm(){newGame();save();lastGoal=null;SEL=[];setupScene();focusTile(PLAYER_TC,17);setMusic('village');updateHUD();say('Elder Maela',`A new kingdom, {N}! Tap a villager, then tap a forest to start chopping wood.`)}
 function seasonBanner(){const el=$('#seasonCard');el.innerHTML=`${SICON[season()]} ${SEASONS[season()]}<small>YEAR ${year()}</small>`;el.classList.add('on');setTimeout(()=>el.classList.remove('on'),1600)}
 
@@ -1384,13 +1418,13 @@ let hintT=20;const HINTS={};function hintTick(dt){hintT-=dt;if(hintT>0||!D.flags
 
 /* ---------- minimap ---------- */
 const MINI={W:170,H:112};let miniBase=null,miniT=0;
-const miniXY=(x,z)=>{const s=Math.min((MINI.W-8)/33,(MINI.H-8)/21.5);return[MINI.W/2+x*s,MINI.H/2+z*s,s]};
-const miniWorld=(px,py)=>{const s=Math.min((MINI.W-8)/33,(MINI.H-8)/21.5);return{x:(px-MINI.W/2)/s,z:(py-MINI.H/2)/s}};
+const miniXY=(x,z)=>{const s=Math.min((MINI.W-8)/(2*MW+1),(MINI.H-8)/(1.732*MH+1.5));return[MINI.W/2+x*s,MINI.H/2+z*s,s]};
+const miniWorld=(px,py)=>{const s=Math.min((MINI.W-8)/(2*MW+1),(MINI.H-8)/(1.732*MH+1.5));return{x:(px-MINI.W/2)/s,z:(py-MINI.H/2)/s}};
 function miniDraw(){const c=$('#mini');if(!c)return;const x=c.getContext('2d');if(!miniBase){miniBase=document.createElement('canvas');miniBase.width=MINI.W;miniBase.height=MINI.H;const b=miniBase.getContext('2d');b.fillStyle='#2A6A92';b.fillRect(0,0,MINI.W,MINI.H);
   TILES.forEach(t=>{const [px,py,s]=miniXY(t.x,t.z);b.fillStyle={water:'#3A8AB8',grass:'#9CC46A',forest:'#3A7A4A',rock:'#9A9A9A',mountain:'#8A7458'}[t.type];if(t.bush)b.fillStyle='#B8C45A';if(inRival(t)&&t.type!=='water')b.fillStyle='#C8A07A';b.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3+Math.PI/6;b.lineTo(px+Math.cos(a)*s*1.15,py+Math.sin(a)*s*1.15)}b.fill()})}
  x.drawImage(miniBase,0,0);Object.entries(D.nodes||{}).forEach(([k,n])=>{if(n.a>0)return;const [cc,rr]=k.split(',').map(Number),t=tileAt(cc,rr);if(t.type==='water')return;const [px,py,s]=miniXY(t.x,t.z);x.fillStyle='#C8B88A';x.fillRect(px-s*.6,py-s*.6,s*1.2,s*1.2)});
  const dot=(o,col,r)=>{const [px,py]=miniXY(o.x,o.z);x.fillStyle=col;x.fillRect(px-r/2,py-r/2,r,r)};
- blist().forEach(b=>dot(b,'#3A7AFF',5));Object.values(D.rb||{}).forEach(b=>dot(b,'#E8302A',5));CAMPS.forEach(c=>{if(D.camps&&!D.camps[c.id].opened){const t=tileAt(c.c,c.r);dot(t,D.camps[c.id].cleared?'#FFE07A':'#EDEDED',4)}});
+ blist().forEach(b=>dot(b,'#3A7AFF',5));Object.values(D.rb||{}).forEach(b=>dot(b,KINGS[b.o||0].col,5));CAMPS.forEach(c=>{if(D.camps&&!D.camps[c.id].opened){const t=tileAt(c.c,c.r);dot(t,D.camps[c.id].cleared?'#FFE07A':'#EDEDED',4)}});
  D.u.forEach(u=>{if(!u.inTC)dot(u,u.k==='hero'?'#FFD000':'#DDEEFF',u.k==='hero'?4:2.5)});E.forEach(e=>dot(e,e.creep?'#BBBBBB':'#FF4A3A',3));
  const pts=[[0,0],[innerWidth,0],[innerWidth,innerHeight],[0,innerHeight]].map(([a,b])=>screenToGround(a,Math.max(b,innerHeight*.08))).map(p=>miniXY(clamp(p.x,-30,30),clamp(p.z,-25,25)));x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=1.2;x.beginPath();pts.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.closePath();x.stroke();x.fillStyle='#fff';x.font='bold 10px sans-serif';x.fillText('N ↑',MINI.W/2-8,11)}
 function miniInit(){const c=$('#mini');c.width=MINI.W;c.height=MINI.H;let down=false;const go=e=>{const r=c.getBoundingClientRect();const w=miniWorld((e.clientX-r.left)*MINI.W/r.width,(e.clientY-r.top)*MINI.H/r.height);camS.tx=w.x;camS.tz=w.z;camS.x=w.x;camS.z=w.z;clampCam()};
@@ -1398,7 +1432,7 @@ function miniInit(){const c=$('#mini');c.width=MINI.W;c.height=MINI.H;let down=f
 
 /* ---------- input: lasso select, two-finger pan, pinch, wheel, tap, mouse ---------- */
 const ptrs=new Map();let tapStart=null,pinch0=0,dist0=0,cen0=null,lastTap={t:0,id:null},lasso=null,mousePan=false;
-function clampCam(){camS.tx=clamp(camS.tx,-16,16);camS.tz=clamp(camS.tz,-9,13);camS.tdist=clamp(camS.tdist,8,30)}
+function clampCam(){camS.tx=clamp(camS.tx,-MW,MW);camS.tz=clamp(camS.tz,-MH*.87-1,MH*.87+5);camS.tdist=clamp(camS.tdist,8,MW>16?40:30)}
 function pickScreen(list,px,py,rad){let best=null,bd=rad;list.forEach(u=>{if(u.inTC)return;_v.set(u.x,.35,u.z).project(cam);const x=(_v.x*.5+.5)*innerWidth,y=(-_v.y*.5+.5)*innerHeight,d=Math.hypot(x-px,y-py);if(d<bd){bd=d;best=u}});return best}
 function onTap(px,py,right){if(cardOpen||dlgOpen||interActive)return;const g=screenToGround(px,py),t=pickTile(g.x,g.z);
  if(rallyFor){const b=D.b[rallyFor];if(!b){endRally();return}doRally(b,t,g);return}
@@ -1435,7 +1469,7 @@ function inputInit(){const c=$('#gl');c.addEventListener('contextmenu',e=>e.prev
 /* ---------- labels ---------- */
 const LBL={};function label(id,cls){if(!LBL[id]){const el=document.createElement('div');el.className='tag3 '+(cls||'');$('#labels').appendChild(el);LBL[id]=el}return LBL[id]}
 const _v=new THREE.Vector3();function placeLabel(el,x,y,z,text){_v.set(x,y,z).project(cam);if(_v.z>1||Math.abs(_v.x)>1.1||Math.abs(_v.y)>1.1){el.style.display='none';return}el.style.display='';if(el.textContent!==text)el.textContent=text;el.style.transform=`translate(${(_v.x*.5+.5)*innerWidth-el.offsetWidth/2}px,${(-_v.y*.5+.5)*innerHeight-el.offsetHeight}px)`}
-function labelsUpdate(){if(mode!=='play'){$('#labels').hidden=true;return}$('#labels').hidden=false;placeLabel(label('riv','red'),RIVAL_TC.x,D.rival.age===2?4.6:2.6,RIVAL_TC.z,`Red Hills`);
+function labelsUpdate(){if(mode!=='play'){$('#labels').hidden=true;return}$('#labels').hidden=false;D.rivals.forEach((R,o)=>{const el=label('riv'+o,'red'),T=RIVAL_TCS[o];if(!T||R.alive===false){el.style.display='none';return}placeLabel(el,T.x,R.age===2?4.6:2.6,T.z,KINGS[o].short)});
  const rl=label('raid','raid');if(FLAGRAID){placeLabel(rl,FLAGRAID.position.x,2.2,FLAGRAID.position.z,`⚠️ Raiders coming`)}else rl.style.display='none';
  const nb=label('nb','warn');const unb=blist().find(b=>b.prog<1&&!D.u.some(u=>u.task.t==='build'&&u.task.bid===b.id));if(unb)placeLabel(nb,unb.x,1.6,unb.z,`🔨 Needs a builder`);else nb.style.display='none';
  if(D.camps)CAMPS.forEach(c=>{const S=D.camps[c.id],el=label('camp'+c.id,S.cleared?'warn':'');if(S.opened){el.style.display='none';return}const t=tileAt(c.c,c.r);placeLabel(el,t.x,1.5,t.z,S.cleared?`🎁 Treasure!`:`💀 Skeleton Camp`)});
@@ -1462,16 +1496,17 @@ addEventListener('resize',()=>R&&resize());
 function titleRefresh(){const s=D.started;$('#contBtn').hidden=!s;$('#nameRow').hidden=s;$('#goBtn').textContent=s?'New Kingdom':'Found a Kingdom';$('#goBtn').className=s?'btn':'btn big';
  $('#saveInfo').textContent=s?`${D.name}'s kingdom · ${AGES[D.age].n} · ${Math.floor(D.clock/60)} min played`:''}
 async function enterGame(){audioInit();mode='play';$('#title').hidden=true;$('#hud').hidden=false;if(!D.u.length||!D.nodes)newGame();else afterLoad();setupScene();focusTile(PLAYER_TC,17);camS.x=camS.tx;camS.z=camS.tz+6;setMusic('village');updateHUD();lastGoal=curGoal();
- if(!D.flags.council)ask(council)}
+ if(!D.flags.council)ask(council);if(D.result==='lose')ask(()=>fx('defeat'))}
 async function boot(){$('#goBtn').disabled=true;$('#contBtn').disabled=true;try{initGL()}catch(e){$('#noGL').hidden=false;return}
  load();titleRefresh();resize();
  try{await loadAssets(p=>{$('#loadFill').style.width=Math.round(p*100)+'%';$('#loadTxt').textContent=`Preparing the land… ${Math.round(p*100)}%`})}catch(e){$('#loadTxt').textContent='Could not load the game files. Check your connection and reload.';console.error(e);return}
- buildMap();if(!D.nodes)initNodes();setupScene();inputInit();pickVoice();if(TTS&&speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=pickVoice;
+ genMap(D.setup);buildMap();if(D.started&&D.setup&&D.setup.rivals>1)makeCamps();if(!D.nodes)initNodes();setupScene();inputInit();pickVoice();if(TTS&&speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=pickVoice;
  $('#loading').hidden=true;$('#goBtn').disabled=false;$('#contBtn').disabled=false;cloudInit();
- $('#goBtn').onclick=()=>{audioInit();if(D.started){showCard(head('Start over?','')+`<p class="sub">Start a brand-new kingdom? Learning progress is kept.</p><div class="center"><button class="btn" id="no">Cancel</button> <button class="btn red" id="yes">Start over</button></div>`);wireClose();$('#no').onclick=closeCard;$('#yes').onclick=()=>{closeCard();newGame();save();enterGame()};return}
+ let auto=null;try{auto=sessionStorage.getItem('dok.auto');sessionStorage.removeItem('dok.auto')}catch(e){}if(auto&&D.started)setTimeout(()=>enterGame(),50);
+ $('#goBtn').onclick=()=>{audioInit();if(D.started){setupCard();return}
   const nm=$('#nameIn').value.trim().replace(/[^A-Za-z0-9 '\-]/g,'').slice(0,14);if(!nm){$('#nameIn').focus();$('#nameIn').classList.add('shake');setTimeout(()=>$('#nameIn').classList.remove('shake'),500);return}D.name=nm;D.started=true;newGame();save();enterGame()};
  $('#contBtn').onclick=enterGame;requestAnimationFrame(frame)}
 
-window.__f={neighbors,tkey,setRally,rallyPoint,startRally,doRally,sendToRally,get FLAG(){return FLAG},get rallyFor(){return rallyFor},trainTick,get sheetTile(){return sheetTile},get D(){return D},set D(v){D=v},get TILES(){return TILES},get PLAYER_TC(){return PLAYER_TC},get RIVAL_TC(){return RIVAL_TC},BD,UT,TECHS,place,tileFree,research,advanceAge,queueUnit,setGather,setBuild,assignJob,sendAssault,startWonderStage,trade,openTile,openBuilding,openResearch,openMarket,openBook,updateHUD,setupScene,capOf,soldiers,vils,curGoal,get mode(){return mode},get cardOpen(){return cardOpen},get dlgOpen(){return dlgOpen},get interActive(){return interActive},get E(){return E},get INTER(){return INTER},save,camS,get R(){return R},get cam(){return cam},get scene(){return scene},focusTile,newRealm,ageReady,tileAt,tkey,screenToGround,pickTile,tick,select,selUnits,onTap,nodeOf,findSource,getEnt,blist,TCB,get ANIM(){return ANIM},set paused(v){paused=v},useAbility,ringBell,heroU,buyUpgrade,campAt,CAMPS,attackEnemy,finishLasso,set lasso(v){lasso=v},drawSel,commandAt,selectHero,selectArmy,popUsed,UPG};
+window.__f={neighbors,tkey,setRally,rallyPoint,startRally,doRally,sendToRally,get FLAG(){return FLAG},get rallyFor(){return rallyFor},trainTick,get sheetTile(){return sheetTile},get D(){return D},set D(v){D=v},get TILES(){return TILES},get PLAYER_TC(){return PLAYER_TC},get RIVAL_TC(){return RIVAL_TC},get RIVAL_TCS(){return RIVAL_TCS},damage,fx,genMap,initTiles,startSetup,setupCard,get MW(){return MW},makeCamps,rivalOf,liveR,BD,UT,TECHS,place,tileFree,research,advanceAge,queueUnit,setGather,setBuild,assignJob,sendAssault,startWonderStage,trade,openTile,openBuilding,openResearch,openMarket,openBook,updateHUD,setupScene,capOf,soldiers,vils,curGoal,get mode(){return mode},get cardOpen(){return cardOpen},get dlgOpen(){return dlgOpen},get interActive(){return interActive},get E(){return E},get INTER(){return INTER},save,camS,get R(){return R},get cam(){return cam},get scene(){return scene},focusTile,newRealm,ageReady,tileAt,tkey,screenToGround,pickTile,tick,select,selUnits,onTap,nodeOf,findSource,getEnt,blist,TCB,get ANIM(){return ANIM},set paused(v){paused=v},useAbility,ringBell,heroU,buyUpgrade,campAt,CAMPS,attackEnemy,finishLasso,set lasso(v){lasso=v},drawSel,commandAt,selectHero,selectArmy,popUsed,UPG};
 boot();
 })();</script>
