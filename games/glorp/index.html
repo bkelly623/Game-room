@@ -1079,7 +1079,7 @@ function applyLoaded(){$('#nameIn').value=D.name||'';const st=!!D.started;$('#co
     $('#saveInfo').textContent='Your game saves automatically after every move, battle and catch.'}
   $('#goBtn').textContent=st?'Start over':'New game';$('#goBtn').className=st?'btn ghost small':'btn';$('#sndWave').style.display=D.sound?'':'none';hud()}
 function begin(isNew){audioInit();if(isNew&&D.started){confirmRestart();return}
-  if(isNew){const nm=$('#nameIn').value.trim().slice(0,12);const keep=D.sound;D=fresh();D.sound=keep;D.name=nm||'Trainer';D.started=true;save()}
+  if(isNew){const nm=$('#nameIn').value.trim().slice(0,12);const keep=D.sound,ke={sp:D.sp,ma:D.ma};D=fresh();D.sound=keep;if(ke.sp&&ke.sp.placed)D.sp=ke.sp;if(ke.ma&&ke.ma.placed)D.ma=ke.ma;D.name=nm||'Trainer';D.started=true;save()}
   enterGame()}
 function confirmRestart(){showCard(`<h2>Start over?</h2><p>This erases <b>${esc(D.name||'this trainer')}'s</b> Glorps, badges, items and map progress. It can't be undone.</p><p class="sub">Spelling and math progress is kept, so the questions stay at the right level.</p>
    <div class="namebox"><label for="nameIn2">New trainer name</label><input id="nameIn2" maxlength="12" placeholder="Trainer" autocomplete="off" value="${esc(D.name||'')}"></div>

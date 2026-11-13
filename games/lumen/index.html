@@ -752,7 +752,7 @@ function faint(){if(fade.on)return;fade.on=true;fade.a=0;fade.phase='out';mode='
   fade.cb=()=>{P.hp=P.max;P.invT=0;updateHUD();const r=cur.respawn||{map:cur.id,x:LOCS[cur.id].x,y:LOCS[cur.id].y};enterMap(r.map,r.x*16,r.y*16,'up');boltSay('Whoa. I rebooted you. Let\'s try that again!',3.5)}}
 function hurtPlayer(d,fx,fy){if(P.invT>0||mode!=='play')return;P.hp-=d;P.invT=1.1;const a=Math.atan2(P.y-fy,P.x-fx);P.kvx=Math.cos(a)*170;P.kvy=Math.sin(a)*170;P.kb=.16;sfx('hurt');shake=3;updateHUD();if(P.hp<=0)faint()}
 function startGame(isNew){audioInit();$('#title').hidden=true;
-  if(isNew){const name=($('#heroName').value||'').trim().slice(0,10);const snd=G.sound,mus=G.music;G=freshSave();G.sound=snd;G.music=mus;G.name=name||'Hero';G.started=true;}
+  if(isNew){const name=($('#heroName').value||'').trim().slice(0,10);const snd=G.sound,mus=G.music,lvk=G.level;G=freshSave();G.sound=snd;G.music=mus;if(lvk)G.level=lvk;G.name=name||'Hero';G.started=true;}
   P.hp=P.max;updateHUD();cur=null;
   if(isNew){enterMap('village',8.5*16,10.85*16,'up');mode='play';setTimeout(()=>{if(mode==='play')talkMaple()},700)}
   else{let id=G.map||'village';if(id==='ruinsC'&&!G.flags.boss)id='ruinsB';const l=LOCS[id];enterMap(id,l.x*16,l.y*16,'up');mode='play'}

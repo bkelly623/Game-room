@@ -33,7 +33,7 @@ function progress(k,g){var D=gameSave(k,g);if(!D)return null;var out=[];
   if(g==='lumen'&&D.stats){var q=0,ok=0;['sum','mult','pattern','word'].forEach(function(x){var a=D.stats[x];if(Array.isArray(a)){ok+=a[0]||0;q+=(a[0]||0)+(a[1]||0)}});if(q)out.push({s:'Math',q:q,ok:ok})}
   if(g==='summit'&&D.totalAnswered)out.push({s:'Mixed',q:D.totalAnswered,ok:D.totalCorrect||0});
   return{name:D.name||'',subjects:out}}
-function wipe(k,g){var key=(window.SAVEKEYS||{})[g];if(key)try{localStorage.removeItem('kid.'+k+'::'+key)}catch(e){}var L=load().log;if(L[k])delete L[k][g];save()}
+function wipe(k,g){var key=(window.SAVEKEYS||{})[g];if(key)try{localStorage.removeItem('kid.'+k+'::'+key);localStorage.removeItem('kid.'+k+'::__gs.'+g)}catch(e){}var L=load().log;if(L[k])delete L[k][g];save()}
 function wipeKid(k){try{var rm=[];for(var i=0;i<localStorage.length;i++){var x=localStorage.key(i);if(x&&x.indexOf('kid.'+k+'::')===0)rm.push(x)}rm.forEach(function(x){localStorage.removeItem(x)})}catch(e){}delete load().log[k];save()}
 /* Speech for kids who can't read yet. */
 var voice=null;

@@ -127,6 +127,15 @@ a.btn{text-decoration:none}
 .khead input:hover,.khead input:focus{border-color:var(--line);background:var(--night2);outline:none}
 .ksec{margin-top:16px}
 .kwlv{margin-top:10px;display:grid;gap:6px}
+.gset{border:2px solid var(--line);border-radius:14px;margin-top:8px;background:var(--night2)}
+.gset summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;font-weight:700;font-size:16px;cursor:pointer;list-style:none}
+.gset summary::-webkit-details-marker{display:none}
+.gset summary::after{content:'▾';opacity:.7;margin-left:6px}.gset[open] summary::after{content:'▴'}
+.gset summary .note{margin-left:auto;font-weight:600}
+.gbody{padding:0 14px 14px;display:grid;gap:12px}
+.gsrow{display:grid;gap:5px}.gsn{font-weight:700}
+.gsrow select{width:100%;max-width:100%;font:600 15px inherit;font-family:inherit;color:inherit;background:var(--night);border:2px solid var(--line);border-radius:10px;padding:9px 10px}
+.gsnow{font-size:13px}.warn{color:#FFD08A}
 .kwrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .kwrow .kwn{width:96px;font-weight:700}
 .kwrow b{min-width:22px;text-align:center;font-size:18px}
@@ -192,6 +201,7 @@ a.btn{text-decoration:none}
 </div>
 <script src="games/catalog.js"></script>
 <script src="games/kingswall/levels.js"></script>
+<script src="games/_gset.js"></script>
 <script src="hub.js"></script>
 <script src="games/_sync.js"></script>
 <script>
@@ -277,12 +287,24 @@ function openPanel(){$('#pinBox').hidden=true;const P=$('#panel');P.hidden=false
   <div class="row" style="margin-top:10px"><button class="btn ghost small" id="chgPin">Change PIN</button></div></div></div>`;
  P.innerHTML=h;bindPanel();show('grown');$('#pinBox').hidden=true}
 function kwBox(k){const c=H.kw(k),K=window.KW;if(!K)return'';
- return `<div class="ksec"><h3>👑 King's Wall: what ${esc(k.name)} practices</h3>
-  <div class="row">${Object.keys(K.subjects).map(s=>{const on=c.subj.includes(s);return`<button class="chk${on?' on':''}" data-kws="${k.id}" data-v="${s}"><span class="box">${on?'✓':''}</span>${K.subjects[s].em} ${K.subjects[s].n}</button>`}).join('')}</div>
+ return `<div class="row">${Object.keys(K.subjects).map(s=>{const on=c.subj.includes(s);return`<button class="chk${on?' on':''}" data-kws="${k.id}" data-v="${s}"><span class="box">${on?'✓':''}</span>${K.subjects[s].em} ${K.subjects[s].n}</button>`}).join('')}</div>
   <div class="kwlv">${c.subj.map(s=>{const S=K.subjects[s],l=Math.min(c.lv[s]||1,S.lv.length);return`<div class="kwrow"><span class="kwn">${S.n}</span><button class="btn ghost small" data-kwl="${k.id}" data-s="${s}" data-d="-1" aria-label="Easier">−</button><b>${l}</b><button class="btn ghost small" data-kwl="${k.id}" data-s="${s}" data-d="1" aria-label="Harder">+</button><span class="note">${esc(S.lv[l-1])}</span></div>`}).join('')}</div>
-  <div class="toggle" style="margin-top:10px"><button class="tg" aria-pressed="${c.strict!=null?!!c.strict:k.id==='luca'}" data-kwst="${k.id}" aria-label="Stop guessing"></button><span>⚡ Stop guessing (all games)<small>Every wrong answer is a lightning hit: King's Wall loses a heart (3 per stage), Rocket Pants loses a heart and goes back to the checkpoint after 3, Block Party loses a heart. Careful right answers earn hearts back in King's Wall.</small></span></div>
-  <div class="row" style="margin-top:8px"><span class="note" style="margin-right:4px">Monster speed</span>${Object.keys(K.speeds).map(v=>`<button class="chk${c.speed===v?' on':''}" data-kwsp="${k.id}" data-v="${v}"><span class="box">${c.speed===v?'✓':''}</span>${K.speeds[v]}</button>`).join('')}</div>
-  <p class="note" style="margin-top:6px">This is where the game starts. It moves the level up after a run of right answers and down if they struggle.</p></div>`}
+  <div class="row" style="margin-top:8px"><span class="note" style="margin-right:4px">Monster speed</span>${Object.keys(K.speeds).map(v=>`<button class="chk${c.speed===v?' on':''}" data-kwsp="${k.id}" data-v="${v}"><span class="box">${c.speed===v?'✓':''}</span>${K.speeds[v]}</button>`).join('')}</div>`}
+const gOpen={};let syncNote='';
+function gsRead(kid,g){try{const key=(window.SAVEKEYS||{})[g];const s=key&&localStorage.getItem('kid.'+kid+'::'+key);return s?JSON.parse(s):null}catch(e){return null}}
+function gameSettings(k){const GS=window.__GSET,ids=H.gamesOf(k).filter(id=>id==='kingswall'||(GS&&GS.games[id]));if(!ids.length)return'';
+ const c=H.kw(k)||{};const strict=c.strict!=null?!!c.strict:k.id==='luca';
+ const cards=ids.map(id=>{const g=H.game(id);if(!g)return'';const ck=k.id+'|'+id;let body='',sum='';
+  if(id==='kingswall'){body=kwBox(k);sum=(c.subj||[]).length+' subjects'}
+  else{const set=(k.gs&&k.gs[id])||{},save=gsRead(k.id,id);let n=0;
+   body=GS.games[id].tracks.map(T=>{const L=GS.levels(id,T.k,!!k.speak),v=set[T.k]&&set[T.k].lv||0;if(v)n++;const now=GS.current(id,T.k,save,!!k.speak);
+    return `<div class="gsrow"><label class="gsn" for="gs-${ck}-${T.k}">${esc(T.n)}</label><select id="gs-${ck}-${T.k}" data-gs="${ck}|${T.k}"><option value="">Auto: the game finds the level</option>${L.map((x,i)=>`<option value="${i+1}"${v===i+1?' selected':''}>${i+1}. ${esc(x)}</option>`).join('')}</select>${now?`<span class="note gsnow">Now on this device: ${now}. ${esc(L[now-1]||'')}</span>`:''}</div>`}).join('');
+   sum=n?n+' set':'Auto'}
+  return `<details class="gset" data-gopen="${ck}"${gOpen[ck]?' open':''}><summary><span>${g.emoji} ${esc(g.title)}</span><span class="note">${sum}</span></summary><div class="gbody">${body}</div></details>`}).join('');
+ return `<div class="ksec"><h3>Game settings</h3>
+  <div class="toggle"><button class="tg" aria-pressed="${strict}" data-kwst="${k.id}" aria-label="Stop guessing"></button><span>⚡ Stop guessing<small>Every wrong answer is a lightning hit. King's Wall loses a heart (3 per stage), Rocket Pants loses a heart and goes back to the checkpoint after 3, Block Party loses a heart. Careful right answers earn hearts back in King's Wall.</small></span></div>
+  <p class="note" style="margin:10px 0 8px">Pick the level each game starts at, subject by subject. The game still moves up as they get things right. "Auto" lets the game work it out.</p>
+  ${cards}${syncNote?`<p class="note warn">${syncNote}</p>`:''}</div>`}
 function kidCard(k){const L=S.log[k.id]||{};
  const rows=window.CATALOG.filter(g=>!g.soon).map(g=>{const e=L[g.id],pr=H.progress(k.id,g.id);if(!e&&!pr)return'';
   const acc=pr&&pr.subjects.length?pr.subjects.map(s=>`<span class="acc">${s.s}: <b>${s.ok}/${s.q}</b> (${Math.round(s.ok/s.q*100)}%)</span>`).join(''):'<span class="note">No answers yet</span>';
@@ -296,10 +318,16 @@ function kidCard(k){const L=S.log[k.id]||{};
    <div class="row" style="margin-top:8px">${COLORS.map(c=>`<button class="col${c===k.color?' on':''}" style="background:${c}" data-col="${k.id}" data-v="${c}" aria-label="Color"></button>`).join('')}</div></div>
   <div class="ksec"><div class="toggle"><button class="tg" aria-pressed="${!!k.speak}" data-speak="${k.id}" aria-label="Read aloud"></button><span>Read things out loud<small>For kids who can't read yet: names and game titles are spoken, and game cards get bigger.</small></span></div></div>
   ${k.tester?`<div class="ksec"><h3>Games</h3><p class="note">Every game in the Game Room, including new ones as they're added. Locked with your PIN, and never counted in the kids' numbers.</p></div>`:`<div class="ksec"><h3>Games on ${esc(k.name)}'s shelf</h3><div class="row">${window.CATALOG.map(g=>{const on=k.games.includes(g.id);return`<button class="chk${on?' on':''}" data-game="${k.id}" data-v="${g.id}"><span class="box">${on?'✓':''}</span>${g.emoji} ${esc(g.title)}${g.soon?' <small>(soon)</small>':''}</button>`}).join('')}</div></div>`}
-  ${kwBox(k)}
+  ${gameSettings(k)}
   <div class="ksec"><h3>Progress on this device</h3>${rows?`<div class="tblwrap"><table class="tbl"><thead><tr><th>Game</th><th>Last played</th><th>This week</th><th>All time</th><th>Answers right</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="note">${esc(k.name)} hasn't played anything on this device yet.</p>`}</div>
  </div>`}
+function pushSettings(k){k.setAt=Date.now();H.save();
+ fetch('api/settings',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({kids:{[k.id]:{at:k.setAt,gs:k.gs||{},kw:k.kw||null}}})})
+  .then(r=>{const was=syncNote;syncNote=r.status===401?'Saved on this device. To send these settings to every device the boys play on, sign in once to the <a href="admin">Command Center</a> on this phone.':r.ok?'':'Saved on this device. Couldn’t reach the cloud just now; it will send next time you change a setting.';if(was!==syncNote&&!$('#panel').hidden){const y=window.scrollY;openPanel();window.scrollTo(0,y)}}).catch(()=>{})}
 function bindPanel(){const P=$('#panel');
+ P.querySelectorAll('details.gset').forEach(d=>{d.ontoggle=()=>{if(d.open)gOpen[d.dataset.gopen]=1;else delete gOpen[d.dataset.gopen]}});
+ P.onchange=e=>{const t=e.target;if(!t.dataset||!t.dataset.gs)return;const [kid,g,tr]=t.dataset.gs.split('|');const k=H.kid(kid);if(!k)return;k.gs=k.gs||{};const G=k.gs[g]=k.gs[g]||{};
+  const v=+t.value||0;if(v)G[tr]={lv:v,t:Date.now()};else delete G[tr];pushSettings(k);toast(v?'Saved: starts there next time':'Saved: Auto');const y=window.scrollY;openPanel();window.scrollTo(0,y)};
  $('#doneBtn').onclick=()=>renderWho();
  $('#addKid').onclick=()=>{const id='kid-'+Date.now().toString(36);S.kids.push({id,name:'New player',emoji:EMOJI[S.kids.length%EMOJI.length],color:COLORS[S.kids.length%COLORS.length],speak:false,games:[]});H.save();openPanel();
   const inp=P.querySelector(`[data-name="${id}"]`);if(inp){inp.scrollIntoView({block:'center'});inp.focus();inp.select()}};
@@ -322,8 +350,10 @@ function bindPanel(){const P=$('#panel');
   else if(d.nodel){delete confirmOpen['kid|'+d.nodel]}
   else if(d.delkid){H.wipeKid(d.delkid);S.kids=S.kids.filter(x=>x.id!==d.delkid);delete confirmOpen['kid|'+d.delkid]}
   else return;
-  H.save();const y=window.scrollY;openPanel();window.scrollTo(0,y)}}
+  H.save();if(k&&(d.kws||d.kwl||d.kwsp||d.kwst))pushSettings(k);const y=window.scrollY;openPanel();window.scrollTo(0,y)}}
 
+/* settings chosen on any grown-up device reach every device */
+fetch('api/settings',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.kids)return;let ch=false;S.kids.forEach(k=>{const r=j.kids[k.id];if(r&&(+r.at||0)>(k.setAt||0)){k.gs=r.gs||{};if(r.kw)k.kw=r.kw;k.setAt=+r.at;ch=true}});if(ch){H.save();if(!$('#panel').hidden){const y=window.scrollY;openPanel();window.scrollTo(0,y)}}}).catch(()=>{});
 /* ---------- start ---------- */
 let start=null;try{start=location.hash.slice(1)||sessionStorage.getItem('hub.kid')}catch(e){}
 if(start&&H.kid(start))openShelf(start);else renderWho();
