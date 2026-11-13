@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Game Room</title>
 <meta name="theme-color" content="#0E0B24">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,7 +13,8 @@
 :root{color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:#0E0B24;overscroll-behavior:none}
-body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+body{display:flex;flex-direction:column;height:100vh;height:100dvh;height:var(--vh,100dvh);padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+#frame{min-height:0}
 #bar{flex:none;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 5px) max(10px,env(safe-area-inset-right)) 5px max(10px,env(safe-area-inset-left));background:#0E0B24;color:#FFF6E6;font:600 16px Fredoka,system-ui,sans-serif}
 #back{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:11px;padding:6px 12px 6px 8px;background:#F2B632;color:#3A2600;font:inherit;cursor:pointer;box-shadow:0 3px 0 #B5841A}
 #back:active{transform:translateY(2px);box-shadow:0 1px 0 #B5841A}
@@ -27,6 +28,8 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 </head>
 <body>
 <div id="bar"><button id="back" aria-label="Back to games"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Games</button><span id="title"></span><span id="who"></span></div>
+<script>/* fit the real visible screen: phone toolbars, gesture bars and in-app browsers */
+(function(){function fit(){var h=(window.visualViewport&&visualViewport.height)||innerHeight;document.documentElement.style.setProperty('--vh',Math.round(Math.min(h,innerHeight))+'px')}fit();addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});window.visualViewport&&visualViewport.addEventListener('resize',fit)})();</script>
 <script src="games/catalog.js"></script>
 <script src="hub.js"></script>
 <script>
