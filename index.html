@@ -293,7 +293,7 @@ function kwBox(k){const c=H.kw(k),K=window.KW;if(!K)return'';
 const gOpen={};let syncNote='';
 function gsRead(kid,g){try{const key=(window.SAVEKEYS||{})[g];const s=key&&localStorage.getItem('kid.'+kid+'::'+key);return s?JSON.parse(s):null}catch(e){return null}}
 function gameSettings(k){const GS=window.__GSET,ids=H.gamesOf(k).filter(id=>id==='kingswall'||(GS&&GS.games[id]));if(!ids.length)return'';
- const c=H.kw(k)||{};const strict=c.strict!=null?!!c.strict:k.id==='luca';
+ const c=H.kw(k)||{};const strict=c.strict!=null?!!c.strict:true;
  const cards=ids.map(id=>{const g=H.game(id);if(!g)return'';const ck=k.id+'|'+id;let body='',sum='';
   if(id==='kingswall'){body=kwBox(k);sum=(c.subj||[]).length+' subjects'}
   else{const set=(k.gs&&k.gs[id])||{},save=gsRead(k.id,id);let n=0;
@@ -302,7 +302,7 @@ function gameSettings(k){const GS=window.__GSET,ids=H.gamesOf(k).filter(id=>id==
    sum=n?n+' set':'Auto'}
   return `<details class="gset" data-gopen="${ck}"${gOpen[ck]?' open':''}><summary><span>${g.emoji} ${esc(g.title)}</span><span class="note">${sum}</span></summary><div class="gbody">${body}</div></details>`}).join('');
  return `<div class="ksec"><h3>Game settings</h3>
-  <div class="toggle"><button class="tg" aria-pressed="${strict}" data-kwst="${k.id}" aria-label="Stop guessing"></button><span>⚡ Stop guessing<small>Every wrong answer is a lightning hit. King's Wall loses a heart (3 per stage), Rocket Pants loses a heart and goes back to the checkpoint after 3, Block Party loses a heart. Careful right answers earn hearts back in King's Wall.</small></span></div>
+  <div class="toggle"><button class="tg" aria-pressed="${strict}" data-kwst="${k.id}" aria-label="Stop guessing"></button><span>⚡ Stop guessing<small>Every wrong answer is a lightning hit. King's Wall loses a heart (3 per stage), Rocket Pants loses a heart and goes back to the checkpoint after 3, Block Party loses a heart. Careful right answers earn hearts back in King's Wall. In every game, answers stay locked until the question has been read, and fast wrong taps lock them longer.</small></span></div>
   <p class="note" style="margin:10px 0 8px">Pick the level each game starts at, subject by subject. The game still moves up as they get things right. "Auto" lets the game work it out.</p>
   ${cards}${syncNote?`<p class="note warn">${syncNote}</p>`:''}</div>`}
 function kidCard(k){const L=S.log[k.id]||{};
@@ -342,7 +342,7 @@ function bindPanel(){const P=$('#panel');
   else if(d.kws){k=H.kid(d.kws);const c=H.kw(k),i=c.subj.indexOf(d.v);if(i>=0){if(c.subj.length>1)c.subj.splice(i,1);else{toast('Keep at least one subject');return}}else{const o=Object.keys(window.KW.subjects);c.subj.push(d.v);c.subj.sort((a,b)=>o.indexOf(a)-o.indexOf(b))}}
   else if(d.kwl){k=H.kid(d.kwl);const c=H.kw(k),max=window.KW.subjects[d.s].lv.length;c.lv[d.s]=Math.max(1,Math.min(max,(c.lv[d.s]||1)+(+d.d)))}
   else if(d.kwsp){k=H.kid(d.kwsp);H.kw(k).speed=d.v}
-  else if(d.kwst){k=H.kid(d.kwst);const c=H.kw(k);c.strict=!(c.strict!=null?c.strict:k.id==='luca')}
+  else if(d.kwst){k=H.kid(d.kwst);const c=H.kw(k);c.strict=!(c.strict!=null?c.strict:true)}
   else if(d.askwipe){confirmOpen[d.askwipe]=1}
   else if(d.nowipe){delete confirmOpen[d.nowipe]}
   else if(d.wipe){const [kid,g]=d.wipe.split('|');H.wipe(kid,g);delete confirmOpen[d.wipe];toast('Progress erased')}

@@ -416,7 +416,7 @@ function hubKid(){try{if(window.__hubRaw){const h=JSON.parse(window.__hubRaw('hu
 let HK=null;
 function cfg(){HK=hubKid();const kw=(HK&&HK.kw)||(HK?window.KW.defaults(HK.id):D.cfg);
  const subj=(kw.subj||[]).filter(s=>window.KW.subjects[s]);
- return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',strict:kw.strict!=null?!!kw.strict:(HK?HK.id==='luca':!!D.cfg.strict),speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
+ return{subj:subj.length?subj:['ma'],lv:Object.assign({ma:1,rd:1,sw:1,sp:1},kw.lv||{}),speed:kw.speed||'normal',strict:kw.strict!=null?!!kw.strict:(HK?true:D.cfg.strict!==false),speak:HK?!!HK.speak:!!D.cfg.speak,name:HK?HK.name:((curProfile()||{}).name||'')}}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 /* ================= learning engine (per subject) ================= */

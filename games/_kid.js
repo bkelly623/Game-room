@@ -25,9 +25,9 @@
   /* this kid's Game Room settings, for every game */
   window.__kidInfo=function(){try{var h=JSON.parse(g.call(ls,'hub.v1')||'null');return h&&h.kids&&h.kids.find(function(k){return k.id===kid})||null}catch(e){return null}};
   /* Stop guessing: wrong answers cost a heart (on for Luca unless a grown-up turns it off) */
-  window.__strict=function(){var k=window.__kidInfo();var kw=k&&k.kw;return kw&&kw.strict!=null?!!kw.strict:kid==='luca'};
+  window.__strict=function(){var k=window.__kidInfo();var kw=k&&k.kw;return kw&&kw.strict!=null?!!kw.strict:true};
   /* early reader: reads things aloud and starts with the youngest material */
   window.__young=function(){var k=window.__kidInfo();return !!(k&&k.speak)};
   /* progress tracking for the grown-ups' Command Center */
-  try{var me=document.currentScript&&document.currentScript.src;if(me)document.write('<script src="'+me.replace(/_kid\.js(\?.*)?$/,'_gset.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_sync.js')+'"><\/script>')}catch(e){}
+  try{var me=document.currentScript&&document.currentScript.src;if(me)document.write('<script src="'+me.replace(/_kid\.js(\?.*)?$/,'_gset.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_guard.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_sync.js')+'"><\/script>')}catch(e){}
 })();

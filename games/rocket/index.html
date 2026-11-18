@@ -193,7 +193,7 @@ function gen(s){switch(s){
  case 0:{const a=ri(3,12),b=ri(2,Math.min(9,20-a)),t=a+b;return Q(s,`${a} + ${b} = ?`,t,[t+1,t-1,t+10,t-2],`Start at ${Math.max(a,b)} and count up ${Math.min(a,b)}.`)}
  case 1:{const a=ri(9,20),b=ri(2,Math.min(9,a-1)),t=a-b;return Q(s,`${a} − ${b} = ?`,t,[t+1,t-1,a+b,t+2],`Count up from ${b} to ${a}. How many jumps?`)}
  case 2:{const a=ri(17,68),b=ri(14,Math.min(89,99-a)),t=a+b,nc=(a-a%10)+(b-b%10)+((a%10+b%10)%10);return Q(s,`${a} + ${b} = ?`,t,[nc,t+10,t-10,t+1],`Tens first: ${a-a%10} + ${b-b%10} = ${a-a%10+b-b%10}. Then add ${a%10} + ${b%10}.`)}
- case 3:{const a=ri(41,98),b=ri(12,a-11),t=a-b,er=Math.abs(Math.floor(a/10)-Math.floor(b/10))*10+Math.abs(a%10-b%10);return Q(s,`${a} − ${b} = ?`,t,[er,t+10,t-10,t+1],`Take away ${b-b%10} first: ${a} − ${b-b%10} = ${a-(b-b%10)}. Then take away ${b%10} more.`)}
+ case 3:{const a=ri(41,98),b=ri(12,a-11),t=a-b,er=Math.abs(Math.floor(a/10)-Math.floor(b/10))*10+Math.abs(a%10-b%10);return Q(s,`${a} − ${b} = ?`,t,[er,t+10,t-10,t+1],(()=>{const T=b-b%10,x=a-T,o=b%10;if(o===0)return `Just take away the tens: ${a} − ${T}.`;if(o>x%10){const d=x%10;return d?`Take away ${T} first: ${a} − ${T} = ${x}. Then take away ${o}: go down ${d} to ${x-d}, then ${o-d} more.`:`Take away ${T} first: ${a} − ${T} = ${x}. Then count back ${o} from ${x}.`}return `Take away ${T} first: ${a} − ${T} = ${x}. Then take away ${o} more.`})())}
  case 4:{const t=ri(0,2);if(t===0){const h=ri(1,9),te=ri(0,9),o=ri(1,9),v=h*100+te*10+o;return Q(s,`${h} hundreds + ${te} tens + ${o} ones = ?`,v,[h*100+o*10+te,h*10+te*10+o,h+te+o,v+100],`${h} hundreds is ${h*100}. ${te} tens is ${te*10}.`)}
    if(t===1){const n=ri(105,985);return Q(s,`10 more than ${n} = ?`,n+10,[n+1,n+100,n-10],`Only the tens digit goes up by one.`)}
    const n=ri(205,985);return Q(s,`100 less than ${n} = ?`,n-100,[n-10,n-1,n+100],`Only the hundreds digit goes down by one.`)}
@@ -238,7 +238,9 @@ function dayStat(){const k=today();if(!D.stats.days[k])D.stats.days[k]={q:0,c:0,
 /* ===================== adaptive engine ===================== */
 function focusS(){for(const i of ORDER)if(D.m[i]<MASTER)return i;return ORDER[ORDER.length-1]}
 function recentAcc(){return D.recent.length?D.recent.reduce((a,b)=>a+b,0)/D.recent.length:.8}
-function chooseQ(){D.counter++;const due=D.review.find(r=>r.due<=D.counter);if(due)return Object.assign({},due.q,{choices:shuffle(due.q.choices.slice()),review:true});
+function chooseQ(){D.counter++;const due=D.counter-(D.lastRev||-9)>=3&&D.review.find(r=>r.due<=D.counter);if(due){D.lastRev=D.counter;let q=gen(due.q.s);for(let i=0;i<6&&(q.text===due.q.text||q.text===D.lastQ);i++)q=gen(due.q.s);q.review=true;q.rkey=due.key;D.lastQ=q.text;return q}
+   /* a skill that keeps getting missed rests for a few questions while easier ones build confidence */
+   if(D.park&&D.counter<D.park.until&&D.park.f===focusS()){const fp0=ORDER.indexOf(D.park.f),alt=[fp0-1,fp0-2,fp0-3].filter(i=>i>=0).map(i=>ORDER[i]);if(alt.length){let q=gen(pick(alt));for(let i=0;i<6&&D.lastQ===q.text;i++)q=gen(q.s);D.lastQ=q.text;return q}}
   const ff=focusS(),acc=recentAcc(),r=rnd(),pRev=acc<.65?.4:.18,pNext=acc>.88?.2:.1;let f=ff;
   if(YOUNG){const yp=[16,17,18,19,20].filter(i=>D.m[i]<MASTER);if(yp.length){const c=yp.filter(i=>i!==D.lastS);f=pick(c.length?c:yp);D.lastS=f;let q=gen(f);for(let i=0;i<8&&(D.recentQ||[]).includes(q.text+q.ans);i++)q=gen(f);D.recentQ=(D.recentQ||[]).concat(q.text+q.ans).slice(-12);return q}}
   const fp=ORDER.indexOf(ff);if(r<pRev&&fp>0)f=ORDER[ri(Math.max(0,fp-3),fp-1)];else if(r<pRev+pNext&&fp<ORDER.length-1)f=ORDER[fp+1];
@@ -247,8 +249,8 @@ function chooseQ(){D.counter++;const due=D.review.find(r=>r.due<=D.counter);if(d
 function tally(ok){D.stats.q++;if(ok)D.stats.correct++;const ds=dayStat();ds.q++;if(ok)ds.c++}
 function grade(q,ok){try{window.__trk&&__trk.ans({s:'math',f:q.s,it:q.text,ok})}catch(e){}const f=q.s;D.n[f]++;if(ok){D.c[f]++;D.m[f]+=(1-D.m[f])*.25}else D.m[f]-=D.m[f]*.15;
   D.recent.push(ok?1:0);if(D.recent.length>10)D.recent.shift();if(ok&&D.recent.length>=8&&recentAcc()>=.9)D.m[f]+=(1-D.m[f])*.12;tally(ok);
-  const rv=D.review.find(r=>r.key===q.text);
-  if(!ok){D.missed[q.text]=(D.missed[q.text]||0)+1;if(rv){rv.need=2;rv.due=D.counter+ri(3,5)}else{const keep={s:q.s,text:q.text,ans:q.ans,choices:q.choices,hint:q.hint,say:q.say};D.review.push({key:q.text,q:keep,due:D.counter+ri(3,5),need:2})}}
+  const rv=D.review.find(r=>r.key===q.text||(q.review&&r.key===q.rkey));if(f===focusS()&&!q.survey){if(ok)D.fs=0;else{D.fs=(D.fs||0)+1;if(D.fs>=3){D.fs=0;D.park={f,until:D.counter+8}}}}
+  if(!ok){D.missed[q.text]=(D.missed[q.text]||0)+1;if(rv){rv.need=2;rv.due=D.counter+ri(5,8)}else{const keep={s:q.s,text:q.text,ans:q.ans,choices:q.choices,hint:q.hint,say:q.say};D.review.push({key:q.text,q:keep,due:D.counter+ri(4,7),need:2})}}
   else if(rv){rv.need--;if(rv.need<=0)D.review=D.review.filter(x=>x!==rv);else rv.due=D.counter+ri(6,10)}
   if(D.review.length>40)D.review.splice(0,D.review.length-40);save()}
 function surveyStart(){D.survey={fi:0,res:[],log:[],fails:0};save()}
@@ -470,7 +472,17 @@ let qbarT=0;
 function qIdle(){const qb=$('#qbar');qb.className='idle';$('#qText').textContent=L&&L.real?(L.placement?'Training Day':levelName(L.idx)):'Rocket Pants';$('#qText').classList.remove('long');$('#qSay').hidden=true;
   $('#qHint').innerHTML=L&&L.real&&L.boss?'Find <b>Baron Von Broccoli</b> at the end of the level!':'Run right and smash the <b>Broccoli Walls</b>!';drawPF($('#qPf'),'coach')}
 function nextQ(){if(L.placement&&D.survey){const q=gen(ORDER[D.survey.fi]);q.survey=true;return q}return chooseQ()}
-function activate(G){G.q=nextQ();G.graded=false;G.state='active';(G.blocks||[]).forEach(b=>{b.used=false;b.bad=false;b.ok=false});(G.pipes||[]).forEach(p=>p.plug=false);showQ(G.q,G.type)}
+function needLesson(q){if(!q||q.survey||q.review||q.read||q.s===17||!L||!L.real)return false;const f=q.s;D.lesson=D.lesson||{};if(D.m[f]>=MASTER)return false;
+ return (D.lesson[f]==null&&(D.n[f]<3||D.m[f]<.4))||((D.fs||0)>=2&&D.counter-(D.lesson[f]==null?-99:D.lesson[f])>=6)}
+function lessonCard(q){const f=q.s;D.lesson=D.lesson||{};D.lesson[f]=D.counter;save();let ex=gen(f);for(let i=0;i<10&&(ex.text===q.text||ex.ans===q.ans);i++)ex=gen(f);
+ showCard(`<h2 style="margin:0 0 4px">📘 Coach's Lesson</h2><p style="margin:0 0 10px;opacity:.85">${esc(SK[f].n)}. Watch how it works, then it's your turn!</p>
+  <div style="font-size:28px;font-weight:800;text-align:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.08)">${esc(ex.text.replace('= ?','= ?'))}</div>
+  <p style="font-size:19px;line-height:1.45;margin:12px 0 6px"><b>How:</b> ${esc(ex.hint)}</p>
+  <p style="font-size:22px;text-align:center;margin:6px 0 14px">So the answer is <b style="color:#FFD23F">${esc(String(ex.ans))}</b></p>
+  <div style="text-align:center"><button class="btn" id="lgo">Got it! My turn 🚀</button></div>`);
+ try{speak(ex.text.replace('?','what')+'. '+ex.hint+' So the answer is '+ex.ans+'.')}catch(e){}
+ $('#lgo').onclick=()=>{try{speechSynthesis.cancel()}catch(e){}closeCard()}}
+function activate(G){G.q=nextQ();if(needLesson(G.q))setTimeout(()=>lessonCard(G.q),350);G.graded=false;G.state='active';(G.blocks||[]).forEach(b=>{b.used=false;b.bad=false;b.ok=false});(G.pipes||[]).forEach(p=>p.plug=false);showQ(G.q,G.type)}
 function showQ(q,type){const qb=$('#qbar');qb.className='';const qt=$('#qText');qt.textContent=q.text;qt.classList.toggle('long',q.text.length>34);$('#qHint').innerHTML=type==='pipe'?'Stand on the pipe with the answer and press <b>down</b>.':type==='boss'?'Hit the right block to launch a <b>Bean Bomb</b> at the Baron!':(L.placement?`<b>Training Day</b> · question ${(D.survey?D.survey.log.length:0)+1}. Jump up into the right answer.`:'Jump up into the block with the right answer.');
   $('#qSay').hidden=!TTS;drawPF($('#qPf'),type==='boss'?'boss':'coach');qbarT=0;if(q.say)setTimeout(()=>speak(q.sayText||q.text),300)}
 function qMsg(cls,html,hide){const qb=$('#qbar');qb.className=cls;$('#qHint').innerHTML=html;if(hide)qbarT=hide}
@@ -494,7 +506,7 @@ function pipeResolve(){const {G,p}=pipeAnim;pipeAnim=null;const ok=G.q.choices[p
     P.x=(G.wallX+2)*16+8;P.y=GY*16;P.vx=0;P.vy=0;L.check.x=P.x;for(let i=0;i<8;i++)L.beans.push({x:P.x+30+i*12,y:GY*16-24-Math.abs(Math.sin(i))*20});cam.x=clamp(P.x-VW*.4,0,L.W*16-VW);flash=.5;mode='play'}
   else{p.plug=true;sfx('plug');P.x=p.tx*16+16;P.y=7*16;P.vy=-320;P.ground=false;mode='play';qMsg('bad',`<b>${pick(['That pipe was full of old spaghetti!','WRONG PIPE! It went to Grandma\'s bathroom.','That pipe burped you back out!'])}</b> ${esc(G.q.hint)}`);if(STRICT)zap(G)}}
 let flash=0;
-window.__rp2={chooseQ,focusS,get ORDER(){return ORDER},zap:G=>zap(G),spawnPow:(k,x,y)=>spawnPow(k,x,y),applyPow:k=>applyPow(k),gameOver:()=>gameOver(),P};
+window.__rp2={chooseQ,focusS,grade,gen,needLesson,lessonCard,get D(){return D},get ORDER(){return ORDER},zap:G=>zap(G),spawnPow:(k,x,y)=>spawnPow(k,x,y),applyPow:k=>applyPow(k),gameOver:()=>gameOver(),P};
 function updGates(dt){for(const G of L.gates){
   if(G.state==='idle'&&(G.type==='boss'?P.x>G.trigX:cam.x+VW>G.trigX)){if(G.type==='boss'){if(P.x>G.trigX){G.state='intro';G.t=0;L.check.x=G.trigX+24;for(let y=0;y<GY;y++)L.g[y][G.entryX]='W';setMusic('boss');sfx('roar');L.bossE={x:G.bossX,y:GY*16,vx:-30,hp:3,state:'walk',t:0,throwT:2.5,flash:0,G};
         const qb=$('#qbar');qb.className='bad';drawPF($('#qPf'),'boss');$('#qText').textContent='BARON VON BROCCOLI';$('#qText').classList.remove('long');$('#qHint').innerHTML=pick(['"You\'ll never get your beans back! Eat your vegetables! MWAHAHA!"','"I have stolen every bean in the land! Now everyone must eat BROCCOLI!"']);$('#qSay').hidden=true}}else activate(G)}
