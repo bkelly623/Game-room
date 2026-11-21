@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Game Room</title>
 <meta name="theme-color" content="#0E0B24">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Game Room">
@@ -176,6 +177,7 @@ a.btn{text-decoration:none}
   <section id="who">
     <div class="logo">GAME ROOM<small>WHO'S PLAYING?</small></div>
     <div class="kids" id="kids"></div>
+    <div class="league" id="league" hidden></div>
     <button class="grownups" id="toGrown"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4.5" y="10.5" width="15" height="11" rx="3"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" fill="none" stroke="currentColor" stroke-width="2.6"/></svg>Grown-ups</button>
   </section>
 
@@ -186,6 +188,7 @@ a.btn{text-decoration:none}
     <div class="sec" id="allH">YOUR GAMES</div>
     <a id="ccLink" class="btn" href="/admin" hidden style="margin:0 0 16px">📊 Command Center (stats)</a>
     <div id="gwrap"><div class="games" id="games"></div></div>
+    <div class="league" id="league2" hidden></div>
   </section>
 
   <section id="grown" hidden>
@@ -204,6 +207,8 @@ a.btn{text-decoration:none}
 <script src="games/_gset.js"></script>
 <script src="hub.js"></script>
 <script src="games/_sync.js"></script>
+<script src="games/_hero.js"></script>
+<script src="heroui.js"></script>
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s);
@@ -229,8 +234,9 @@ const kidWeek=k=>Object.values(S.log[k.id]||{}).reduce((a,e)=>a+H.weekSec(e),0);
 /* ---------- who's playing ---------- */
 function renderWho(){const box=$('#kids');box.innerHTML='';
  S.kids.forEach(k=>{const n=H.gamesOf(k).map(H.game).filter(g=>g&&!g.soon).length,w=kidWeek(k);const b=document.createElement('button');b.className='pcard';b.style.setProperty('--c',k.color);
-  b.innerHTML=`<div class="tile"><div class="av">${esc(k.emoji)}</div><b>${esc(k.name)}${k.tester?' 🔒':''}</b><span class="meta">${k.tester?'Grown-up · all games':n+' game'+(n===1?'':'s')+(w>=60?' · '+H.fmtDur(w)+' this week':'')}</span></div>`;
-  b.onclick=()=>{if(k.tester)return unlockB(k.id);H.say(k.name+'!');openShelf(k.id)};box.appendChild(b)});show('who')}
+  const hh=window.HERO&&!k.tester?HERO.load(k.id):null,useAv=hh&&hh.xp>0;
+  b.innerHTML=`<div class="tile"><div class="av">${useAv?'<div class="hav" style="width:1.05em;height:1.22em">'+HERO.svg(hh.look)+'</div>':esc(k.emoji)}</div><b>${esc(k.name)}${k.tester?' 🔒':''}</b><span class="meta">${k.tester?'Grown-up · all games':n+' game'+(n===1?'':'s')+(useAv?' · Level '+HERO.lvOf(hh.xp):'')+(w>=60?' · '+H.fmtDur(w)+' this week':'')}</span></div>`;
+  b.onclick=()=>{if(k.tester)return unlockB(k.id);H.say(k.name+'!');openShelf(k.id)};box.appendChild(b)});show('who');if(window.HEROUI)HEROUI.league($('#league'),S.kids,null)}
 
 /* ---------- shelf ---------- */
 let curKid=null;
@@ -241,7 +247,7 @@ function openShelf(id){const k=H.kid(id);if(!k){renderWho();return}if(k.tester&&
  const list=H.gamesOf(k).map(H.game).filter(Boolean),L=S.log[k.id]||{};
  const lastG=list.filter(g=>!g.soon&&L[g.id]&&L[g.id].last).sort((a,b)=>L[b.id].last-L[a.id].last)[0];
  $('#meSub').textContent=k.speak?'Tap a game to play!':lastG?`You have ${list.length} games. Pick up where you left off!`:`You have ${list.length} games. Pick one to start!`;
- const cont=$('#cont');cont.innerHTML='';
+ const cont=$('#cont');cont.innerHTML='';if(window.HEROUI){try{cont.appendChild(HEROUI.card(k,()=>{const y=window.scrollY;openShelf(k.id);window.scrollTo(0,y)}))}catch(e){console.error(e)}}
  if(lastG&&!k.speak){const b=document.createElement('button');b.className='hero';b.innerHTML=`<div class="shot" style="background-image:url('${cover(lastG)}')"></div><div class="txt"><div class="eyebrow">Jump back in</div><h2>${esc(lastG.title)}</h2><div class="note">Last played ${esc(H.ago(L[lastG.id].last).toLowerCase())}</div><span class="btn play">▶ Play</span></div>`;b.onclick=()=>go(k,lastG);cont.appendChild(b)}
  $('#allH').hidden=!(lastG&&!k.speak);$('#gwrap').className=k.speak?'big':'';
  const cc=$('#ccLink');if(cc)cc.hidden=!k.tester;
@@ -251,7 +257,7 @@ function openShelf(id){const k=H.kid(id);if(!k){renderWho();return}if(k.tester&&
   b.innerHTML=`<div class="shot" style="background-image:url('${cover(g)}')"><span class="em" style="--a:${g.bg[0]}">${g.emoji}</span>${e&&e.last?`<span class="played">${esc(H.ago(e.last))}</span>`:''}</div>
    <div class="body"><h3>${esc(g.title)}</h3><p>${esc(g.blurb)}</p><div class="chips">${g.subjects.map(s=>`<span class="chip ${s}">${s}</span>`).join('')}</div></div>`;
   b.onclick=()=>{if(g.soon){H.say(g.title+' is coming soon!');toast(g.title+' is coming soon');return}if(k.speak){H.say(g.title);setTimeout(()=>go(k,g),800)}else go(k,g)};box.appendChild(b)});
- show('shelf')}
+ show('shelf');if(window.HEROUI&&!k.tester)HEROUI.league($('#league2'),S.kids,k.id);else $('#league2').hidden=true}
 function go(k,g){location.href='play.html?g='+encodeURIComponent(g.id)+'&k='+encodeURIComponent(k.id)}
 
 /* ---------- grown-ups: PIN ---------- */
@@ -278,6 +284,8 @@ $('#toGrown').onclick=openGrown;$('#toGrown2').onclick=openGrown;$('#pinBack').o
 const confirmOpen={};
 function openPanel(){$('#pinBox').hidden=true;const P=$('#panel');P.hidden=false;
  let h=`<div class="panelTop"><h1>Grown-ups</h1><button class="btn" id="addKid">+ Add a kid</button><button class="btn ghost" id="doneBtn">Done</button></div>`;
+ h+=`<div class="kcard"><div class="ksec" style="margin-top:0"><h3>🏆 Brothers League</h3><p class="note">Weekly scoreboard on the home screen. XP comes only from right answers and focused play time. Resets every Monday. Set a prize for this week's winner (shows on every device):</p>
+  <div class="row" style="margin-top:8px"><input id="prizeIn" maxlength="60" placeholder="e.g. Pick Friday's movie" value="${esc(S.prize||'')}" style="flex:1;min-width:200px"><button class="btn small" id="prizeSave">Save prize</button></div></div></div>`;
  S.kids.forEach(k=>{h+=kidCard(k)});
  const dev=window.__trk&&__trk.device?__trk.device():{name:'This device',test:false};
  h+=`<div class="kcard">
@@ -305,6 +313,11 @@ function gameSettings(k){const GS=window.__GSET,ids=H.gamesOf(k).filter(id=>id==
   <div class="toggle"><button class="tg" aria-pressed="${strict}" data-kwst="${k.id}" aria-label="Stop guessing"></button><span>⚡ Stop guessing<small>Every wrong answer is a lightning hit. King's Wall loses a heart (3 per stage), Rocket Pants loses a heart and goes back to the checkpoint after 3, Block Party loses a heart. Careful right answers earn hearts back in King's Wall. In every game, answers stay locked until the question has been read, and fast wrong taps lock them longer.</small></span></div>
   <p class="note" style="margin:10px 0 8px">Pick the level each game starts at, subject by subject. The game still moves up as they get things right. "Auto" lets the game work it out.</p>
   ${cards}${syncNote?`<p class="note warn">${syncNote}</p>`:''}</div>`}
+function goalBox(k){const g=HERO.goalOf(k.id),sc=HERO.schedOf(k.id),ms=HERO.missionsOf(k.id);
+ return `<div class="ksec"><h3>Daily goal and hero alerts</h3><div class="row" style="gap:14px">
+  <label class="note">Daily goal <select data-goal="${k.id}">${[30,45,60,90,120,150,180,240].map(v=>`<option value="${v}"${v===g?' selected':''}>${v>=60?(v/60)+' hour'+(v===60?'':'s'):v+' min'}</option>`).join('')}</select></label>
+  <label class="note">Day <select data-sched="${k.id}"><option value="home"${sc==='home'?' selected':''}>Home all day (homeschool)</option><option value="school"${sc==='school'?' selected':''}>School, plays after</option></select></label></div>
+  <p class="note" style="margin-top:8px">Split into ${ms.length} mission${ms.length>1?'s':''} a day${ms.length>1?' ('+ms.map((m,i)=>m-(ms[i-1]||0)).join(' + ')+' min)':''}. Each one opens a reward; finishing all opens the daily treasure chest. Coming back after a break earns a bonus, so spaced-out sessions pay best. Hero alerts (if turned on from ${esc(k.name)}'s shelf) call ${sc==='home'?'during the school day: about 9:30, 11:15, 1:00, 2:45 and 4:30 on weekdays':'after school: about 3:45, 5:15 and 6:45 on weekdays'}, only when there's a mission left and nobody is playing.</p></div>`}
 function kidCard(k){const L=S.log[k.id]||{};
  const rows=window.CATALOG.filter(g=>!g.soon).map(g=>{const e=L[g.id],pr=H.progress(k.id,g.id);if(!e&&!pr)return'';
   const acc=pr&&pr.subjects.length?pr.subjects.map(s=>`<span class="acc">${s.s}: <b>${s.ok}/${s.q}</b> (${Math.round(s.ok/s.q*100)}%)</span>`).join(''):'<span class="note">No answers yet</span>';
@@ -317,18 +330,21 @@ function kidCard(k){const L=S.log[k.id]||{};
   <div class="ksec"><h3>Picture</h3><div class="row">${EMOJI.map(e=>`<button class="emo${e===k.emoji?' on':''}" data-emo="${k.id}" data-v="${e}">${e}</button>`).join('')}</div>
    <div class="row" style="margin-top:8px">${COLORS.map(c=>`<button class="col${c===k.color?' on':''}" style="background:${c}" data-col="${k.id}" data-v="${c}" aria-label="Color"></button>`).join('')}</div></div>
   <div class="ksec"><div class="toggle"><button class="tg" aria-pressed="${!!k.speak}" data-speak="${k.id}" aria-label="Read aloud"></button><span>Read things out loud<small>For kids who can't read yet: names and game titles are spoken, and game cards get bigger.</small></span></div></div>
+  ${k.tester?'':goalBox(k)}
   ${k.tester?`<div class="ksec"><h3>Games</h3><p class="note">Every game in the Game Room, including new ones as they're added. Locked with your PIN, and never counted in the kids' numbers.</p></div>`:`<div class="ksec"><h3>Games on ${esc(k.name)}'s shelf</h3><div class="row">${window.CATALOG.map(g=>{const on=k.games.includes(g.id);return`<button class="chk${on?' on':''}" data-game="${k.id}" data-v="${g.id}"><span class="box">${on?'✓':''}</span>${g.emoji} ${esc(g.title)}${g.soon?' <small>(soon)</small>':''}</button>`}).join('')}</div></div>`}
   ${gameSettings(k)}
   <div class="ksec"><h3>Progress on this device</h3>${rows?`<div class="tblwrap"><table class="tbl"><thead><tr><th>Game</th><th>Last played</th><th>This week</th><th>All time</th><th>Answers right</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="note">${esc(k.name)} hasn't played anything on this device yet.</p>`}</div>
  </div>`}
-function pushSettings(k){k.setAt=Date.now();H.save();
- fetch('api/settings',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({kids:{[k.id]:{at:k.setAt,gs:k.gs||{},kw:k.kw||null}}})})
+function pushSettings(k,extra){if(k){k.setAt=Date.now();H.save()}
+ fetch('api/settings',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify(Object.assign({kids:k?{[k.id]:{at:k.setAt,gs:k.gs||{},kw:k.kw||null,goal:k.goal||null,sched:k.sched||null}}:{}},extra||{}))})
   .then(r=>{const was=syncNote;syncNote=r.status===401?'Saved on this device. To send these settings to every device the boys play on, sign in once to the <a href="admin">Command Center</a> on this phone.':r.ok?'':'Saved on this device. Couldn’t reach the cloud just now; it will send next time you change a setting.';if(was!==syncNote&&!$('#panel').hidden){const y=window.scrollY;openPanel();window.scrollTo(0,y)}}).catch(()=>{})}
 function bindPanel(){const P=$('#panel');
  P.querySelectorAll('details.gset').forEach(d=>{d.ontoggle=()=>{if(d.open)gOpen[d.dataset.gopen]=1;else delete gOpen[d.dataset.gopen]}});
- P.onchange=e=>{const t=e.target;if(!t.dataset||!t.dataset.gs)return;const [kid,g,tr]=t.dataset.gs.split('|');const k=H.kid(kid);if(!k)return;k.gs=k.gs||{};const G=k.gs[g]=k.gs[g]||{};
+ P.onchange=e=>{const t=e.target;if(t.dataset&&(t.dataset.goal||t.dataset.sched)){const k=H.kid(t.dataset.goal||t.dataset.sched);if(t.dataset.goal)k.goal=+t.value;else k.sched=t.value;pushSettings(k);toast('Saved');const y=window.scrollY;openPanel();window.scrollTo(0,y);return}
+  if(!t.dataset||!t.dataset.gs)return;const [kid,g,tr]=t.dataset.gs.split('|');const k=H.kid(kid);if(!k)return;k.gs=k.gs||{};const G=k.gs[g]=k.gs[g]||{};
   const v=+t.value||0;if(v)G[tr]={lv:v,t:Date.now()};else delete G[tr];pushSettings(k);toast(v?'Saved: starts there next time':'Saved: Auto');const y=window.scrollY;openPanel();window.scrollTo(0,y)};
  $('#doneBtn').onclick=()=>renderWho();
+ $('#prizeSave').onclick=()=>{S.prize=$('#prizeIn').value.trim();S.prizeAt=Date.now();H.save();pushSettings(null,{prize:{v:S.prize,at:S.prizeAt}});toast(S.prize?'Prize saved':'Prize cleared')};
  $('#addKid').onclick=()=>{const id='kid-'+Date.now().toString(36);S.kids.push({id,name:'New player',emoji:EMOJI[S.kids.length%EMOJI.length],color:COLORS[S.kids.length%COLORS.length],speak:false,games:[]});H.save();openPanel();
   const inp=P.querySelector(`[data-name="${id}"]`);if(inp){inp.scrollIntoView({block:'center'});inp.focus();inp.select()}};
  $('#chgPin').onclick=()=>{S.pin=null;H.save();openGrown()};
@@ -353,7 +369,8 @@ function bindPanel(){const P=$('#panel');
   H.save();if(k&&(d.kws||d.kwl||d.kwsp||d.kwst))pushSettings(k);const y=window.scrollY;openPanel();window.scrollTo(0,y)}}
 
 /* settings chosen on any grown-up device reach every device */
-fetch('api/settings',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.kids)return;let ch=false;S.kids.forEach(k=>{const r=j.kids[k.id];if(r&&(+r.at||0)>(k.setAt||0)){k.gs=r.gs||{};if(r.kw)k.kw=r.kw;k.setAt=+r.at;ch=true}});if(ch){H.save();if(!$('#panel').hidden){const y=window.scrollY;openPanel();window.scrollTo(0,y)}}}).catch(()=>{});
+fetch('api/settings',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.kids)return;let ch=false;S.kids.forEach(k=>{const r=j.kids[k.id];if(r&&(+r.at||0)>(k.setAt||0)){k.gs=r.gs||{};if(r.kw)k.kw=r.kw;if(r.goal)k.goal=+r.goal;if(r.sched)k.sched=r.sched;k.setAt=+r.at;ch=true}});
+ if(j.prize&&(+j.prize.at||0)>(S.prizeAt||0)){S.prize=j.prize.v||'';S.prizeAt=+j.prize.at;ch=true}if(ch){H.save();if(!$('#panel').hidden){const y=window.scrollY;openPanel();window.scrollTo(0,y)}}}).catch(()=>{});
 /* ---------- start ---------- */
 let start=null;try{start=location.hash.slice(1)||sessionStorage.getItem('hub.kid')}catch(e){}
 if(start&&H.kid(start))openShelf(start);else renderWho();

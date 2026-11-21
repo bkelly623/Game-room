@@ -14,4 +14,5 @@ module.exports=async(req,res)=>{
   const best=ev.filter(e=>e&&e.e==='kwbest'&&!doc.dev.test).reduce((m,e)=>Math.max(m,+e.st||0),0);
   if(best){try{const url=B.publicUrl('gr/v1/board.json');const cur=(url&&await B.getJSON(url+'?t='+now))||{kids:{}};
     const k=cur.kids[b.kid]||{};if(best>(k.best||0)){cur.kids[b.kid]={name:doc.name||k.name||b.kid,best,at:now};await B.put('gr/v1/board.json',JSON.stringify(cur),{random:false,overwrite:true,maxAge:60})}}catch(e){}}
+  try{await require('./_league').record(doc)}catch(e){}
   return json(res,200,{ok:true})};

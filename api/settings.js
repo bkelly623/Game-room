@@ -6,9 +6,10 @@ module.exports=async(req,res)=>{try{
   if(req.method==='GET')return json(res,200,await current());
   if(req.method!=='POST')return json(res,405,{error:'method'});
   if(!authed(req))return json(res,401,{error:'sign in'});
-  const body=await readBody(req);if(!body||typeof body.kids!=='object')return json(res,400,{error:'bad body'});
+  const body=await readBody(req);if(!body||(typeof body.kids!=='object'&&!body.prize))return json(res,400,{error:'bad body'});
   const cur=await current();
-  for(const [id,v] of Object.entries(body.kids)){if(!/^[a-z0-9-]{1,40}$/.test(id)||!v||typeof v!=='object')continue;const s=JSON.stringify(v);if(s.length>20000)continue;
-    const at=+v.at||Date.now();if(!cur.kids[id]||(+cur.kids[id].at||0)<=at)cur.kids[id]={at,gs:v.gs||{},kw:v.kw||null}}
+  for(const [id,v] of Object.entries(body.kids||{})){if(!/^[a-z0-9-]{1,40}$/.test(id)||!v||typeof v!=='object')continue;const s=JSON.stringify(v);if(s.length>20000)continue;
+    const at=+v.at||Date.now();if(!cur.kids[id]||(+cur.kids[id].at||0)<=at)cur.kids[id]={at,gs:v.gs||{},kw:v.kw||null,goal:+v.goal||null,sched:v.sched==='home'||v.sched==='school'?v.sched:null}}
+  if(body.prize&&typeof body.prize==='object'&&(+body.prize.at||0)>=(cur.prize&&+cur.prize.at||0))cur.prize={v:String(body.prize.v||'').slice(0,60),at:+body.prize.at||Date.now()};
   cur.at=Date.now();await B.put(PATH,JSON.stringify(cur),{random:false,overwrite:true,maxAge:60});
   return json(res,200,{ok:true,at:cur.at})}catch(e){return json(res,500,{error:String(e.message||e).slice(0,200)})}};

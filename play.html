@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Game Room</title>
 <meta name="theme-color" content="#0E0B24">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&display=swap">
@@ -24,14 +26,21 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;height:var(--
 #title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #frame{flex:1;width:100%;border:0;display:block;background:#000}
 #msg{flex:1;display:grid;place-items:center;color:#FFF6E6;font:600 20px Fredoka,system-ui,sans-serif;text-align:center;padding:20px}
+#hp{display:none;align-items:center;gap:7px;margin-left:auto;padding:3px 10px 3px 4px;border-radius:99px;background:#221C4E;border:2px solid #3E3584;font-size:14px;white-space:nowrap;cursor:default}
+#hp .hav{width:26px;height:30px}#hp .b{width:54px;height:8px;border-radius:9px;background:#15103A;overflow:hidden}#hp .b i{display:block;height:100%;background:linear-gradient(90deg,#FFD23F,#FF9F1C)}
+#hp .m{color:#BFF5D8}#hp+#who{margin-left:6px}
+#htoast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 46px);transform:translate(-50%,-140%);z-index:20;background:#221C4E;color:#fff;border:3px solid #FFD23F;border-radius:18px;padding:9px 16px;font:600 16px Fredoka,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.3,.4,1);pointer-events:none;max-width:92vw;text-align:center}
+#htoast.on{transform:translate(-50%,0)}
+@media (max-width:560px){#hp .b,#hp .m{display:none}#title{display:none}}
 </style>
 </head>
 <body>
-<div id="bar"><button id="back" aria-label="Back to games"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Games</button><span id="title"></span><span id="who"></span></div>
+<div id="bar"><button id="back" aria-label="Back to games"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Games</button><span id="title"></span><span id="hp"></span><span id="who"></span></div>
 <script>/* fit the real visible screen: phone toolbars, gesture bars and in-app browsers */
 (function(){function fit(){var h=(window.visualViewport&&visualViewport.height)||innerHeight;document.documentElement.style.setProperty('--vh',Math.round(Math.min(h,innerHeight))+'px')}fit();addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});window.visualViewport&&visualViewport.addEventListener('resize',fit)})();</script>
 <script src="games/catalog.js"></script>
 <script src="hub.js"></script>
+<script src="games/_hero.js"></script>
 <script>
 (()=>{'use strict';
 const q=new URLSearchParams(location.search),k=HUB.kid(q.get('k')||''),g=HUB.game(q.get('g')||'');
@@ -46,6 +55,15 @@ f.src='games/'+g.id+'/?kid='+encodeURIComponent(k.id);
 f.addEventListener('load',()=>{try{f.contentWindow.focus()}catch(e){}});
 document.body.appendChild(f);
 HUB.touch(k.id,g.id);
+/* hero pill + news toasts (the game itself does the counting) */
+if(window.HERO&&!k.tester){HERO.css();const hp=document.getElementById('hp');let seen=Date.now(),q=[],busy=false;
+ const tst=document.createElement('div');tst.id='htoast';document.body.appendChild(tst);
+ function show(){if(busy||!q.length)return;busy=true;tst.textContent=q.shift();tst.classList.add('on');HERO.tone('level');setTimeout(()=>{tst.classList.remove('on');setTimeout(()=>{busy=false;show()},450)},3600)}
+ function draw(){const h=HERO.load(k.id),L=HERO.lvOf(h.xp),b0=HERO.lvBase(L),b1=HERO.lvBase(L+1),ms=HERO.missionsOf(k.id),i=Math.min(h.today.m.length,ms.length-1),min=Math.floor(h.today.sec/60),prev=i?ms[i-1]:0;
+  const done=h.today.m.length>=ms.length;
+  hp.style.display='inline-flex';hp.innerHTML='<span class="hav">'+HERO.svg(h.look)+'</span><b>Lv '+L+'</b><span class="b"><i style="width:'+Math.round((h.xp-b0)/(b1-b0)*100)+'%"></i></span><span class="m">'+(done?'🎁 Chest ready!':'🗡️ '+Math.max(0,min-prev)+'/'+(ms[i]-prev)+' min')+'</span>';
+  hp.title='Mission progress today';(h.news||[]).filter(n=>n.t>seen&&n.k!=='xp'||n.t>seen&&/Welcome back/.test(n.txt)).forEach(n=>q.push(n.txt));seen=Math.max(seen,...(h.news||[]).map(n=>n.t));show()}
+ draw();setInterval(draw,3000);addEventListener('storage',draw)}
 /* Count time only while the game is on screen. */
 let lastT=Date.now(),acc=0,vis=!document.hidden;
 function flush(){const n=Date.now();if(vis){acc+=Math.min(60,(n-lastT)/1000)}lastT=n;if(acc>=1){HUB.addTime(k.id,g.id,Math.floor(acc));acc-=Math.floor(acc)}}

@@ -41,7 +41,7 @@ function flushSess(){if(active>=5&&KID&&GAME){push(KID,{t:Date.now(),e:'sess',g:
 window.__trk={
  /* one answer: s=subject, lv=level, it=item, ok=right, ms=time to answer */
  ans:function(o){if(!KID)return;var t=Date.now();var e={t:t,e:'ans',g:GAME,s:String(o.s||''),ok:o.ok?1:0};if(o.lv!=null)e.lv=o.lv;if(o.it!=null)e.it=String(o.it).slice(0,60);
-  var ms=o.ms!=null?o.ms:(lastAns?t-lastAns:null);if(ms!=null&&ms<180000)e.ms=Math.round(ms);if(o.help)e.h=1;if(o.f!=null)e.f=o.f;lastAns=t;push(KID,e)},
+  var ms=o.ms!=null?o.ms:(lastAns?t-lastAns:null);if(ms!=null&&ms<180000)e.ms=Math.round(ms);if(o.help)e.h=1;if(o.f!=null)e.f=o.f;lastAns=t;push(KID,e);try{if(window.HERO)HERO.onAns(KID,!!o.ok,GAME,!!o.help)}catch(x){}},
  ev:function(type,o){if(!KID)return;var e={t:Date.now(),e:type,g:GAME};for(var k in o)e[k]=o[k];push(KID,e)},
  flush:function(b){flushSess();send(KID,{beacon:b})},
  syncKid:function(kid){send(kid,{})},device:device,setDevice:function(p){var d=device();for(var k in p)d[k]=p[k];rset('hub.device',JSON.stringify(d))}

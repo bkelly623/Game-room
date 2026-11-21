@@ -29,5 +29,5 @@
   /* early reader: reads things aloud and starts with the youngest material */
   window.__young=function(){var k=window.__kidInfo();return !!(k&&k.speak)};
   /* progress tracking for the grown-ups' Command Center */
-  try{var me=document.currentScript&&document.currentScript.src;if(me)document.write('<script src="'+me.replace(/_kid\.js(\?.*)?$/,'_gset.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_guard.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_sync.js')+'"><\/script>')}catch(e){}
+  try{var me=document.currentScript&&document.currentScript.src;if(me)document.write('<script src="'+me.replace(/_kid\.js(\?.*)?$/,'_gset.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_guard.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_hero.js')+'"><\/script><script src="'+me.replace(/_kid\.js(\?.*)?$/,'_sync.js')+'"><\/script>')}catch(e){}
 })();

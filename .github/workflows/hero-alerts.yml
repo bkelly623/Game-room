@@ -1,0 +1,13 @@
+name: Hero alerts
+# Every 30 minutes through the family's day (8am-7:59pm Eastern). The API decides who, if anyone, gets an alert.
+on:
+  schedule:
+    - cron: '0,30 13-23 * * *'
+    - cron: '0,30 0 * * *'
+  workflow_dispatch:
+jobs:
+  nudge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: curl -fsS --max-time 60 "https://game-room-omega.vercel.app/api/push?run=1&key=sEGTZqL7CRZGgRoLgcV28qu8"
