@@ -406,7 +406,7 @@ function migrate(o){if(o&&o.v!==2)o={name:o.name,ma:o.ma,rd:o.rd,gr:o.gr,days:o.
 function load(){try{const s=localStorage.getItem(KEY);if(s)D=migrate(JSON.parse(s))}catch(e){}}
 function save(){if(!D.started)return;D.savedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}cloudSchedule()}
 function dayStat(){const k=today();if(!D.days[k])D.days[k]={math:{q:0,c:0},read:{q:0,c:0},gram:{q:0,c:0},sec:0};const d=D.days[k];['math','read','gram'].forEach(x=>{if(!d[x])d[x]={q:0,c:0}});return d}
-const fmt=s=>String(s).replace(/\{N\}/g,D.name||'Chief');
+const fmt=s=>{const t=String(s).replace(/\{N\}/g,D.name||'Chief');return typeof bossTx==='function'?bossTx(t):t};
 
 /* ===================== adaptive engines: math, reading, grammar ===================== */
 const ENG={math:{len:()=>MSK.length,E:()=>D.ma,name:i=>MSK[i].n,make:(s,c)=>makeM(s,c)},read:{len:()=>RSK.length,E:()=>D.rd,name:i=>RSK[i].n},gram:{len:()=>GSK.length,E:()=>D.gr,name:i=>GSK[i].n,make:s=>makeG(s)}};
@@ -708,7 +708,7 @@ const UPG={bw:{n:'Bronze Weapons',age:1,cost:{food:100,gold:50},d:`Warriors, swo
  iw:{n:'Iron Weapons',age:2,req:'bw',cost:{food:200,gold:150},d:`Melee fighters hit 3 more.`},ia:{n:'Iron Armor',age:2,req:'ba',cost:{food:200,gold:150},d:`Soldiers take another 15% less damage.`}};
 const ITEMS={boots:{n:'Boots of Speed',i:'👢',d:`Your hero runs 30% faster.`},ring:{n:'Ring of Health',i:'💍',d:`+80 health.`},sword:{n:'Runed Sword',i:'🗡️',d:`+6 attack.`},horn:{n:'War Horn',i:'📯',d:`Battle Cry lasts twice as long and reaches farther.`}};
 const ABIL={cry:{n:'Battle Cry',i:'📣',lvl:1,cd:45,d:`Nearby soldiers hit 50% harder for 12 seconds.`},slam:{n:'Shield Slam',i:'🛡️',lvl:2,cd:25,d:`Smash nearby enemies and stun them.`},heal:{n:'Healing Light',i:'✨',lvl:3,cd:60,d:`Heal everyone nearby by half their health.`}};
-const XPN=[0,0,100,250,450,700];
+const XPN=[0,0,100,250,450,700,1000,1350,1750,2200,2700,3250,3850,4500,5200,6000];
 const HAND_CAMPS=[{id:'a',c:1,r:4,mob:['skel','skel'],item:'boots',gold:120},{id:'b',c:10,r:9,mob:['skel','skel','skelw'],item:'ring',gold:150},{id:'c',c:8,r:6,mob:['skel','skelw','skel','skelw'],item:'sword',gold:200},{id:'d',c:7,r:1,mob:['skelw','skelw','skel','skelw','skel'],item:'horn',gold:250}];
 let CAMPS=HAND_CAMPS.slice();
 function makeCamps(){if(D.rivals.length<=1||!D.setup||D.setup.rivals<=1){CAMPS=HAND_CAMPS.slice();return}const tcs=[PLAYER_TC].concat(RIVAL_TCS);const out=[];const ok=t=>t.type==='grass'&&!t.bush&&tcs.every(x=>hexDist(t,x)>=4)&&out.every(c=>hexDist(t,tileAt(c.c,c.r))>=4);
@@ -875,7 +875,7 @@ function sendToRally(u,b){const r=b.rally,k=u.k,kind=rallyKind(r);
  moveTo(u,r||rallyDefault(b),r?.8:2)}
 
 /* ---------- the hero ---------- */
-function gainXP(n,x,z){const H=D.hero,h=heroU();if(!h||(x!=null&&Math.hypot(h.x-x,h.z-z)>10))return;if(H.lvl>=5)return;H.xp+=n;fx('xp',n);while(H.lvl<5&&H.xp>=XPN[H.lvl+1]){H.lvl++;h.hp=uMax(h);const L=H.lvl;fx('levelUp',L);ask(()=>heroTrial(L))}}
+function gainXP(n,x,z){const H=D.hero,h=heroU();if(!h||(x!=null&&Math.hypot(h.x-x,h.z-z)>10))return;const MX=XPN.length-1;if(H.lvl>=MX)return;H.xp+=n;fx('xp',n);while(H.lvl<MX&&H.xp>=XPN[H.lvl+1]){H.lvl++;h.hp=uMax(h);const L=H.lvl;fx('levelUp',L);ask(()=>heroTrial(L))}}
 async function heroTrial(L){const nw=Object.entries(ABIL).find(([k,a])=>a.lvl===L);await ASK.say('Elder Maela',`${D.name||'Our chief'} has reached level ${L}! Stronger and tougher.${nw?` New ability: ${nw[1].i} ${nw[1].n}! ${nw[1].d}`:''} Now, a Trial of Wisdom: answer well and gain even more strength.`);
  const q=nextQ('math','battle');const ok=await ASK.math(q,{mode:'trial'});answer(q,ok);if(ok){D.hero.wisdom++;const h=heroU();if(h)h.hp=uMax(h)}ASK.toast(ok?`⭐ Wisdom! Your hero gains +25 health and +2 attack.`:`The trial was hard this time. Keep practicing!`);fx('hud')}
 function useAbility(k){const h=heroU(),H=D.hero,A=ABIL[k];if(!h||H.lvl<A.lvl||H.cd[k]>D.clock)return false;H.cd[k]=D.clock+A.cd;const horn=H.items.includes('horn');
@@ -943,7 +943,7 @@ function enThink(e,dt){e.moving=false;e.act=null;e.cd-=dt;e.retarget-=dt;const U
 
 /* ---------- combat ---------- */
 function strike(src,ref,tg,dmg){const ranged=(src.k&&UT[src.k]&&UT[src.k].ranged)||src.shooter;if(ranged){const p={x:src.x,z:src.z,y:src.shooter?2:.6,ref,dmg,t:0,T:Math.max(.25,Math.hypot(tg.x-src.x,tg.z-src.z)/14),by:src.id,src};P.push(p);fx('arrow',p,src)}else{damage(ref,dmg,src);fx('swing',src,ref)}}
-function damage(ref,dmg,src){const t=getEnt(ref);if(!t)return;if(ref.k==='u'&&src&&src.creep)src.angry=true;if(ref.k==='u'&&t.k==='vil'&&src&&src.creep){if(!D.danger)D.danger={};const vt=nearestTile(t.x,t.z);TILES.forEach(x=>{if(hexDist(x,vt)<=1)D.danger[tkey(x.c,x.r)]=D.clock+180})}if(ref.k==='u')dmg*=1-armorOf(t);t.hp-=dmg;if(ref.k==='e'&&t.creep&&!t.angry){t.angry=true;E.forEach(o=>{if(o.creep===t.creep)o.angry=true})}fx('hit',ref,t);if(t.hp<=0)kill(ref,t,src)}
+function damage(ref,dmg,src){const t=getEnt(ref);if(!t)return;if(ref.k==='rb'&&t.t==='tc'&&(t.o||0)===0&&bossShield()){shieldHit(t);return}if(ref.k==='u'&&src&&src.creep)src.angry=true;if(ref.k==='u'&&t.k==='vil'&&src&&src.creep){if(!D.danger)D.danger={};const vt=nearestTile(t.x,t.z);TILES.forEach(x=>{if(hexDist(x,vt)<=1)D.danger[tkey(x.c,x.r)]=D.clock+180})}if(ref.k==='u')dmg*=1-armorOf(t);t.hp-=dmg;if(ref.k==='e'&&t.creep&&!t.angry){t.angry=true;E.forEach(o=>{if(o.creep===t.creep)o.angry=true})}fx('hit',ref,t);if(t.hp<=0)kill(ref,t,src)}
 function kill(ref,t,src){if(ref.k==='u'){const i=D.u.indexOf(t);if(i>=0)D.u.splice(i,1);D.stats.lost++;t.killer=src?(src.creep?'creep':src.garrison?'garrison':src.raid?'raider':src.shooter?'arrow':src.k):'arrow';if(t.k==='hero'){D.hero.dead=true;D.hero.respawn=D.clock+45;ask(()=>ASK.say('Elder Maela',`Our chief has fallen! Don't worry: after 45 seconds of rest at the Town Center, ${D.name||'the chief'} will return. You can pay 100 gold at the Town Center to bring them back sooner.`))}fx('unitDie',t)}
  else if(ref.k==='e'){const i=E.indexOf(t);if(i>=0)E.splice(i,1);D.stats.kills++;if(t.garrison)RV(t.o).army=Math.max(1,RV(t.o).army-2.5);gainXP(UT[t.k].xp||25,t.x,t.z);fx('enemyDie',t)}
  else if(ref.k==='b'){if(t.t==='tc'){t.hp=1;return}delete D.b[t.id];D.u.forEach(u=>{if(u.task.t==='gather'&&u.task.key==='b:'+t.id)u.task={t:'idle'}});fx('bDestroyed',t);save()}
@@ -967,7 +967,7 @@ function rivalTick(dt){const min=D.clock/60,many=D.rivals.length>1;Object.values
   if((R.built||0)<RIVAL_PLAN.length&&D.clock>=(R.built||0)*150+o*40){const ns=rivalSpots(o),i=R.built||0;if(ns[i]&&!D.rb['r'+tkey(ns[i].c,ns[i].r)])addRB(ns[i],RIVAL_PLAN[i],o);R.built=i+1;fx('rivalBuilt')}
   if(!R.wonderOn&&D.clock>=Math.max(RIVAL_START+o*300,R.restartAt||0)&&!D.result){R.wonderOn=true;const ns=rivalSpots(o),wt=ns[ns.length-1];if(wt){const old=D.rb['r'+tkey(wt.c,wt.r)];if(!old||old.t!=='wonder')addRB(wt,'wonder',o)}
    ask(()=>ASK.say('Your Advisor',R.restartAt?`${KG.king} has started building a Great Tower again!`:`Terrible news! ${KG.king} has begun building a Great Tower. If it is finished before your Sun Tower stands, ${KG.king.split(' ')[0]==='Queen'||KG.king.split(' ')[0]==='Baroness'?'she':'he'} wins. Attack ${KG.realm} to slow them down, or smash the tower itself!`))}
-  if(R.wonderOn&&!D.result){/* a kingdom that's behind gets more time, so a race is never hopeless */R.wonder+=dt*(D.age<R.age?.6:D.age===R.age?.85:1);
+  if(R.wonderOn&&!D.result){/* a kingdom that's behind gets more time, so a race is never hopeless */R.wonder+=dt*(D.age<R.age?.6:D.age===R.age?.85:1)*bossW(o);
    const pct=R.wonder/RIVAL_WONDER,steps=[.5,.75,.9];R.warned=R.warned||0;
    if(R.warned<steps.length&&pct>=steps[R.warned]){const p=Math.round(steps[R.warned]*100);R.warned++;ask(()=>ASK.say('Your Advisor',`${KG.king}'s Great Tower is ${p}% built! Tap ⚔️ Smash Tower to send your army, or finish your own Sun Tower first.${p>=90?' Hurry!':''}`))}
    if(R.wonder>=RIVAL_WONDER){D.result='lose';D.loser=o;ask(()=>fx('defeat'))}}})}
@@ -1069,6 +1069,91 @@ async function council(){surveyStart('math',3);surveyStart('gram',2);const R=[{w
 let campT=0;
 function tick(dt){if(D.result==='lose')return;D.clock+=dt;seasonTick();rivalTick(dt);raidTick();assaultTick(dt);storyTick();timersTick(dt);trainTick(dt);heroTick(dt);campT-=dt;if(campT<=0){campT=.5;campTick()}
  D.u.slice().forEach(u=>{if(!D.u.includes(u))return;if(u.k==='vil')vilThink(u,dt);else if(u.k==='fboat')boatThink(u,dt);else solThink(u,dt)});E.slice().forEach(e=>{if(E.includes(e))enThink(e,dt)});shootTick(dt);projTick(dt);separate()}
+
+/* ===================== Weekly Campaign =====================
+   Every Monday: a new map (same for all the brothers) and a new boss king with a twist.
+   The boss castle is sealed by a magic shield; only the Boss Trial (harder questions, 4 of 5 right first try) breaks it.
+   Carries over between games: your hero (level, items, wisdom) and the relics you win each week. */
+const CKEY='dawnkingdoms.camp.v1';
+const BOSSES=[
+ {king:'Count Fangula',realm:'Castle Gloom',short:'Castle Gloom',col:'#7A2AE8',trait:'fast',tip:`His Great Tower builds faster than anyone's. Strike early!`,taunt:`I vant to suck... your gold! Mwa-ha-ha!`},
+ {king:'Lord Grubb',realm:'the Swamp of Snort',short:'Snort Swamp',col:'#6AC83A',trait:'rich',tip:`He starts with a much bigger army. Build a tower and train soldiers early.`,taunt:`Grubb smash! Grubb also count... to four. Sometimes five.`},
+ {king:'Queen Mirela',realm:'the Frost Fen',short:'Frost Fen',col:'#3AC8E8',trait:'frost',tip:`Her Great Tower races ahead every winter. Hit it before the snow!`,taunt:`Winter is coming, little chief. And it brought homework.`},
+ {king:'Sir Burpsalot',realm:'the Gassy Gorge',short:'Gassy Gorge',col:'#C8A23A',trait:'walls',tip:`His castle has double-thick walls. Bring battering rams and lots of swordsmen.`,taunt:`BUUURP. Excuse me. That was a warning.`},
+ {king:'Emperor Pickles',realm:'the Whisker Empire',short:'Whisker Empire',col:'#E87A2A',trait:'rich',tip:`A cat with a big army. Defend first, then strike.`,taunt:`Meow. That means "surrender" in Cat.`},
+ {king:'Grandma Gristle',realm:'Goblin Gulch',short:'Goblin Gulch',col:'#2AB88A',trait:'walls',tip:`She knits her castle walls extra thick. Bring rams.`,taunt:`Come here, sweetie. Grandma made you a cookie. It's a trap.`},
+ {king:'Baron Bonkers',realm:'the Bouncy Hills',short:'Bouncy Hills',col:'#E82A8A',trait:'fast',tip:`He builds super fast and talks even faster. Don't wait around!`,taunt:`Boing! Boing! I'm going to win! Boing!`},
+ {king:'King Varric',realm:'the Red Hills',short:'Red Hills',col:'#E8302A',trait:'frost',tip:`He's back, and his tower loves the cold.`,taunt:`I've been practicing my times tables, Chief. Have you?`}];
+const RELICS=[{id:'banner',n:'Golden Banner',i:'🚩',d:`Start every campaign with 2 extra villagers.`},{id:'horn',n:'Dragon Horn',i:'🐲',d:`Your hero starts with +2 Wisdom (+50 health, +4 attack).`},
+ {id:'stone',n:'Sunstone',i:'🔆',d:`Start every campaign with +200 stone.`},{id:'coin',n:'Lucky Coin',i:'🪙',d:`Start every campaign with +200 gold.`},
+ {id:'oak',n:'Elder Oak Seed',i:'🌳',d:`Start every campaign with +300 wood.`},{id:'grain',n:'Royal Granary',i:'🌾',d:`Start every campaign with +300 food.`}];
+function wkId(d){d=d?new Date(d):new Date();const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return 'w'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function wkHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function wkNum(w){return Math.floor(new Date(w.slice(1)+'T12:00:00').getTime()/(7*864e5))}
+function bossOf(w){return BOSSES[(((wkNum(w)+1)%BOSSES.length)+BOSSES.length)%BOSSES.length]}
+function campLoad(){let c=null;try{c=JSON.parse(localStorage.getItem(CKEY)||'null')}catch(e){}return c&&c.v===1?c:{v:1,wins:[],relics:[],hero:null,tries:{}}}
+function campSave(c){try{localStorage.setItem(CKEY,JSON.stringify(c))}catch(e){}}
+const campOn=()=>!!(D.setup&&D.setup.camp);
+const campBoss=()=>campOn()?BOSSES[D.setup.boss||0]:null;
+function campWon(w){return campLoad().wins.some(x=>x.week===w)}
+function relicCount(id){return campLoad().relics.filter(r=>r===id).length}
+/* the boss takes the place of rival 0 everywhere: names, colours and every line of text */
+const KING0=KINGS.map(k=>Object.assign({},k)),VAR0=KING0[0];
+function bossNames(){KINGS.forEach((k,i)=>Object.assign(k,KING0[i]));const B=campBoss();if(!B)return;Object.assign(KINGS[0],{king:B.king,realm:B.realm,short:B.short,col:B.col});
+ KINGS.forEach((k,i)=>{if(i&&KING0[i].king===B.king)Object.assign(k,{king:'Duke Dudley',realm:'the Muddy Marsh',short:'Muddy Marsh',col:'#9A7A3A'})})}
+function bossTx(s){const B=campBoss();if(!B||B.king==='King Varric'||typeof s!=='string'||s.indexOf('Varric')<0&&s.indexOf('Red Hills')<0)return s;
+ const nm=B.king.split(' ').slice(1).join(' ');return s.replace(/King Varric/g,B.king).replace(/Varric/g,nm).replace(/the Red Hills/g,B.realm).replace(/The Red Hills/g,B.realm[0].toUpperCase()+B.realm.slice(1)).replace(/Red Hills/g,B.short)}
+function bossDomFix(){if(window.__bossObs)return;const fixNode=n=>{if(n.nodeType===3){const v=bossTx(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v}else if(n.nodeType===1&&n.tagName!=='SCRIPT'&&n.tagName!=='STYLE'){const w=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);let t;while((t=w.nextNode())){const v=bossTx(t.nodeValue);if(v!==t.nodeValue)t.nodeValue=v}}};
+ window.__bossObs=new MutationObserver(ms=>{if(!campBoss())return;ms.forEach(m=>{if(m.type==='characterData')fixNode(m.target);else m.addedNodes.forEach(fixNode)})});
+ window.__bossObs.observe(document.body,{childList:true,subtree:true,characterData:true});fixNode(document.body)}
+/* boss twists */
+function bossW(o){const B=campBoss();if(!B||(o||0)!==0)return 1;if(B.trait==='fast')return 1.2;if(B.trait==='frost')return season()===3?1.45:1;return 1}
+const bossShield=()=>campOn()&&!D.flags.trial;
+let shieldMsgAt=-99;
+function shieldHit(t){if(D.clock-shieldMsgAt>12){shieldMsgAt=D.clock;ASK.toast(`🛡️ A magic shield protects ${campBoss().king.split(' ')[1]}'s castle! Tap ⚡ Boss Trial to break it.`);sfx&&sfx('bad')}}
+/* start this week's campaign (rebuilds the map, then the page reloads into it) */
+function startCampaign(){const w=wkId(),c=campLoad();c.tries[w]=(c.tries[w]||0)+1;Object.keys(c.tries).forEach(k=>{if(k<'w'+new Date(Date.now()-60*864e5).toISOString().slice(0,10))delete c.tries[k]});campSave(c);
+ D.setup={rivals:2,seed:wkHash('dok|'+w),camp:w,boss:(((wkNum(w)+1)%BOSSES.length)+BOSSES.length)%BOSSES.length};genMap(D.setup);initTiles();newGame();D.result='';save();try{sessionStorage.setItem('dok.auto','1')}catch(e){}location.reload()}
+function campNewGame(){const c=campLoad(),B=campBoss();bossNames();
+ if(c.hero){D.hero.lvl=Math.max(1,c.hero.lvl|0);D.hero.xp=c.hero.xp|0;D.hero.items=(c.hero.items||[]).slice();D.hero.wisdom=c.hero.wisdom|0}
+ D.hero.wisdom+=2*relicCount('horn');D.res.stone+=200*relicCount('stone');D.res.gold+=200*relicCount('coin');D.res.wood+=300*relicCount('oak');D.res.food+=300*relicCount('grain');
+ const t=PLAYER_TC;for(let i=0;i<2*relicCount('banner');i++){const a=i/4*6.28+1.3;addUnit('vil',t.x+Math.cos(a)*1.6,t.z+Math.sin(a)*1.6+.4)}
+ const h=heroU();if(h)h.hp=uMax(h);D.flags.trial=0;D.flags.trialCd=0;
+ if(B.trait==='rich')D.rivals[0].army+=4;
+ if(B.trait==='walls')Object.values(D.rb).forEach(b=>{if(b.t==='tc'&&(b.o||0)===0){b.max=Math.round(b.max*1.6);b.hp=b.max}})}
+/* keep the campaign hero's progress (it only goes up) */
+function campSync(){if(!campOn()||!D.hero)return;const c=campLoad(),H=D.hero,base=Math.max(0,(H.wisdom|0)-2*relicCount('horn'));const old=c.hero||{lvl:1,xp:0,items:[],wisdom:0};
+ if(H.lvl>old.lvl||H.xp>old.xp||H.items.length>(old.items||[]).length||base>(old.wisdom|0)){c.hero={lvl:Math.max(H.lvl,old.lvl),xp:Math.max(H.xp,old.xp),items:[...new Set([...(old.items||[]),...H.items])],wisdom:Math.max(base,old.wisdom|0)};campSave(c)}}
+/* the Boss Trial: 5 questions a step above where they are now; 4 right on the first try breaks the shield */
+async function bossTrial(){if(!campOn()||!bossShield()||D.result)return;if(D.flags.trialCd>D.clock){ASK.toast(`⏳ The shield is still humming. Try the Trial again in ${Math.ceil(D.flags.trialCd-D.clock)} seconds.`);return}
+ const B=campBoss();await ASK.say(B.king,`${B.taunt} My shield can only be broken by a true scholar. Five hard questions. Get four right on the first try, if you can!`);
+ const plan=['math','math','gram','math','math'];let right=0;
+ for(let i=0;i<plan.length;i++){const subj=plan[i],L=ENG[subj].len(),s=Math.min(L-1,focusOf(subj)+1);const q=subj==='math'?makeM(s,'battle'):makeG(s);q.subj=q.subj||subj;
+  const ok=subj==='math'?await ASK.math(q,{mode:'boss',i}):await ASK.gram(q,{mode:'boss',i});answer(q,ok);if(ok)right++;
+  if(right+(plan.length-1-i)<4)break}
+ if(right>=4){D.flags.trial=1;sfx('win');await ASK.say('Your Advisor',`⚡ ${right} of 5! The magic shield SHATTERS! ${B.king}'s castle can be attacked now. Send your army!`);gainXP(60)}
+ else{D.flags.trialCd=D.clock+120;await ASK.say(B.king,`Ha! Only ${right} right. My shield holds! Study up and come back in two minutes.`)}
+ save();updateHUD()}
+/* winning the week */
+async function campWin(type){if(!campOn())return;const w=D.setup.camp,c=campLoad();campSync();if(c.wins.some(x=>x.week===w))return;
+ const order=RELICS.map(r=>r.id),owned=c.relics,next=order.find(id=>!owned.includes(id))||order[c.wins.length%order.length];c.relics.push(next);
+ c.wins.push({week:w,boss:D.setup.boss,type,mins:Math.round(D.clock/60),at:Date.now()});campSave(c);const R=RELICS.find(r=>r.id===next),B=campBoss();
+ let gr='';try{if(window.HERO&&window.__KID){HERO.bonus(__KID,500,100,`👑 You beat ${B.king} in the Weekly Campaign! +500 XP, +100 coins.`);gr=' Your Game Room hero gets +500 XP and 100 coins!'}}catch(e){}
+ await ASK.say('Your Advisor',`👑 ${B.king} is defeated! This week's campaign is WON. You earned a relic that stays with you forever: ${R.i} ${R.n}. ${R.d}${gr} Your hero is level ${D.hero.lvl} and keeps every level for next week's boss.`)}
+function campTitleHTML(){const w=wkId(),B=bossOf(w),c=campLoad(),won=campWon(w),cur=campOn()&&D.setup.camp===w&&!D.result;
+ const days=(7-((new Date().getDay()+6)%7));
+ return `<button class="btn${won?'':' big'}" id="campBtn" style="margin-top:10px;width:100%;flex-direction:column">${cur?'▶ Continue the Weekly Campaign':won?'✓ Weekly Campaign beaten · play again':'🗺️ Weekly Campaign'}<small style="display:block;font-size:13px;opacity:.85;margin-top:3px">This week's boss: ${esc(B.king)} of ${esc(B.realm)} · new boss in ${days} day${days>1?'s':''}</small></button>
+  <div style="font-size:13px;opacity:.85;margin-top:6px;text-align:center">${c.hero?`🦸 Campaign hero: level ${c.hero.lvl}`:'🦸 Your campaign hero keeps every level'}${c.relics.length?` · Relics: ${c.relics.map(id=>RELICS.find(r=>r.id===id).i).join(' ')}`:''}${c.wins.length?` · 👑 ${c.wins.length} boss${c.wins.length>1?'es':''} beaten`:''}</div>`}
+function campBoot(){bossNames();bossDomFix();
+ if(typeof MTITLE!=='undefined')MTITLE.boss=[`⚡ Boss Trial`,`A step harder than usual. Read carefully and think it through!`];
+ if(typeof GTITLE!=='undefined')GTITLE.boss=o=>[`⚡ Boss Trial · ${(o.i||0)+1} of 5`,`Find the mistake, then fix it. Boss-level sentences!`];
+ const v0=HOOK.victory;HOOK.victory=async function(type){const r=await v0.apply(this,arguments);if(campOn())await campWin(type);return r};
+ const nb=HOOK.defeat;HOOK.defeat=async function(){if(campOn()){const B=campBoss();try{await ASK.say(B.king,`${B.taunt} Better luck next time!`)}catch(e){}}return nb.apply(this,arguments)};
+ const ng=newGame;newGame=function(){ng();if(campOn())campNewGame()};
+ const sv=save;save=function(){try{campSync()}catch(e){}return sv()};
+ const ttl=titleRefresh;titleRefresh=function(){ttl();let box=document.getElementById('campBox');if(!box){box=document.createElement('div');box.id='campBox';const tb=document.querySelector('#title .tbtns');if(tb)tb.after(box)}
+  box.hidden=!D.started;box.innerHTML=campTitleHTML();const b=document.getElementById('campBtn');if(b)b.onclick=()=>{audioInit();const w=wkId();if(campOn()&&D.setup.camp===w&&!D.result){enterGame();return}startCampaign()}};
+ titleRefresh()}
 
 /* ===================== screens, input, and the main loop ===================== */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1185,7 +1270,8 @@ function towerTarget(){let best=null;D.rivals.forEach((R,o)=>{if(R.alive===false
 function smashTower(){const T=towerTarget();if(!T)return;const war=D.u.filter(u=>(MILITARY.includes(u.k)||u.k==='galley')&&u.hp>0&&!(u.k==='hero'&&D.hero.dead));if(!war.length){sfx('bad');toast(`You need soldiers first! Tap your Barracks and train swordsmen.`);return}
  war.forEach(u=>{u.task={t:'attack',ref:{k:'rb',id:T.rb.id},then:{t:'assault',o:T.o}};u.path=null;u.stand=null});sfx('win');toast(`⚔️ ${war.length} soldiers march on ${KINGS[T.o].king}'s Great Tower!`);try{focusTile({x:T.rb.x,z:T.rb.z},20)}catch(e){}}
 function updateHUD(){if(mode!=='play')return;{let b=$('#bSmash');if(!b){const a=$('#bArmy');if(a){b=document.createElement('button');b.className='bb';b.id='bSmash';b.style.cssText='background:#B3261E;color:#fff';b.onclick=()=>{audioInit();smashTower()};a.after(b)}}
- if(b){const T=towerTarget();b.hidden=!T||!!D.result;if(T)b.innerHTML=`<span>🏰</span>Smash ${Math.round(T.p*100)}%`}}const cnt={food:0,wood:0,stone:0,gold:0};D.u.forEach(u=>{if(u.task.t==='gather')cnt[u.task.kind]++});
+ if(b){const T=towerTarget();b.hidden=!T||!!D.result;if(T)b.innerHTML=`<span>🏰</span>Smash ${Math.round(T.p*100)}%`}}{let b=$('#bTrial');if(!b){const a=$('#bArmy');if(a){b=document.createElement('button');b.className='bb';b.id='bTrial';b.style.cssText='background:#6B2BD6;color:#fff';b.onclick=()=>{audioInit();bossTrial()};a.after(b)}}
+ if(b){const on=campOn()&&bossShield()&&!D.result;b.hidden=!on;if(on){const cd=Math.ceil((D.flags.trialCd||0)-D.clock);b.innerHTML=cd>0?`<span>⏳</span>Trial ${cd}s`:`<span>⚡</span>Boss Trial`}}}const cnt={food:0,wood:0,stone:0,gold:0};D.u.forEach(u=>{if(u.task.t==='gather')cnt[u.task.kind]++});
  $('#resBar').innerHTML=RES.map(k=>`<div class="rc" id="rc_${k}"><b><i>${RI[k]}</i>${Math.floor(D.res[k])}</b><small class="mid">${cnt[k]} 🧑</small></div>`).join('')+`<div class="rc"><b><i>👥</i>${popUsed()}/${capOf()}</b><small class="${popUsed()>=capOf()?'neg':'mid'}">${popUsed()>=capOf()?'need house':'people'}</small></div>`;
  const sf=seasonFrac();$('#timeBox').innerHTML=`<div>${SICON[season()]} ${SEASONS[season()]} · Year ${year()}</div><div class="tbar s"><i style="width:${sf*100}%"></i></div><div class="age">${AGES[D.age].n}${D.aging?` → ${AGES[D.aging.n].short} ${Math.round(100-D.aging.t/D.aging.total*100)}%`:''}</div>${D.research?`<div class="age">📜 ${TECHS[D.research.k].n} ${Math.round(100-D.research.t/D.research.total*100)}%</div>`:''}`;
  $('#rivalBox').innerHTML=D.rivals.map((R,o)=>{const KG=KINGS[o];if(R.alive===false)return`<div style="opacity:.5;text-decoration:line-through">🏳️ ${KG.king}</div>`;const cas=Object.values(D.rb||{}).find(b=>b.t==='tc'&&(b.o||0)===o);return`<div><span style="color:${KG.col}">⚔️</span> ${KG.king}</div><small>Army ~${Math.round(R.army)} · ${AGES[R.age].short} Age${cas&&cas.hp<cas.max?` · Castle ${Math.round(cas.hp/cas.max*100)}%`:''}</small>${R.wonderOn?`<small>Great Tower ${Math.round(R.wonder/RIVAL_WONDER*100)}%</small><div class="tbar"><i style="width:${R.wonder/RIVAL_WONDER*100}%"></i></div>`:''}`}).join('');
@@ -1412,7 +1498,7 @@ Object.assign(HOOK,{
 function setupCard(){const cur=(D.setup&&D.setup.rivals)||1;showCard(head('⚔️ New Kingdom','How many enemy kingdoms?',{close:true})+`<div class="sub">More enemies means a bigger map. Conquer every castle or build the Sun Tower to win.</div><div class="center" style="gap:10px;flex-wrap:wrap">${[1,2,3,4].map(n=>`<button class="btn${n===cur?' big':''}" data-n="${n}">${'⚔️'.repeat(n)}<br>${n} enem${n>1?'ies':'y'}</button>`).join('')}</div>`);wireClose();
  document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{closeCard();startSetup(+b.dataset.n)})}
 function startSetup(n){const same=((D.setup&&D.setup.rivals)||1)===n&&n===1;D.setup={rivals:n,seed:Math.floor(Math.random()*1e9)};if(same){restartSame();return}genMap(D.setup);initTiles();newGame();D.result='';save();try{sessionStorage.setItem('dok.auto','1')}catch(e){}location.reload()}
-function restartSame(){const n=(D.setup&&D.setup.rivals)||1;if(n>1){startSetup(n);return}newRealm()}
+function restartSame(){if(D.setup&&D.setup.camp){startCampaign();return}const n=(D.setup&&D.setup.rivals)||1;if(n>1){startSetup(n);return}newRealm()}
 function newRealm(){newGame();save();lastGoal=null;SEL=[];setupScene();focusTile(PLAYER_TC,17);setMusic('village');updateHUD();say('Elder Maela',`A new kingdom, {N}! Tap a villager, then tap a forest to start chopping wood.`)}
 function seasonBanner(){const el=$('#seasonCard');el.innerHTML=`${SICON[season()]} ${SEASONS[season()]}<small>YEAR ${year()}</small>`;el.classList.add('on');setTimeout(()=>el.classList.remove('on'),1600)}
 
@@ -1510,11 +1596,11 @@ addEventListener('resize',()=>R&&resize());
 function titleRefresh(){const s=D.started;$('#contBtn').hidden=!s;$('#nameRow').hidden=s;$('#goBtn').textContent=s?'New Kingdom':'Found a Kingdom';$('#goBtn').className=s?'btn':'btn big';
  $('#saveInfo').textContent=s?(D.result==='lose'?`${KINGS[D.loser||0].king} won last time. Your people still remember everything you learned!`:`${D.name}'s kingdom · ${AGES[D.age].n} · ${Math.floor(D.clock/60)} min played`):'';
  $('#contBtn').textContent=s&&D.result==='lose'?'▶ Play again':'Continue'}
-function playAgainFromTitle(){audioInit();const n=(D.setup&&D.setup.rivals)||1;if(n>1){startSetup(n);return}mode='play';$('#title').hidden=true;$('#hud').hidden=false;newRealm();camS.x=camS.tx;camS.z=camS.tz+6;lastGoal=curGoal()}
+function playAgainFromTitle(){audioInit();if(D.setup&&D.setup.camp){startCampaign();return}const n=(D.setup&&D.setup.rivals)||1;if(n>1){startSetup(n);return}mode='play';$('#title').hidden=true;$('#hud').hidden=false;newRealm();camS.x=camS.tx;camS.z=camS.tz+6;lastGoal=curGoal()}
 async function enterGame(){audioInit();mode='play';$('#title').hidden=true;$('#hud').hidden=false;if(!D.u.length||!D.nodes)newGame();else afterLoad();setupScene();focusTile(PLAYER_TC,17);camS.x=camS.tx;camS.z=camS.tz+6;setMusic('village');updateHUD();lastGoal=curGoal();
  if(!D.flags.council)ask(council);if(D.result==='lose')ask(()=>fx('defeat'))}
 async function boot(){$('#goBtn').disabled=true;$('#contBtn').disabled=true;try{initGL()}catch(e){$('#noGL').hidden=false;return}
- load();titleRefresh();resize();
+ load();campBoot();resize();
  try{await loadAssets(p=>{$('#loadFill').style.width=Math.round(p*100)+'%';$('#loadTxt').textContent=`Preparing the land… ${Math.round(p*100)}%`})}catch(e){$('#loadTxt').textContent='Could not load the game files. Check your connection and reload.';console.error(e);return}
  genMap(D.setup);buildMap();if(D.started&&D.setup&&D.setup.rivals>1)makeCamps();if(!D.nodes)initNodes();setupScene();inputInit();pickVoice();if(TTS&&speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=pickVoice;
  $('#loading').hidden=true;$('#goBtn').disabled=false;$('#contBtn').disabled=false;cloudInit();
@@ -1523,6 +1609,6 @@ async function boot(){$('#goBtn').disabled=true;$('#contBtn').disabled=true;try{
   const nm=$('#nameIn').value.trim().replace(/[^A-Za-z0-9 '\-]/g,'').slice(0,14);if(!nm){$('#nameIn').focus();$('#nameIn').classList.add('shake');setTimeout(()=>$('#nameIn').classList.remove('shake'),500);return}D.name=nm;D.started=true;newGame();save();enterGame()};
  $('#contBtn').onclick=()=>{if(D.started&&D.result==='lose')playAgainFromTitle();else enterGame()};requestAnimationFrame(frame)}
 
-window.__f={neighbors,tkey,setRally,rallyPoint,startRally,doRally,sendToRally,get FLAG(){return FLAG},get rallyFor(){return rallyFor},trainTick,get sheetTile(){return sheetTile},get D(){return D},set D(v){D=v},get TILES(){return TILES},get PLAYER_TC(){return PLAYER_TC},get RIVAL_TC(){return RIVAL_TC},get RIVAL_TCS(){return RIVAL_TCS},damage,fx,genMap,initTiles,startSetup,setupCard,get MW(){return MW},makeCamps,rivalOf,liveR,BD,UT,TECHS,place,tileFree,research,advanceAge,queueUnit,setGather,setBuild,assignJob,sendAssault,startWonderStage,trade,openTile,openBuilding,openResearch,openMarket,openBook,updateHUD,setupScene,capOf,soldiers,vils,curGoal,get mode(){return mode},get cardOpen(){return cardOpen},get dlgOpen(){return dlgOpen},get interActive(){return interActive},get E(){return E},get INTER(){return INTER},save,camS,get R(){return R},get cam(){return cam},get scene(){return scene},focusTile,newRealm,ageReady,tileAt,tkey,screenToGround,pickTile,tick,select,selUnits,onTap,nodeOf,findSource,getEnt,blist,TCB,get ANIM(){return ANIM},set paused(v){paused=v},useAbility,ringBell,heroU,buyUpgrade,campAt,CAMPS,attackEnemy,finishLasso,set lasso(v){lasso=v},drawSel,commandAt,selectHero,selectArmy,popUsed,UPG,askMath,makeM,smashTower,towerTarget,RIVAL_WONDER,rivalSpots,addRB,closeCard};
+window.__f={neighbors,tkey,setRally,rallyPoint,startRally,doRally,sendToRally,get FLAG(){return FLAG},get rallyFor(){return rallyFor},trainTick,get sheetTile(){return sheetTile},get D(){return D},set D(v){D=v},get TILES(){return TILES},get PLAYER_TC(){return PLAYER_TC},get RIVAL_TC(){return RIVAL_TC},get RIVAL_TCS(){return RIVAL_TCS},damage,fx,genMap,initTiles,startSetup,setupCard,get MW(){return MW},makeCamps,rivalOf,liveR,BD,UT,TECHS,place,tileFree,research,advanceAge,queueUnit,setGather,setBuild,assignJob,sendAssault,startWonderStage,trade,openTile,openBuilding,openResearch,openMarket,openBook,updateHUD,setupScene,capOf,soldiers,vils,curGoal,get mode(){return mode},get cardOpen(){return cardOpen},get dlgOpen(){return dlgOpen},get interActive(){return interActive},get E(){return E},get INTER(){return INTER},save,camS,get R(){return R},get cam(){return cam},get scene(){return scene},focusTile,newRealm,ageReady,tileAt,tkey,screenToGround,pickTile,tick,select,selUnits,onTap,nodeOf,findSource,getEnt,blist,TCB,get ANIM(){return ANIM},set paused(v){paused=v},useAbility,ringBell,heroU,buyUpgrade,campAt,CAMPS,attackEnemy,finishLasso,set lasso(v){lasso=v},drawSel,commandAt,selectHero,selectArmy,popUsed,UPG,askMath,makeM,smashTower,towerTarget,RIVAL_WONDER,rivalSpots,addRB,closeCard,startCampaign,bossTrial,campLoad,campSave,campWin,bossW,bossShield,BOSSES,wkId,get KINGS(){return KINGS}};
 boot();
 })();</script>

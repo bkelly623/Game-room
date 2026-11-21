@@ -150,6 +150,7 @@ var KID=window.__KID||null,GAME=(location.pathname.match(/\/games\/([a-z0-9-]+)\
 if(KID&&GAME&&ls){var lastIn=0;['pointerdown','keydown','touchstart','wheel'].forEach(function(t){window.addEventListener(t,function(){lastIn=Date.now()},{capture:true,passive:true})});
  setInterval(function(){if(!document.hidden&&Date.now()-lastIn<75000)addSec(KID,15)},15000)}
 
-window.HERO={load:load,save:save,onAns:onAns,addSec:addSec,openChest:openChest,buy:buy,equip:equip,svg:svg,css:css,doMove:doMove,tone:tone,
+function bonus(kid,xp,coins,txt){var h=load(kid);give(kid,h,xp,coins,txt);save(kid,h)}
+window.HERO={bonus:bonus,load:load,save:save,onAns:onAns,addSec:addSec,openChest:openChest,buy:buy,equip:equip,svg:svg,css:css,doMove:doMove,tone:tone,
  lvOf:lvOf,lvBase:lvBase,titleOf:titleOf,goalOf:goalOf,schedOf:schedOf,missionsOf:missionsOf,weekId:weekId,ITEMS:ITEMS,SKINS:SKINS,SLOTS:SLOTS,MOVES:MOVES};
 })();
