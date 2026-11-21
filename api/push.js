@@ -43,7 +43,7 @@ async function run(force){const now=Date.now(),p=T.parts(now),nowMin=p.h*60+p.mi
   const all=L.summary(raw,now).kids,byEp={},log=[];if(sent.d!==p.d){sent.d=p.d;sent.k={}}
   const kids=[...new Set(subs.subs.map(x=>x.kid))];
   for(const id of kids){const sch=SLOTS[schedOf(id,st)]||SLOTS.school,slots=wkday?sch.wk:sch.we;
-    let si=-1;slots.forEach(([hh,mm],i)=>{const m=hh*60+mm;if(nowMin>=m&&nowMin<m+45)si=i});
+    let si=-1;slots.forEach(([hh,mm],i)=>{const m=hh*60+mm;if(nowMin>=m&&nowMin<m+60)si=i});
     if(force&&force!==id)continue;if(!force&&si<0)continue;const tag=force?'test'+now:'s'+si;
     if(!force&&(sent.k[id]||[]).includes(tag))continue;
     const s=all[id];const goal=goalOf(id,st);
