@@ -482,7 +482,9 @@ function lessonCard(q){const f=q.s;D.lesson=D.lesson||{};D.lesson[f]=D.counter;s
   <div style="text-align:center"><button class="btn" id="lgo">Got it! My turn 🚀</button></div>`);
  try{speak(ex.text.replace('?','what')+'. '+ex.hint+' So the answer is '+ex.ans+'.')}catch(e){}
  $('#lgo').onclick=()=>{try{speechSynthesis.cancel()}catch(e){}closeCard()}}
-function activate(G){G.q=nextQ();if(needLesson(G.q))setTimeout(()=>lessonCard(G.q),350);G.graded=false;G.state='active';(G.blocks||[]).forEach(b=>{b.used=false;b.bad=false;b.ok=false});(G.pipes||[]).forEach(p=>p.plug=false);showQ(G.q,G.type)}
+/* read first: the answer blocks stay locked until there has been time to read the question */
+function readTime(q){const w=String(q.text||'').split(/\s+/).filter(Boolean).length;return Math.min(6,Math.max(YOUNG?2.2:1.6,.9+w*.45))}
+function activate(G){G.q=nextQ();if(needLesson(G.q))setTimeout(()=>lessonCard(G.q),350);G.graded=false;G.state='active';G.readyAt=now+readTime(G.q);G.lockMsg=0;(G.blocks||[]).forEach(b=>{b.used=false;b.bad=false;b.ok=false});(G.pipes||[]).forEach(p=>p.plug=false);showQ(G.q,G.type)}
 function showQ(q,type){const qb=$('#qbar');qb.className='';const qt=$('#qText');qt.textContent=q.text;qt.classList.toggle('long',q.text.length>34);$('#qHint').innerHTML=type==='pipe'?'Stand on the pipe with the answer and press <b>down</b>.':type==='boss'?'Hit the right block to launch a <b>Bean Bomb</b> at the Baron!':(L.placement?`<b>Training Day</b> · question ${(D.survey?D.survey.log.length:0)+1}. Jump up into the right answer.`:'Jump up into the block with the right answer.');
   $('#qSay').hidden=!TTS;drawPF($('#qPf'),type==='boss'?'boss':'coach');qbarT=0;if(q.say)setTimeout(()=>speak(q.sayText||q.text),300)}
 function qMsg(cls,html,hide){const qb=$('#qbar');qb.className=cls;$('#qHint').innerHTML=html;if(hide)qbarT=hide}
@@ -490,12 +492,13 @@ $('#qSay').onclick=()=>{audioInit();const G=L&&L.gates.find(g=>g.state==='active
 function firstGrade(G,ok){if(G.graded)return;G.graded=true;L.qTotal++;if(ok)L.qRight++;if(G.q.survey){if(surveyAnswer(ok,G.q))L.surveyDone=true}else grade(G.q,ok)}
 const YES=['BOOM! Broccoli Wall destroyed!','Correct! The broccoli is crying.','YES! Your brain is HUGE.','Nailed it! The Baron just felt a chill.','Correct! Somewhere a pigeon is proud of you.'];
 const NOPE=['BONK! That block was full of broccoli.','Nope! That one smelled like feet.','Not that one! A pigeon laughed at you.','Wrong block! It was stuffed with old socks.'];
-function answerHit(tx,ty){const b=L.ans[tx+','+ty];if(!b)return;const G=b.gate;if(G.state!=='active'||b.used)return;const ok=G.q.choices[b.i]===G.q.ans;firstGrade(G,ok);
+function answerHit(tx,ty){const b=L.ans[tx+','+ty];if(!b)return;const G=b.gate;if(G.state!=='active'||b.used)return;
+  if(G.readyAt&&now<G.readyAt){if(now-(G.lockMsg||-9)>1.2){G.lockMsg=now;sfx('bad');qMsg('bad','<b>📖 Read it first!</b> The blocks unlock in a moment.');try{speak('Read it first.')}catch(e){}}return}const ok=G.q.choices[b.i]===G.q.ans;firstGrade(G,ok);
   if(ok){b.ok=true;G.blocks.forEach(x=>x.used=true);sfx('good');if(G.type!=='boss'&&!G.q.survey){spawnPow(pick(POWPOOL),b.tx*16+16,b.ty*16)}if(++P.streak%5===0)spawnPow('oneup',b.tx*16+16,b.ty*16-10);for(let i=0;i<5;i++)L.items.push({type:'pop',x:b.tx*16+16+(i-2)*6,y:b.ty*16-4,vy:-150-i*20,life:.5});getBean(5);
     if(G.type==='boss'){G.state='cool';qMsg('ok',`<b>${pick(YES)}</b> Bean Bomb away!`);L.shots.push({type:'bomb',x:b.tx*16+16,y:b.ty*16,sx:b.tx*16+16,sy:b.ty*16,t:0})}
     else{G.state='done';G.doneAt=now;qMsg('ok',`<b>${pick(YES)}</b>`,1.4);crumble(G);if(L.surveyDone)setTimeout(placementDone,1100)}}
   else{P.streak=0;b.used=true;b.bad=true;sfx('bad');shake=2;L.items.push({type:'brocfall',x:b.tx*16+16,y:b.ty*16+16,vy:40,t:0});qMsg('bad',`<b>${pick(NOPE)}</b> ${esc(G.q.hint)}`);
-    if(G.type==='boss'&&L.bossE)L.bossE.throwT=0;if(STRICT)zap(G)}}
+    if(G.type==='boss'&&L.bossE)L.bossE.throwT=0;G.readyAt=now+2.5;if(STRICT)zap(G)}}
 /* Stop guessing: lightning hits the hero for every wrong answer. Three hits and it's back to the checkpoint. */
 function zap(G){L.items.push({type:'bolt',t:0});shake=6;flash=.3;P.streak=0;if(P.pow){losePow('⚡ ZAP! The lightning took your power!');qMsg('bad',`<b>⚡ ZAP! No guessing!</b> ${esc(G.q.hint)}`);speak('Zap! No guessing.');return}sfx('hurt');P.hp--;P.inv=1;hud();qMsg('bad',`<b>⚡ ZAP! No guessing!</b> Think first. ${esc(G.q.hint)}`);speak(P.hp>0?'Zap! No guessing. Think first.':'Zap! Too many guesses.');if(P.hp<=0){P.hp=0;bonked('⚡ Too many guesses! Back to the checkpoint.')}}
 function crumble(G){sfx('crumble');shake=4;for(let y=0;y<GY;y++){if(L.g[y][G.wallX]==='W'){L.g[y][G.wallX]='.';debris(G.wallX,y,pick(['#2E7A34','#6AC45A','#A8E88A']))}}L.check.x=(G.wallX+1)*16+8}
@@ -506,7 +509,7 @@ function pipeResolve(){const {G,p}=pipeAnim;pipeAnim=null;const ok=G.q.choices[p
     P.x=(G.wallX+2)*16+8;P.y=GY*16;P.vx=0;P.vy=0;L.check.x=P.x;for(let i=0;i<8;i++)L.beans.push({x:P.x+30+i*12,y:GY*16-24-Math.abs(Math.sin(i))*20});cam.x=clamp(P.x-VW*.4,0,L.W*16-VW);flash=.5;mode='play'}
   else{p.plug=true;sfx('plug');P.x=p.tx*16+16;P.y=7*16;P.vy=-320;P.ground=false;mode='play';qMsg('bad',`<b>${pick(['That pipe was full of old spaghetti!','WRONG PIPE! It went to Grandma\'s bathroom.','That pipe burped you back out!'])}</b> ${esc(G.q.hint)}`);if(STRICT)zap(G)}}
 let flash=0;
-window.__rp2={chooseQ,focusS,grade,gen,needLesson,lessonCard,get D(){return D},get ORDER(){return ORDER},zap:G=>zap(G),spawnPow:(k,x,y)=>spawnPow(k,x,y),applyPow:k=>applyPow(k),gameOver:()=>gameOver(),P};
+window.__rp2={answerHit:(x,y)=>answerHit(x,y),get L(){return L},get now(){return now},startLevel:i=>startLevel(i),activate:G=>activate(G),chooseQ,focusS,grade,gen,needLesson,lessonCard,get D(){return D},get ORDER(){return ORDER},zap:G=>zap(G),spawnPow:(k,x,y)=>spawnPow(k,x,y),applyPow:k=>applyPow(k),gameOver:()=>gameOver(),P};
 function updGates(dt){for(const G of L.gates){
   if(G.state==='idle'&&(G.type==='boss'?P.x>G.trigX:cam.x+VW>G.trigX)){if(G.type==='boss'){if(P.x>G.trigX){G.state='intro';G.t=0;L.check.x=G.trigX+24;for(let y=0;y<GY;y++)L.g[y][G.entryX]='W';setMusic('boss');sfx('roar');L.bossE={x:G.bossX,y:GY*16,vx:-30,hp:3,state:'walk',t:0,throwT:2.5,flash:0,G};
         const qb=$('#qbar');qb.className='bad';drawPF($('#qPf'),'boss');$('#qText').textContent='BARON VON BROCCOLI';$('#qText').classList.remove('long');$('#qHint').innerHTML=pick(['"You\'ll never get your beans back! Eat your vegetables! MWAHAHA!"','"I have stolen every bean in the land! Now everyone must eat BROCCOLI!"']);$('#qSay').hidden=true}}else activate(G)}
@@ -610,7 +613,7 @@ function render(){ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;
   for(let ty=0;ty<H;ty++)for(let tx=t0;tx<=t1;tx++){const ch=L.g[ty][tx];if(ch==='.'||ch==='A')continue;const img=tileImg(ch,tx,ty);if(!img)continue;const bm=L.bumps.find(b=>b.tx===tx&&b.ty===ty);ctx.drawImage(img,tx*16,ty*16-(bm?Math.round(Math.sin(bm.t/.18*Math.PI)*4):0))}
   for(const G of L.gates){
     if(G.blocks)for(const b of G.blocks){const x=b.tx*16;if(x<cx-40||x>cx+VW+8)continue;const bm=L.bumps.find(q=>(q.tx===b.tx||q.tx===b.tx+1)&&q.ty===b.ty);const y=b.ty*16-(bm?Math.round(Math.sin(bm.t/.18*Math.PI)*4):0);
-      const col=b.ok?['#4EC85A','#2E8A3A','#B8F5B0']:b.bad?['#7A7A8E','#4E4E62','#A4A4B8']:b.used?['#9A6A44','#7A4E30','#B88A64']:['#F5B92E','#C8861A','#FFF0B0'];
+      const col=b.ok?['#4EC85A','#2E8A3A','#B8F5B0']:b.bad?['#7A7A8E','#4E4E62','#A4A4B8']:b.used?['#9A6A44','#7A4E30','#B88A64']:(G.state==='active'&&G.readyAt&&now<G.readyAt)?['#8C7A9E','#5E4E72','#B8A8CC']:['#F5B92E','#C8861A','#FFF0B0'];
       ctx.fillStyle='#141026';ctx.fillRect(x,y,32,16);ctx.fillStyle=col[0];ctx.fillRect(x+1,y+1,30,14);ctx.fillStyle=col[2];ctx.fillRect(x+1,y+1,29,1);ctx.fillRect(x+1,y+1,1,13);ctx.fillStyle=col[1];ctx.fillRect(x+1,y+14,30,1);ctx.fillRect(x+30,y+1,1,14);
       ctx.fillStyle='#141026';[[2,2],[29,2],[2,13],[29,13]].forEach(([a,c])=>ctx.fillRect(x+a,y+c,1,1));
       const live=G.q&&(G.state==='active'||G.state==='cool');if(live||(b.ok&&G.doneAt&&now-G.doneAt<1.4)){const c=G.q.choices[b.i];label(c,x+16,y+8.5,b.bad?'#D8D8E4':'#FFFFFF',c.length>3?10:12);if(b.bad){ctx.strokeStyle='#E8414F';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x+6,y+3);ctx.lineTo(x+26,y+13);ctx.stroke()}}
