@@ -56,7 +56,7 @@ async function run(force){const now=Date.now(),p=T.parts(now),nowMin=p.h*60+p.mi
   if(Object.keys(byEp).length){const cut=now-3*864e5;for(const k of Object.keys(msgs))if(msgs[k].at<cut)delete msgs[k];await put(MSGS,msgs)}
   for(const ep of Object.keys(byEp)){try{const code=await send(ep);log.push(byEp[ep].map(x=>x.id).join('+')+' -> '+code);if(code===404||code===410)dead.add(ep)}catch(e){log.push('send error '+String(e.message||e).slice(0,80))}}
   if(dead.size){subs.subs=subs.subs.filter(x=>!dead.has(x.ep));await put(SUBS,subs)}
-  await put(SENT,sent);return{at:p,log,subs:subs.subs.length}}
+  sent.last={at:now,log:log.slice(0,10)};await put(SENT,sent);const out={at:p,log,subs:subs.subs.length};console.log('hero-alerts run',JSON.stringify(out));return out}
 
 module.exports=async(req,res)=>{try{const u=new URL(req.url,'http://x'),q=u.searchParams;
   if(req.method==='GET'&&q.get('pub'))return json(res,200,{pub:process.env.VAPID_PUB||''});
@@ -64,7 +64,7 @@ module.exports=async(req,res)=>{try{const u=new URL(req.url,'http://x'),q=u.sear
   const keyOk=()=>authed(req)||(process.env.NUDGE_KEY&&eq(q.get('key')||'',process.env.NUDGE_KEY));
   if(req.method==='GET'&&q.get('run')){if(!keyOk())return json(res,401,{error:'key'});return json(res,200,await run(null))}
   if(req.method==='GET'&&q.get('test')){if(!keyOk())return json(res,401,{error:'key'});return json(res,200,await run(q.get('test')))}
-  if(req.method==='GET'&&q.get('list')){if(!keyOk())return json(res,401,{error:'key'});const s=await get(SUBS,{subs:[]});return json(res,200,{subs:s.subs.map(x=>({kid:x.kid,host:new URL(x.ep).host,dev:x.dev,at:x.at}))})}
+  if(req.method==='GET'&&q.get('list')){if(!keyOk())return json(res,401,{error:'key'});const s=await get(SUBS,{subs:[]}),sn=await get(SENT,{});return json(res,200,{lastRun:sn.last||null,subs:s.subs.map(x=>({kid:x.kid,host:new URL(x.ep).host,dev:x.dev,at:x.at}))})}
   if(req.method!=='POST')return json(res,405,{error:'method'});
   const b=await readBody(req);const ep=b&&b.sub&&b.sub.endpoint;
   if(!b||!/^[a-z0-9-]{1,40}$/.test(b.kid||'')||typeof ep!=='string'||ep.length>1000)return json(res,400,{error:'bad'});
