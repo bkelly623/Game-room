@@ -102,11 +102,11 @@ const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}};
 (function decay(){const h=(Date.now()-(S.lastFed||Date.now()))/36e5;S.food=Math.max(0,Math.round(S.food-h*8));S.lastFed=Date.now();save()})();
 setInterval(()=>{S.food=Math.max(0,S.food-1);S.lastFed=Date.now();save();drawPet();meters()},450000);
 
-const STAGES=[{at:0,n:'Egg',em:'🥚'},{at:5,n:'Baby',em:'🐣'},{at:30,n:'Little',em:'🌱'},{at:80,n:'Big',em:'🌿'},{at:160,n:'Super',em:'⭐'},{at:300,n:'Mega',em:'👑'}];
+const STAGES=[{at:0,n:'Egg',em:'🥚'},{at:5,n:'Cub',em:'🐾'},{at:30,n:'Young Cheetah',em:'🐆'},{at:80,n:'Big Cheetah',em:'🐆'},{at:160,n:'Turbo Cheetah',em:'⚡'},{at:300,n:'Mega Cheetah',em:'👑'}];
 const stageOf=w=>{let s=0;STAGES.forEach((x,i)=>{if(w>=x.at)s=i});return s};
 const GIFTS=[{id:'bow',n:'a bow',em:'🎀'},{id:'shades',n:'cool glasses',em:'🕶️'},{id:'cap',n:'a cap',em:'🧢'},{id:'flower',n:'a flower',em:'🌸'},{id:'tophat',n:'a top hat',em:'🎩'},{id:'crown',n:'a crown',em:'👑'},{id:'cape',n:'a hero cape',em:'🦸'},{id:'party',n:'a party hat',em:'🥳'}];
 const COLORS=['#FF8FB8','#7FD3FF','#9BE36D','#FFB547','#B79BFF','#5FE0C8'];
-const NAMES=[['Ziggy','⚡'],['Mochi','🍡'],['Bloop','💧'],['Pip','🌟']];
+const NAMES=[['Zoom','⚡'],['Spots','🐾'],['Dash','💨'],['Rocket','🚀']];
 
 /* ================= speech ================= */
 let voice=null;function pv(){try{const v=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));voice=v.find(x=>/samantha|google us english|aria|jenny|ava|allison/i.test(x.name))||v.find(x=>/en.us/i.test(x.lang))||v[0]||null}catch(e){}}
@@ -125,43 +125,60 @@ function mood(){const h=new Date().getHours();if(S.stage===0)return'egg';if(mood
 let moodOverride=null;
 function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const c=v=>Math.max(0,Math.min(255,Math.round(f<0?v*(1+f):v+(255-v)*f)));return'#'+((1<<24)+(c(r)<<16)+(c(g)<<8)+c(b)).toString(16).slice(1)}
 function accNow(){const a=S.acc.slice(-20);return a.length?a.reduce((x,y)=>x+y,0)/a.length:0}
-function drawPet(){const svg=$('#pet');const st=S.stage,md=mood(),c=S.color||'#FF8FB8',d=shade(c,-.28),l=shade(c,.4);let o='';
+/* the cheetah: egg, then cub, young, big cat, turbo and mega, drawn fresh for each mood */
+const SPOTS=[[78,70,3.2],[92,62,2.6],[108,62,2.6],[122,70,3.2],[100,56,2.2],[70,142,4],[84,128,3.5],[120,130,3.5],[132,146,4],[76,160,3],[126,162,3],[100,124,3]];
+function drawPet(){const svg=$('#pet');const st=S.stage,md=mood();let o='';
+ const G='#F2B33D',GD='#C9851C',CR='#FFF1D0',DK='#3A2210';
  const acc=accNow(),aura=st>0&&S.acc.length>=8?(acc>=.9?2:acc>=.75?1:0):0;
- o+=`<defs><radialGradient id="g1" cx="40%" cy="35%"><stop offset="0" stop-color="${l}"/><stop offset="1" stop-color="${c}"/></radialGradient><radialGradient id="au"><stop offset="0" stop-color="#FFF6B0" stop-opacity=".9"/><stop offset="1" stop-color="#FFF6B0" stop-opacity="0"/></radialGradient></defs>`;
- o+=`<ellipse cx="100" cy="190" rx="${st===0?38:44+st*6}" ry="8" fill="rgba(0,0,0,.15)"/>`;
- if(st===0){const cr=Math.min(5,S.words);o+=`<ellipse cx="100" cy="125" rx="52" ry="64" fill="url(#g1)" stroke="${d}" stroke-width="4"/><circle cx="80" cy="105" r="9" fill="${l}"/><circle cx="118" cy="140" r="12" fill="${l}"/><circle cx="112" cy="92" r="6" fill="${l}"/>`;
-  if(cr>=2)o+=`<path d="M70 120l10 8 8-10 10 10" fill="none" stroke="${d}" stroke-width="4" stroke-linecap="round"/>`;if(cr>=4)o+=`<path d="M108 100l8 10 10-6 6 12" fill="none" stroke="${d}" stroke-width="4" stroke-linecap="round"/>`;
-  svg.innerHTML=o;return}
- const R=Math.min(80,46+st*7),cy=190-R*1.02;
- if(aura)o+=`<circle cx="100" cy="${cy}" r="${R*1.45}" fill="url(#au)" opacity="${aura===2?1:.55}"/>`;
- if(aura===2)for(let i=0;i<6;i++){const a=i/6*6.28+Date.now()/3000;o+=`<text x="${100+Math.cos(a)*R*1.35}" y="${cy+Math.sin(a)*R*1.2}" font-size="16" text-anchor="middle">✨</text>`}
- if(S.wear==='cape')o+=`<path d="M${100-R*.7} ${cy-R*.2}Q100 ${cy+R*1.3} ${100+R*.7} ${cy-R*.2}L${100+R*.95} ${cy+R}L${100-R*.95} ${cy+R}Z" fill="#E23A5A"/>`;
- if(st>=4){o+=`<path d="M${100-R*.8} ${cy}C${100-R*1.8} ${cy-R*.9} ${100-R*1.9} ${cy+R*.3} ${100-R*.85} ${cy+R*.35}Z" fill="${l}" stroke="${d}" stroke-width="3"/><path d="M${100+R*.8} ${cy}C${100+R*1.8} ${cy-R*.9} ${100+R*1.9} ${cy+R*.3} ${100+R*.85} ${cy+R*.35}Z" fill="${l}" stroke="${d}" stroke-width="3"/>`}
- if(st>=2){o+=`<path d="M${100-R*.62} ${cy-R*.55}L${100-R*.8} ${cy-R*1.25}L${100-R*.2} ${cy-R*.85}Z" fill="${c}" stroke="${d}" stroke-width="3"/><path d="M${100+R*.62} ${cy-R*.55}L${100+R*.8} ${cy-R*1.25}L${100+R*.2} ${cy-R*.85}Z" fill="${c}" stroke="${d}" stroke-width="3"/>`}
- /* feet + body */
- o+=`<ellipse cx="${100-R*.45}" cy="186" rx="${R*.3}" ry="${R*.14}" fill="${d}"/><ellipse cx="${100+R*.45}" cy="186" rx="${R*.3}" ry="${R*.14}" fill="${d}"/>`;
- o+=`<ellipse cx="100" cy="${cy}" rx="${R}" ry="${R*.98}" fill="url(#g1)" stroke="${d}" stroke-width="4"/><ellipse cx="100" cy="${cy+R*.35}" rx="${R*.55}" ry="${R*.45}" fill="${l}" opacity=".6"/>`;
- if(st>=3)o+=`<path d="M${100-R*.25} ${cy-R*.92}L${100-R*.12} ${cy-R*1.3}L100 ${cy-R*.95}L${100+R*.12} ${cy-R*1.3}L${100+R*.25} ${cy-R*.92}" fill="#FFD23F" stroke="#C79A12" stroke-width="2"/>`;
- if(st>=5)o+=`<circle cx="100" cy="${cy+R*.3}" r="${R*.14}" fill="#FFD23F" stroke="#C79A12" stroke-width="2"/>`;
- /* arms */
- const up=md==='excited';o+=`<ellipse cx="${100-R*.98}" cy="${cy+(up?-R*.3:R*.15)}" rx="${R*.18}" ry="${R*.28}" fill="${c}" stroke="${d}" stroke-width="3" transform="rotate(${up?-35:20} ${100-R*.98} ${cy})"/><ellipse cx="${100+R*.98}" cy="${cy+(up?-R*.3:R*.15)}" rx="${R*.18}" ry="${R*.28}" fill="${c}" stroke="${d}" stroke-width="3" transform="rotate(${up?35:-20} ${100+R*.98} ${cy})"/>`;
- /* face by mood */
- const ex=R*.36,ey=cy-R*.15,er=R*.2;
- if(md==='sleepy'){o+=`<path d="M${100-ex-er} ${ey}q${er} ${er*.6} ${er*2} 0M${100+ex-er} ${ey}q${er} ${er*.6} ${er*2} 0" stroke="#2B2240" stroke-width="4" fill="none" stroke-linecap="round"/><text x="${100+R*.9}" y="${cy-R*.9}" font-size="22" font-weight="800" fill="#7A5CFF">z z</text>`}
- else if(md==='excited'){[-1,1].forEach(s=>o+=`<text x="${100+s*ex}" y="${ey+er*.7}" font-size="${er*2.2}" text-anchor="middle">⭐</text>`)}
- else if(md==='happy'){[-1,1].forEach(s=>o+=`<ellipse cx="${100+s*ex}" cy="${ey}" rx="${er*.85}" ry="${er}" fill="#fff" stroke="#2B2240" stroke-width="2"/><circle cx="${100+s*ex+er*.15}" cy="${ey+er*.15}" r="${er*.55}" fill="#2B2240"/><circle cx="${100+s*ex+er*.35}" cy="${ey-er*.2}" r="${er*.2}" fill="#fff"/>`)}
- else{[-1,1].forEach(s=>o+=`<ellipse cx="${100+s*ex}" cy="${ey}" rx="${er*.8}" ry="${er*.9}" fill="#fff" stroke="#2B2240" stroke-width="2"/><circle cx="${100+s*ex}" cy="${ey+er*.3}" r="${er*.45}" fill="#2B2240"/>`);
-  if(md==='oops')o+=`<path d="M${100-ex-er} ${ey-er*1.3}l${er*1.6} ${er*.5}M${100+ex+er} ${ey-er*1.3}l-${er*1.6} ${er*.5}" stroke="#2B2240" stroke-width="4" stroke-linecap="round"/>`}
- const my=cy+R*.3;
- if(md==='hungry')o+=`<ellipse cx="100" cy="${my}" rx="${R*.22}" ry="${R*.2}" fill="#7A1E3A"/><ellipse cx="100" cy="${my+R*.08}" rx="${R*.12}" ry="${R*.08}" fill="#FF7A9A"/><path d="M${100+R*.18} ${my+R*.1}q4 14 0 18" stroke="#7FD3FF" stroke-width="5" fill="none" stroke-linecap="round"/>`;
- else if(md==='oops')o+=`<path d="M${100-R*.18} ${my+R*.08}q${R*.18} -${R*.14} ${R*.36} 0" stroke="#2B2240" stroke-width="4" fill="none" stroke-linecap="round"/>`;
- else if(md==='sleepy')o+=`<ellipse cx="100" cy="${my}" rx="${R*.08}" ry="${R*.06}" fill="#7A1E3A"/>`;
- else o+=`<path d="M${100-R*.25} ${my-R*.03}q${R*.25} ${R*.3} ${R*.5} 0z" fill="#7A1E3A" stroke="#2B2240" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="${my+R*.1}" rx="${R*.1}" ry="${R*.05}" fill="#FF7A9A"/>`;
- o+=`<ellipse cx="${100-R*.62}" cy="${cy+R*.12}" rx="${R*.13}" ry="${R*.08}" fill="#FF7A9A" opacity=".55"/><ellipse cx="${100+R*.62}" cy="${cy+R*.12}" rx="${R*.13}" ry="${R*.08}" fill="#FF7A9A" opacity=".55"/>`;
- /* what it's wearing */
- const top=cy-R*.95;const W={bow:`<text x="${100+R*.45}" y="${top+R*.15}" font-size="${R*.55}" text-anchor="middle">🎀</text>`,shades:`<text x="100" y="${ey+er*.8}" font-size="${R*.7}" text-anchor="middle">🕶️</text>`,cap:`<text x="100" y="${top+R*.2}" font-size="${R*.75}" text-anchor="middle">🧢</text>`,flower:`<text x="${100-R*.45}" y="${top+R*.2}" font-size="${R*.5}" text-anchor="middle">🌸</text>`,tophat:`<text x="100" y="${top+R*.1}" font-size="${R*.8}" text-anchor="middle">🎩</text>`,crown:`<text x="100" y="${top+R*.1}" font-size="${R*.75}" text-anchor="middle">👑</text>`,party:`<text x="100" y="${top+R*.05}" font-size="${R*.8}" text-anchor="middle">🥳</text>`,cape:''};
+ o+=`<defs><radialGradient id="cg" cx="40%" cy="30%"><stop offset="0" stop-color="#FFD27A"/><stop offset="1" stop-color="${G}"/></radialGradient><radialGradient id="au"><stop offset="0" stop-color="${st>=5?'#FFE27A':'#BFF4FF'}" stop-opacity=".95"/><stop offset="1" stop-color="#FFF6B0" stop-opacity="0"/></radialGradient></defs>`;
+ const sc=[1,.6,.72,.84,.93,1][st];
+ o+=`<ellipse cx="100" cy="191" rx="${st===0?38:58*sc+8}" ry="8" fill="rgba(0,0,0,.15)"/>`;
+ if(st===0){const cr=Math.min(5,S.words);o+=`<ellipse cx="100" cy="125" rx="52" ry="64" fill="url(#cg)" stroke="${GD}" stroke-width="4"/>`+[[80,100,7],[118,92,5],[112,140,8],[84,150,5],[100,118,4],[126,120,5],[72,126,4]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${DK}" opacity=".75"/>`).join('');
+  if(cr>=2)o+=`<path d="M70 120l10 8 8-10 10 10" fill="none" stroke="${DK}" stroke-width="4" stroke-linecap="round"/>`;if(cr>=4)o+=`<path d="M108 100l8 10 10-6 6 12" fill="none" stroke="${DK}" stroke-width="4" stroke-linecap="round"/>`;svg.innerHTML=o;return}
+ if(aura)o+=`<circle cx="100" cy="${190-110*sc}" r="${110*sc}" fill="url(#au)" opacity="${aura===2?1:.55}"/>`;
+ if(aura===2)for(let i=0;i<6;i++){const a=i/6*6.28+Date.now()/3000;o+=`<text x="${100+Math.cos(a)*95*sc}" y="${190-100*sc+Math.sin(a)*85*sc}" font-size="16" text-anchor="middle">✨</text>`}
+ /* turbo and mega cheetahs leave speed streaks */
+ if(st>=4)o+=`<g opacity=".8"><path d="M14 120h34M8 138h40M18 156h30" stroke="${st>=5?'#FFD23F':'#7FD3FF'}" stroke-width="6" stroke-linecap="round"/></g>`;
+ o+=`<g transform="translate(100 190) scale(${sc}) translate(-100 -190)">`;
+ if(S.wear==='cape')o+=`<path d="M64 112Q100 210 136 112L150 186L50 186Z" fill="#E23A5A"/>`;
+ /* tail */
+ o+=`<path d="M128 172C168 172 178 140 164 112" fill="none" stroke="${G}" stroke-width="13" stroke-linecap="round"/><path d="M164 112c-3-8-2-14 2-20" fill="none" stroke="${DK}" stroke-width="13" stroke-linecap="round"/><circle cx="160" cy="150" r="3.5" fill="${DK}"/><circle cx="170" cy="132" r="3.2" fill="${DK}"/><circle cx="148" cy="166" r="3.2" fill="${DK}"/>`;
+ /* body, back paws, belly */
+ o+=`<ellipse cx="68" cy="183" rx="17" ry="8" fill="${G}" stroke="${GD}" stroke-width="2.5"/><ellipse cx="132" cy="183" rx="17" ry="8" fill="${G}" stroke="${GD}" stroke-width="2.5"/>`;
+ o+=`<ellipse cx="100" cy="150" rx="${st>=3?46:42}" ry="38" fill="url(#cg)" stroke="${GD}" stroke-width="3"/><ellipse cx="100" cy="160" rx="24" ry="24" fill="${CR}"/>`;
+ SPOTS.slice(5).forEach(([x,y,r])=>o+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${DK}" ${st>=5?'stroke="#FFD23F" stroke-width="1.5"':''}/>`);
+ /* front paws (up in the air when excited) */
+ const up=md==='excited';
+ if(up)o+=`<ellipse cx="62" cy="122" rx="11" ry="16" fill="${CR}" stroke="${GD}" stroke-width="2.5" transform="rotate(-30 62 122)"/><ellipse cx="138" cy="122" rx="11" ry="16" fill="${CR}" stroke="${GD}" stroke-width="2.5" transform="rotate(30 138 122)"/>`;
+ else o+=`<ellipse cx="86" cy="176" rx="11" ry="14" fill="${CR}" stroke="${GD}" stroke-width="2.5"/><ellipse cx="114" cy="176" rx="11" ry="14" fill="${CR}" stroke="${GD}" stroke-width="2.5"/><path d="M82 186v-5M86 187v-5M90 186v-5M110 186v-5M114 187v-5M118 186v-5" stroke="${GD}" stroke-width="1.8" stroke-linecap="round"/>`;
+ /* head: cubs have big heads */
+ const hs=[1,1.22,1.12,1.04,1,1][st];o+=`<g transform="translate(100 96) scale(${hs}) translate(-100 -96)">`;
+ o+=`<path d="M62 70L60 36L90 56Z" fill="${G}" stroke="${GD}" stroke-width="3" stroke-linejoin="round"/><path d="M138 70L140 36L110 56Z" fill="${G}" stroke="${GD}" stroke-width="3" stroke-linejoin="round"/><path d="M66 62L65 44L82 56Z" fill="${DK}" opacity=".8"/><path d="M134 62L135 44L118 56Z" fill="${DK}" opacity=".8"/>`;
+ o+=`<ellipse cx="100" cy="88" rx="44" ry="40" fill="url(#cg)" stroke="${GD}" stroke-width="3"/>`;
+ if(st<=1)o+=`<path d="M84 52q4-10 8-2q4-10 8 0q4-10 8 2" fill="none" stroke="${CR}" stroke-width="5" stroke-linecap="round"/>`;
+ SPOTS.slice(0,5).forEach(([x,y,r])=>o+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${DK}" ${st>=5?'stroke="#FFD23F" stroke-width="1.2"':''}/>`);
+ o+=`<ellipse cx="100" cy="106" rx="26" ry="17" fill="${CR}"/>`;
+ /* the cheetah's black tear lines */
+ o+=`<path d="M89 88C86 96 84 104 88 112" fill="none" stroke="${DK}" stroke-width="3.5" stroke-linecap="round"/><path d="M111 88C114 96 116 104 112 112" fill="none" stroke="${DK}" stroke-width="3.5" stroke-linecap="round"/>`;
+ if(st>=4)o+=`<path d="M60 92l8-4-4 7 8-3" fill="none" stroke="${st>=5?'#FFD23F':'#4DC8FF'}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M140 92l-8-4 4 7-8-3" fill="none" stroke="${st>=5?'#FFD23F':'#4DC8FF'}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+ /* eyes by mood */
+ const E=[[84,82],[116,82]];
+ if(md==='sleepy'){o+=E.map(([x,y])=>`<path d="M${x-8} ${y}q8 6 16 0" stroke="${DK}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`).join('')+`<text x="140" y="44" font-size="20" font-weight="800" fill="#7A5CFF">z z</text>`}
+ else if(md==='excited'){o+=E.map(([x,y])=>`<text x="${x}" y="${y+7}" font-size="21" text-anchor="middle">⭐</text>`).join('')}
+ else{o+=E.map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="9" ry="10" fill="#fff" stroke="${DK}" stroke-width="2"/><circle cx="${x+1}" cy="${y+1.5}" r="6.2" fill="#E8A317"/><circle cx="${x+1}" cy="${y+1.5}" r="3.4" fill="${DK}"/><circle cx="${x+3}" cy="${y-2}" r="1.8" fill="#fff"/>`).join('');
+  if(md==='oops')o+=`<path d="M74 68l14 5M126 68l-14 5" stroke="${DK}" stroke-width="3.5" stroke-linecap="round"/>`}
+ /* nose + mouth */
+ o+=`<path d="M93 99h14l-7 7z" fill="${DK}" stroke="${DK}" stroke-width="2" stroke-linejoin="round"/>`;
+ if(md==='hungry')o+=`<ellipse cx="100" cy="116" rx="9" ry="8" fill="#7A1E3A"/><ellipse cx="100" cy="119" rx="5" ry="3.5" fill="#FF7A9A"/><path d="M110 116q4 10 0 14" stroke="#7FD3FF" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+ else if(md==='oops')o+=`<path d="M92 117q8-6 16 0" stroke="${DK}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+ else if(md==='sleepy')o+=`<path d="M100 106v4" stroke="${DK}" stroke-width="2.5" stroke-linecap="round"/>`;
+ else o+=`<path d="M100 106v4M100 110q-6 6-11 2M100 110q6 6 11 2" stroke="${DK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>${md==='excited'||md==='happy'?`<path d="M94 114q6 8 12 0z" fill="#FF7A9A"/>`:''}`;
+ o+=`<path d="M74 104h-14M74 109l-13 3M126 104h14M126 109l13 3" stroke="${GD}" stroke-width="1.6" stroke-linecap="round"/>`;
+ /* what it's wearing (on the head) */
+ const W={bow:`<text x="128" y="58" font-size="26" text-anchor="middle">🎀</text>`,shades:`<text x="100" y="92" font-size="40" text-anchor="middle">🕶️</text>`,cap:`<text x="100" y="62" font-size="42" text-anchor="middle">🧢</text>`,flower:`<text x="70" y="60" font-size="24" text-anchor="middle">🌸</text>`,tophat:`<text x="100" y="56" font-size="44" text-anchor="middle">🎩</text>`,crown:`<text x="100" y="56" font-size="40" text-anchor="middle">👑</text>`,party:`<text x="100" y="54" font-size="44" text-anchor="middle">🥳</text>`,cape:''};
  if(S.wear&&W[S.wear])o+=W[S.wear];
- svg.innerHTML=o}
+ if(st>=5&&S.wear!=='crown'&&S.wear!=='tophat'&&S.wear!=='cap'&&S.wear!=='party')o+=`<text x="100" y="54" font-size="30" text-anchor="middle">👑</text>`;
+ o+=`</g></g>`;svg.innerHTML=o}
 
 /* ================= little helpers ================= */
 let bubT=0;function bubble(t,ms){const b=$('#bubble');b.textContent=t;b.classList.add('on');clearTimeout(bubT);bubT=setTimeout(()=>b.classList.remove('on'),ms||2600)}
@@ -224,13 +241,13 @@ function grade(l,ok){S.m[l]=S.m[l]+(ok?(1-S.m[l])*.12:-S.m[l]*.15);const recent=
 function overlay(html){$('#ovc').innerHTML=html;$('#ov').hidden=false}
 function closeOv(){$('#ov').hidden=true}
 async function evolve(from){if(from===0)return hatch();const st=STAGES[S.stage];tone([392,523,659,784,1047,1319]);anim('dance');
- overlay(`<div class="big">✨${STAGES[S.stage].em}✨</div><h1>${S.name} grew!</h1><p style="font-size:22px">Now ${S.name} is a <b>${st.n}</b> pet!</p><button class="btn" id="okb">Yay!</button>`);
- await speak(`Whoa! ${S.name} grew into a ${st.n} pet! Keep reading to grow even more!`);await new Promise(r=>$('#okb').onclick=()=>{closeOv();r()})}
+ overlay(`<div class="big">✨${STAGES[S.stage].em}✨</div><h1>${S.name} evolved!</h1><p style="font-size:22px">Now ${S.name} is a <b>${st.n}</b>!</p><button class="btn" id="okb">Yay!</button>`);
+ await speak(`Whoa! ${S.name} evolved into a ${st.n}! Keep reading to get even faster!`);await new Promise(r=>$('#okb').onclick=()=>{closeOv();r()})}
 async function hatch(){S.color=pick(COLORS);S.stage=1;save();drawPet();meters();tone([523,659,784,1047,1319]);
- overlay(`<div class="big">🐣</div><h1>Your egg hatched!</h1><p style="font-size:20px">Pick a name for your new pet:</p><div class="names">${NAMES.map(n=>`<button data-n="${n[0]}">${n[1]} ${n[0]}</button>`).join('')}</div><button class="btn" id="okb" disabled style="margin-top:14px">That's the one!</button>`);
- await speak('Crack! Your egg hatched! Tap a name to hear it, then pick one for your new pet.');let sel='';
+ overlay(`<div class="big">🐆</div><h1>A baby cheetah!</h1><p style="font-size:20px">Pick a name for your cheetah cub:</p><div class="names">${NAMES.map(n=>`<button data-n="${n[0]}">${n[1]} ${n[0]}</button>`).join('')}</div><button class="btn" id="okb" disabled style="margin-top:14px">That's the one!</button>`);
+ await speak('Crack! Your egg hatched, and it\'s a baby cheetah! Tap a name to hear it, then pick one.');let sel='';
  document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{sel=b.dataset.n;document.querySelectorAll('[data-n]').forEach(x=>x.classList.toggle('on',x===b));speak(sel);$('#okb').disabled=false});
- await new Promise(r=>$('#okb').onclick=()=>{if(!sel)return;S.name=sel;save();closeOv();r()});meters();drawPet();anim('dance');await petSay(`Hi! I'm ${S.name}! I eat words. Read to me and I'll grow big and strong!`)}
+ await new Promise(r=>$('#okb').onclick=()=>{if(!sel)return;S.name=sel;save();closeOv();r()});meters();drawPet();anim('dance');await petSay(`Hi! I'm ${S.name}, the cheetah! I eat words. Read to me and I'll grow big and super fast!`)}
 async function gift(){const left=GIFTS.filter(g=>!S.gifts.includes(g.id));if(!left.length)return;const g=left[0];S.gifts.push(g.id);S.wear=g.id;save();drawPet();tone([784,988,1175,1568]);
  overlay(`<div class="big">🎁</div><h1>A present!</h1><p style="font-size:24px">${S.name} got ${g.n}! ${g.em}</p><button class="btn" id="okb">Put it on!</button>`);await speak(`Ten words! ${S.name} got ${g.n}!`);
  await new Promise(r=>$('#okb').onclick=()=>{closeOv();r()});anim('dance')}
@@ -242,11 +259,11 @@ $('#petWrap').onclick=()=>{if(S.stage===0){anim('wobble');petSay('The egg wiggle
 $('#say').onclick=()=>{if(!cur)return;petSay(cur.kind==='word'?'Read the word. Then feed me the picture that matches!':'Read the sentence. Then feed me the picture that matches!')};
 meters();drawPet();
 setTimeout(async()=>{const m=mood();
- if(S.stage===0)await petSay(S.words?'Keep reading! The egg is almost ready!':'Look, an egg! Read 5 words to hatch it. Read the word, then tap the picture that matches.');
+ if(S.stage===0)await petSay(S.words?'Keep reading! The egg is almost ready!':'Look, a cheetah egg! Read 5 words to hatch it. Read the word, then tap the picture that matches.');
  else if(m==='hungry')await petSay(`I'm sooo hungry! Feed me some words!`);
  else await petSay(pick([`Hi! It's me, ${S.name}! Let's read!`,`Yay, you're back! Read me some words!`]));
  show()},600);
-window.__wp={get S(){return S},get cur(){return cur},chunks,show,nextItem};
+window.__wp={get S(){return S},get cur(){return cur},chunks,show,nextItem,drawPet,setMood:m=>{moodOverride={m,until:Date.now()+9e9}}};
 })();
 </script>
 </body></html>
