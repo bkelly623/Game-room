@@ -45,10 +45,14 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:var(--read);color:var
 @keyframes pshake{20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
 #textbox{flex:none;max-height:48%;overflow:auto;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:#FFFDF6}
 #ptext{font-size:clamp(20px,3.6vw,28px);line-height:1.45;margin:0 0 12px;max-width:900px}
-#ptext .w{border-radius:6px;transition:background .1s}#ptext .w.on{background:#FFE27A}
+#ptext mark{background:#FFE27A;border-radius:6px;color:inherit;padding:0 2px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 #pg{margin-left:auto;font-weight:700;color:#9A8A6A}
 #readBtn{border:0;border-radius:14px;background:#EADFF0;padding:10px 14px;font:700 16px var(--read);cursor:pointer}
+#voiceBtn{border:0;border-radius:14px;background:#EADFF0;padding:10px 14px;font:700 16px var(--read);cursor:pointer}
+#meter{display:inline-flex;align-items:center;gap:6px;font-size:22px}#meter i{display:block;width:110px;height:14px;border-radius:9px;background:#EADFF0;overflow:hidden;border:2px solid #2B2240}#meter b{display:block;height:100%;width:0;background:linear-gradient(90deg,#9BE36D,#FFD23F,#FF7A1A);transition:width .5s}
+#mega{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle,rgba(255,210,63,.95),rgba(255,122,26,.9));font:400 clamp(48px,12vw,110px) var(--title);color:#fff;-webkit-text-stroke:3px #2B2240;text-shadow:6px 6px 0 #2B2240;animation:pop .5s cubic-bezier(.2,1.4,.4,1);text-align:center}#mega small{font:700 22px var(--read);-webkit-text-stroke:0;text-shadow:none;color:#2B2240;margin-top:8px}@keyframes pop{from{transform:scale(.3)}}
+.actor{cursor:pointer}
 #homeBtn{border:0;border-radius:14px;background:#EADFF0;padding:10px 14px;font:700 16px var(--read);cursor:pointer}
 /* question */
 #qv{position:fixed;inset:0;z-index:20;background:rgba(43,34,64,.6);display:flex;align-items:center;justify-content:center;padding:14px}
@@ -102,7 +106,7 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:var(--read);color:var
 <div id="lib" class="scr"></div>
 <div id="read" class="scr" hidden>
  <div id="panel"><div id="caption"></div><div id="boom"></div></div>
- <div id="textbox"><p id="ptext"></p><div class="row"><button id="homeBtn">📚 Books</button><button id="readBtn">🔊 Read it to me</button><span id="pg"></span><button class="btn" id="next">Next ▶</button></div></div>
+ <div id="textbox"><p id="ptext"></p><div class="row"><button id="homeBtn">📚 Books</button><button id="readBtn">🔊 Read it to me</button><button id="voiceBtn" title="Try a different voice">🎙️ Voice</button><span id="meter" title="Toot meter: right answers fill it">💨 <i><b></b></i></span><span id="pg"></span><button class="btn" id="next">Next ▶</button></div></div>
 </div>
 <div id="qv" hidden><div id="qbox"><div id="qtag"></div><div id="qtext"></div><div id="qpics"></div><div id="qlock"><i></i></div><div id="qopts"></div><div id="qfb"></div></div></div>
 <script>
@@ -136,11 +140,29 @@ const SFX={toot:()=>{osc('sawtooth',110,55,.9,.18,28);noise(.9,300,120,.25,3)},b
 const sfx=k=>{try{SFX[k]&&SFX[k]()}catch(e){}};
 
 /* ================= reading aloud ================= */
-let voice=null;function pv(){try{const v=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));voice=v.find(x=>/samantha|google us english|aria|jenny|ava|allison/i.test(x.name))||v.find(x=>/en.us/i.test(x.lang))||v[0]||null}catch(e){}}
+/* the device's own voices, best first: "Natural"/"Online" voices (Edge/Windows), Google, Apple's enhanced ones */
+let voice=null,VOICES=[];
+function rankV(v){const n=v.name;let s=0;if(/natural|neural|online/i.test(n))s+=60;if(/premium|enhanced/i.test(n))s+=45;if(/google us english/i.test(n))s+=35;if(/google uk english female/i.test(n))s+=28;
+ if(/\b(aria|jenny|ava|samantha|allison|zoe|evan|nathan|joelle|guy|michelle|christopher|eric|ana|emma)\b/i.test(n))s+=20;if(/en[-_]us/i.test(v.lang))s+=8;if(/en[-_](gb|au|ca|ie)/i.test(v.lang))s+=4;if(/david|zira|mark|espeak|robot|fred|albert|bad news|bells|boing|bubbles|cellos|jester|organ|trinoids|whisper|zarvox|wobble|superstar|grandma|grandpa|rocko|shelley|sandy|reed|eddy|flo/i.test(n))s-=40;if(v.localService===false)s+=5;return s}
+function pv(){try{VOICES=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)).sort((a,b)=>rankV(b)-rankV(a));const want=S.voice&&VOICES.find(v=>v.name===S.voice);voice=want||VOICES[0]||null;vlabel()}catch(e){}}
+function vlabel(){const b=document.getElementById('voiceBtn');if(b)b.textContent='🎙️ '+(voice?voice.name.replace(/Microsoft |Google |\(.*?\)| Online| - English.*$/g,'').trim().slice(0,16):'Voice')}
 try{pv();speechSynthesis.onvoiceschanged=pv}catch(e){}
-let narrating=false;
-function speak(t,rate){return new Promise(res=>{try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\(|\)/g,''));if(voice)u.voice=voice;u.rate=rate||.95;u.pitch=1.05;u.onend=res;u.onerror=res;speechSynthesis.speak(u)}catch(e){res()}})}
-function stopTalk(){try{speechSynthesis.cancel()}catch(e){}narrating=false}
+let narrating=false,talkId=0;
+/* who is talking changes the voice a little: Grandmom higher, Uncle Brendan and Dad lower, robots and monsters deep */
+const CHAR_P={Grandmom:[1.35,.9],'Uncle Brendan':[.75,.95],Dad:[.8,.95],Mom:[1.2,1],'Aunt Rachel':[1.25,1],Gary:[.6,.85],'Toot-Bot':[.5,.8],Stinkbreath:[.55,.85],Luca:[1.45,1.05],Vinny:[1.3,1.05],Jack:[1.15,1.05]};
+function utter(t,o){return new Promise(res=>{try{const u=new SpeechSynthesisUtterance(t);if(voice)u.voice=voice;u.rate=o.rate||1;u.pitch=o.pitch||1;u.volume=1;let done=false;const fin=()=>{if(!done){done=true;res()}};u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);setTimeout(fin,Math.max(3000,t.length*110))}catch(e){res()}})}
+/* split into sentences and quotes so it reads with pauses, shouts and character voices */
+function parts(text){const out=[];const re=/"([^"]+)"|([^".!?]+[.!?]*)/g;let m;
+ while((m=re.exec(text))){if(m[1]){out.push({t:m[1],q:true})}else{const t=m[2].trim();if(!t)continue;out.push({t})}}
+ out.forEach((p,i)=>{if(p.q){const near=(out[i+1]&&!out[i+1].q?out[i+1].t:'')+' '+(out[i-1]&&!out[i-1].q?out[i-1].t:'');const who=Object.keys(CHAR_P).find(k=>near.includes(k));p.who=who||''}});return out}
+async function speak(text,rate){stopTalk();const my=++talkId;narrating=true;const P=parts(String(text).replace(/\(|\)/g,''));
+ for(const p of P){if(my!==talkId)return;const loud=/\b[A-Z]{3,}\b/.test(p.t)&&p.t.replace(/[^A-Z]/g,'').length>p.t.replace(/[^a-z]/g,'').length*.6;
+  const cp=p.who&&CHAR_P[p.who]||(p.q?[1.15,1]:[1,1]);hl(p.t);
+  if(loud)sfx('boing');await utter(loud?p.t.toLowerCase():p.t,{pitch:loud?1.4:cp[0],rate:(rate||.98)*(loud?.9:cp[1])});await new Promise(r=>setTimeout(r,p.q?120:220))}
+ hl('');if(my===talkId)narrating=false}
+/* light up the sentence being read */
+function hl(t){const el=document.getElementById('ptext');if(!el||!el.dataset.raw)return;if(!t){el.innerHTML=esc(el.dataset.raw);return}const raw=el.dataset.raw,i=raw.indexOf(t);if(i<0)return;el.innerHTML=esc(raw.slice(0,i))+'<mark>'+esc(t)+'</mark>'+esc(raw.slice(i+t.length))}
+function stopTalk(){talkId++;try{speechSynthesis.cancel()}catch(e){}narrating=false}
 
 /* ================= questions ================= */
 /* Luca: read a word, tap its picture. Words come from the story world. */
@@ -182,15 +204,20 @@ function misspell(w){const out=new Set();const vow='aeiou';let tries=0;while(out
  if(r<.25&&i<x.length-1){[x[i],x[i+1]]=[x[i+1],x[i]]}else if(r<.5){if(x[i]===x[i+1])x.splice(i,1);else x.splice(i,0,x[i])}else if(r<.8){const vs=[...x.keys()].filter(j=>vow.includes(x[j]));if(vs.length){const j=pick(vs);x[j]=pick([...vow].filter(v=>v!==x[j]))}}else x.splice(i,1);
  const s=x.join('');if(s!==w)out.add(s)}return[...out]}
 function spellQ(){const list=SPELL[TIER>=2?1:0];const w=pick(list);return{k:'spell',tag:'✏️ SPELL CHECK',text:'Which one is spelled right?',ans:w,opts:shuf([w,...misspell(w)]),work:`It's spelled ${w.toUpperCase().split('').join('-')}.`,say:'Which one is spelled right?',s:'sp',lv:TIER}}
+const STOP=new Set(['the','and','was','his','her','she','they','said','with','that','then','into','from','your','have','very','were','what','when','this','there','their','just','only','some','them','like','also','over','would']);
+function clozeQ(page){const sents=(page.t.replace(/"/g,'').match(/[^.!?]+[.!?]+/g)||[page.t]).map(x=>x.trim()).filter(x=>x.split(' ').length>=5);if(!sents.length)return storyQ(page);const sent=pick(sents);const words=sent.split(' ').map(w=>w.replace(/[^A-Za-z'-]/g,'')).filter(w=>w.length>=4&&!STOP.has(w.toLowerCase())&&!/^[A-Z]{3,}$/.test(w));
+ if(!words.length)return storyQ(page);const w=pick(words);const blank=sent.replace(new RegExp('\\b'+w+'\\b'),'_____');const pool=page.t.replace(/[^A-Za-z' ]/g,' ').split(/\s+/).filter(x=>x.length>=4&&x.toLowerCase()!==w.toLowerCase()&&!STOP.has(x.toLowerCase())&&!/^[A-Z]{3,}$/.test(x));
+ const opts=[w];for(const x of shuf(pool)){if(opts.length>=4)break;if(!opts.some(o=>o.toLowerCase()===x.toLowerCase()))opts.push(x)}for(const x of ['banana','sneaker','pickle','noodle']){if(opts.length>=4)break;if(!opts.includes(x))opts.push(x)}
+ return{k:'cloze',tag:'🔍 MISSING WORD',text:blank,ans:w,opts:shuf(opts),work:`The page says: "${sent}"`,say:'Which word is missing?',s:'rd',lv:8}}
 function storyQ(page){const c=page.c;return{k:'story',tag:'🧐 WHAT HAPPENED?',text:c[0],ans:c[1],opts:shuf(c.slice(1)),work:`The story says: ${c[1]}.`,say:c[0],s:'rd',lv:9}}
 /* the page lock: Luca gets 1 question, Vinny and Jack get 2 (one about the story, one math or spelling) */
-function lockFor(page){if(TIER===0)return[rnd()<.6?readQ():mathQ()];return[storyQ(page),rnd()<.62?mathQ():spellQ()]}
+function lockFor(page){if(TIER===0)return[rnd()<.6?readQ():mathQ()];return[rnd()<.55?storyQ(page):clozeQ(page),rnd()<.62?mathQ():spellQ()]}
 
 let qOpen=false;
 function ask(q){return new Promise(res=>{qOpen=true;$('#qv').hidden=false;$('#qtag').textContent=q.tag;$('#qtext').textContent=q.text;$('#qtext').style.fontSize=q.big?'clamp(54px,13vw,84px)':'';$('#qpics').textContent=q.pics||'';$('#qfb').innerHTML='';
  const O=$('#qopts');O.className=q.k==='read'?'big':'';O.innerHTML='';
  const words=String(q.text).split(/\s+/).length;const ms=q.k==='read'?1800:Math.min(5200,1200+words*(TIER===1?260:200));const bar=$('#qlock i');bar.style.transition='none';bar.style.width='0';void bar.offsetWidth;bar.style.transition=`width ${ms}ms linear`;bar.style.width='100%';
- if(TIER===0)speak(q.k==='read'?q.say:q.text);
+ speak(q.k==='read'||q.k==='spell'||q.k==='cloze'?q.say:q.text);
  let done=false;const unlock=Date.now()+ms;
  q.opts.forEach(v=>{const b=document.createElement('button');b.textContent=v;b.onclick=()=>{if(done||Date.now()<unlock)return;done=true;const ok=String(v)===String(q.ans);
    S.q++;if(ok)S.ok++;try{window.__trk&&__trk.ans({s:q.s,f:q.lv,it:String(q.text).slice(0,50),ok})}catch(e){}adapt(q,ok);save();
@@ -198,18 +225,21 @@ function ask(q){return new Promise(res=>{qOpen=true;$('#qv').hidden=false;$('#qt
    if(ok){sfx('good');$('#qfb').innerHTML=`<b style="color:#1E9E5A">${pick(['Yes!','Correct!','Nailed it!','Toot-tastic!','You got it!'])}</b>`;if(TIER===0)speak(q.k==='read'?q.text+'! Yes!':'Yes!');setTimeout(close,900)}
    else{b.classList.add('no');sfx('bad');$('#qfb').innerHTML=`<b style="color:#C0304A">Not that one!</b><span class="work">${esc(q.work)}</span><div style="margin-top:10px"><button class="btn" id="qgo" disabled>Try another</button></div>`;if(TIER===0)speak('Not that one. '+q.work);
     const g=$('#qgo');setTimeout(()=>g.disabled=false,2500);g.onclick=close}
-   function close(){$('#qv').hidden=true;qOpen=false;res(ok)}};O.appendChild(b)})})}
-function adapt(q,ok){S.streak=ok?S.streak+1:0;if(q.k==='math'){if(ok&&S.streak>=3&&rnd()<.5){S.ml=Math.min(MATH.length-1,S.ml+1);S.streak=0}if(!ok)S.ml=Math.max(0,S.ml-(rnd()<.5?1:0))}
+   async function close(){$('#qv').hidden=true;qOpen=false;meter();if(ok&&S.tm>=5){S.tm=0;save();meter();await megaToot()}res(ok)}};O.appendChild(b)})})}
+function meter(){const b=document.querySelector('#meter b');if(b)b.style.width=Math.min(100,(S.tm||0)*20)+'%'}
+async function megaToot(){const m=document.createElement('div');m.id='mega';m.innerHTML=`💨 MEGA TOOT! 💨<small>5 right in a row! Bonus +25 XP</small>`;document.body.appendChild(m);sfx('bigtoot');setTimeout(()=>sfx('squeak'),900);setTimeout(()=>sfx('toot'),1300);
+ try{if(window.HERO&&KID)HERO.bonus(KID,25,5,'💨 MEGA TOOT bonus! +25 XP')}catch(e){}utter('Mega toot! Five in a row!',{pitch:1.3,rate:.95});await new Promise(r=>setTimeout(r,2300));m.remove()}
+function adapt(q,ok){S.tm=ok?(S.tm||0)+1:0;if(tale){const k=tale.id;S.ft=S.ft||{};S.ft[k]=S.ft[k]||[0,0];S.ft[k][0]++;if(ok)S.ft[k][1]++}S.streak=ok?S.streak+1:0;if(q.k==='math'){if(ok&&S.streak>=3&&rnd()<.5){S.ml=Math.min(MATH.length-1,S.ml+1);S.streak=0}if(!ok)S.ml=Math.max(0,S.ml-(rnd()<.5?1:0))}
  if(q.k==='read'){if(ok&&S.streak>=4){S.rl=Math.min(3,S.rl+1);S.streak=0}}}
 /* to turn the page you need a right answer for each question; a miss gives you a fresh one of the same kind */
-async function unlockPage(page){for(const first of lockFor(page)){let q=first,ok=await ask(q);while(!ok){q=q.k==='story'?(rnd()<.5?mathQ():spellQ()):q.k==='read'?readQ():q.k==='spell'?spellQ():mathQ();ok=await ask(q)}}}
+async function unlockPage(page){for(const first of lockFor(page)){let q=first,ok=await ask(q);while(!ok){q=q.k==='story'||q.k==='cloze'?(rnd()<.5?mathQ():spellQ()):q.k==='read'?readQ():q.k==='spell'?spellQ():mathQ();ok=await ask(q)}}}
 
 /* ================= the picture panel ================= */
 const BGS={kitchen:'linear-gradient(#FFE9B8 0 62%,#C98A4A 62%)',living:'linear-gradient(#D8E8FF 0 64%,#B07A4A 64%)',sky:'linear-gradient(#7FC8FF,#D8F1FF 70%,#9BDB7A 70%)',yard:'linear-gradient(#9FDCFF 0 58%,#7CC95C 58%)',bath:'linear-gradient(#CFF3F0 0 60%,#FFFFFF 60%)',
  bathnight:'linear-gradient(#2A2F6E 0 60%,#4A4F8E 60%)',lab:'linear-gradient(#3A3F6E 0 64%,#5A5F8E 64%)',bubbles:'radial-gradient(circle at 30% 30%,#E6F7FF,#9FDCFF)',pool:'linear-gradient(#9FDCFF 0 50%,#7CC95C 50% 58%,#3EB8E8 58%)',stage:'linear-gradient(#5A2A8E 0 64%,#C9853A 64%)',jungle:'linear-gradient(#FFB070 0 40%,#9BDB7A 40% 62%,#3A8A3A 62%)'};
 function drawPanel(page){const P=$('#panel');P.querySelectorAll('.actor').forEach(x=>x.remove());P.style.background=BGS[page.bg]||BGS.living;const small=innerWidth<560;
  page.a.forEach(([who,x,y,anim])=>{const c=CAST[who];const d=document.createElement('div');d.className='actor'+(anim?' a-'+anim:'');d.style.left=x+'%';d.style.top=y+'%';const big=c?1:who==='🏠'||who==='🐉'||who==='🦖'||who==='🚽'?1.5:.9;
-  d.style.setProperty('--s',Math.round((small?52:72)*big)+'px');d.innerHTML=`<span class="e">${c?c[0]:who}</span>${c?`<span class="n">${c[1]}</span>`:''}`;P.appendChild(d)});
+  d.style.setProperty('--s',Math.round((small?52:72)*big)+'px');d.innerHTML=`<span class="e">${c?c[0]:who}</span>${c?`<span class="n">${c[1]}</span>`:''}`;d.onclick=()=>{ac();sfx(pick(['toot','squeak','burp','boing','toot']));try{d.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-62%) scale(1.25)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:450})}catch(e){}if(c&&rnd()<.6){const lines={Grandmom:'Who wants more beans?','Uncle Brendan':'Excuse me!',Dad:'It was the dog!',Mom:'Boys! Seriously?','Aunt Rachel':'Ten points!',Jack:'That was Vinny!',Vinny:'That was Luca!',Luca:'That was Jack!'};utter(lines[c[1]]||'Hee hee!',{pitch:(CHAR_P[c[1]]||[1])[0],rate:1})}};P.appendChild(d)});
  const loud=(page.t.match(/\b[A-Z]{4,}[A-Z!]*\b/g)||[]).filter(w=>!['THE','END'].includes(w));const bm=$('#boom');bm.classList.remove('on');if(loud.length){bm.textContent=loud[0];void bm.offsetWidth;bm.classList.add('on')}
  if(page.fx==='shake'){P.classList.remove('shake');void P.offsetWidth;P.classList.add('shake')}setTimeout(()=>sfx(page.sfx),250)}
 
@@ -217,17 +247,18 @@ function drawPanel(page){const P=$('#panel');P.querySelectorAll('.actor').forEac
 let tale=null,pi=0;
 function openTale(id,restart){tale=TALES.find(t=>t.id===id);pi=restart?0:(S.at[id]||0);if(pi>=tale.pages.length)pi=0;S.cur=id;save();$('#lib').hidden=true;$('#read').hidden=false;showPage()}
 function showPage(){const page=tale.pages[pi];$('#caption').textContent=tale.title;drawPanel(page);
- $('#ptext').innerHTML=page.t.split(' ').map((w,i)=>`<span class="w" data-i="${i}">${esc(w)}</span>`).join(' ');$('#pg').textContent=`Page ${pi+1} of ${tale.pages.length}`;
- $('#next').textContent=pi===tale.pages.length-1?'The End ▶':'Next ▶';$('#next').disabled=false;stopTalk();if(TIER===0)narrate()}
-async function narrate(){narrating=true;const page=tale.pages[pi];await speak(page.t,.92);narrating=false}
-$('#readBtn').onclick=()=>{ac();if(narrating){stopTalk();return}narrate()};
+ $('#ptext').dataset.raw=page.t;$('#ptext').innerHTML=esc(page.t);$('#pg').textContent=`Page ${pi+1} of ${tale.pages.length}`;
+ $('#next').textContent=pi===tale.pages.length-1?'The End ▶':'Next ▶';$('#next').disabled=false;stopTalk();meter();setTimeout(()=>{if(S.auto!==false)narrate()},700)}
+async function narrate(){$('#readBtn').textContent='⏸ Stop';await speak(tale.pages[pi].t,TIER===0?.9:.98);$('#readBtn').textContent='🔊 Read it again'}
+$('#readBtn').onclick=()=>{ac();if(narrating){stopTalk();$('#readBtn').textContent='🔊 Read it to me';return}narrate()};
+$('#voiceBtn').onclick=()=>{if(!VOICES.length){pv();return}const i=VOICES.indexOf(voice);voice=VOICES[(i+1)%Math.min(VOICES.length,8)];S.voice=voice.name;save();vlabel();speak('Hi! This is how I sound. Toot toot!')};
 $('#homeBtn').onclick=()=>{stopTalk();library()};
 $('#next').onclick=async()=>{ac();stopTalk();$('#next').disabled=true;const page=tale.pages[pi];
  await unlockPage(page);pi++;S.at[tale.id]=pi;save();if(pi>=tale.pages.length)return finish();showPage()};
-function finish(){S.done[tale.id]=(S.done[tale.id]||0)+1;S.at[tale.id]=0;S.cur=null;save();sfx('fanfare');const nx=TALES[TALES.indexOf(tale)+1];
- $('#read').hidden=true;const L=$('#lib');L.hidden=false;L.innerHTML=`<div class="done"><div style="font-size:80px">${tale.em}</div><h1>THE END!</h1><p style="font-size:20px">You finished <b>${esc(tale.title)}</b>!${nx&&(S.done[tale.id]===1)?` A new story unlocked: <b>${esc(nx.title)}</b>!`:''}</p>
+function finish(){const f=(S.ft||{})[tale.id]||[0,0],pct=f[0]?f[1]/f[0]:0,stars=pct>=.9?3:pct>=.7?2:1;S.stars[tale.id]=Math.max(S.stars[tale.id]||0,stars);if(S.ft)S.ft[tale.id]=[0,0];S.done[tale.id]=(S.done[tale.id]||0)+1;S.at[tale.id]=0;S.cur=null;save();sfx('fanfare');const nx=TALES[TALES.indexOf(tale)+1];
+ $('#read').hidden=true;const L=$('#lib');L.hidden=false;L.innerHTML=`<div class="done"><div style="font-size:80px">${tale.em}</div><h1>THE END!</h1><div style="font-size:52px">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><p style="font-size:16px;margin:0">${stars===3?'Perfect reading!':stars===2?'Great job! Get answers right the first time for 3 stars.':'Read it again to earn more stars!'}</p><p style="font-size:20px">You finished <b>${esc(tale.title)}</b>!${nx&&(S.done[tale.id]===1)?` A new story unlocked: <b>${esc(nx.title)}</b>!`:''}</p>
   <div class="row" style="justify-content:center;margin-top:10px">${nx?`<button class="btn" id="dNext">Next story ▶</button>`:''}<button class="btn alt" id="dLib">📚 All stories</button></div></div>`;
- if(TIER===0)speak(`The end! You finished ${tale.title}!`);try{if(window.HERO&&KID)HERO.bonus(KID,40,10,`📚 Finished "${tale.title}"! +40 XP.`)}catch(e){}
+ speak(`The end! You finished ${tale.title}! You got ${stars} star${stars>1?'s':''}!`);try{if(window.HERO&&KID)HERO.bonus(KID,40,10,`📚 Finished "${tale.title}"! +40 XP.`)}catch(e){}
  if(nx)$('#dNext').onclick=()=>openTale(nx.id,true);$('#dLib').onclick=library}
 
 /* ================= library ================= */
@@ -235,11 +266,11 @@ function unlocked(i){return i<2||!!S.done[TALES[i-1].id]}
 function library(){$('#read').hidden=true;const L=$('#lib');L.hidden=false;const cur=S.cur&&TALES.find(t=>t.id===S.cur);
  L.innerHTML=`<div class="logo"><span>💨</span> TOOT TALES <span>🚽</span></div><p class="sub">Silly stories starring the Gambesha family. Answer questions to turn the pages!</p>
   ${cur?`<div class="cont"><button class="btn" id="cont">▶ Keep reading: ${esc(cur.title)} (page ${(S.at[cur.id]||0)+1})</button></div>`:''}
-  <div class="books">${TALES.map((t,i)=>{const ok=unlocked(i),d=S.done[t.id]||0;return`<button class="book${ok?'':' lock'}" data-id="${t.id}" style="background:linear-gradient(150deg,${t.col},#2B2240)"><span class="st">${d?'⭐'.repeat(Math.min(3,d)):ok?'':'🔒'}</span><div class="em">${t.em}</div><b>${esc(t.title)}</b><small>${ok?(d?'Read it again!':S.at[t.id]?`Page ${S.at[t.id]+1}`:'New story!'):'Finish the story before to unlock'}</small></button>`}).join('')}</div>`;
+  <div class="books">${TALES.map((t,i)=>{const ok=unlocked(i),d=S.done[t.id]||0;return`<button class="book${ok?'':' lock'}" data-id="${t.id}" style="background:linear-gradient(150deg,${t.col},#2B2240)"><span class="st">${d?'⭐'.repeat(S.stars[t.id]||1):ok?'':'🔒'}</span><div class="em">${t.em}</div><b>${esc(t.title)}</b><small>${ok?(d?'Read it again!':S.at[t.id]?`Page ${S.at[t.id]+1}`:'New story!'):'Finish the story before to unlock'}</small></button>`}).join('')}</div>`;
  const c=$('#cont');if(c)c.onclick=()=>{ac();openTale(cur.id)};
  L.querySelectorAll('.book').forEach(b=>b.onclick=()=>{ac();const i=TALES.findIndex(t=>t.id===b.dataset.id);if(!unlocked(i)){if(TIER===0)speak('Finish the story before this one to unlock it!');return}openTale(b.dataset.id,!S.at[b.dataset.id])});
- if(TIER===0)setTimeout(()=>speak(cur?`Welcome back! Tap the yellow button to keep reading ${cur.title}.`:'Pick a story! Tap a book to start.'),400)}
-window.__tt={get S(){return S},openTale,library,mathQ,spellQ,readQ,TIER};
+ setTimeout(()=>speak(cur?`Welcome back! Tap the yellow button to keep reading ${cur.title}.`:'Pick a story! Tap a book to start.'),400)}
+window.__tt={get S(){return S},openTale,library,mathQ,spellQ,readQ,clozeQ,TIER};
 library();
 })();
 </script>
