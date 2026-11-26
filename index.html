@@ -376,6 +376,8 @@ let start=null;try{start=location.hash.slice(1)||sessionStorage.getItem('hub.kid
 if(start&&H.kid(start))openShelf(start);else renderWho();
 /* send each kid's saves and play time to the Command Center (skips if nothing changed) */
 setTimeout(()=>{if(window.__trk)S.kids.forEach((k,i)=>setTimeout(()=>__trk.syncKid(k.id),i*400))},2500);
+/* an app left open for a while picks up the latest games when it comes back */
+let hidAt=0;document.addEventListener('visibilitychange',()=>{if(document.hidden)hidAt=Date.now();else if(hidAt&&Date.now()-hidAt>20*60000)location.reload()});
 window.addEventListener('pageshow',e=>{if(e.persisted&&curKid&&!$('#shelf').hidden)openShelf(curKid.id)});
 })();
 </script>

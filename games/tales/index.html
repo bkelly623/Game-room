@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en"><head>
+<script src="../_kid.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Toot Tales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<script src="stories.js"></script>
+<style>
+:root{--ink:#2B2240;--title:'Bangers',Impact,sans-serif;--read:'Andika','Comic Sans MS',system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:var(--read);color:var(--ink);background:#FFF4D6}
+[hidden]{display:none!important}
+.scr{position:fixed;inset:0;overflow:auto;padding:14px}
+.btn{font:400 24px var(--title);letter-spacing:.04em;border:0;border-radius:18px;padding:12px 24px;background:#FFD23F;color:#2B2240;box-shadow:0 6px 0 #C79A12;cursor:pointer}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #C79A12}
+.btn.alt{background:#7A5CFF;color:#fff;box-shadow:0 6px 0 #4A2FB8}
+.btn:disabled{filter:grayscale(1);opacity:.6}
+/* library */
+#lib{background:radial-gradient(circle at 20% 10%,#FFE7A8,transparent 50%),#FFF4D6}
+.logo{font:400 clamp(52px,12vw,96px)/.9 var(--title);text-align:center;color:#FF7A1A;text-shadow:4px 4px 0 #7A3A10,8px 8px 0 rgba(0,0,0,.12);margin:6px 0 2px;letter-spacing:.03em}
+.logo span{display:inline-block;animation:wig 2s ease-in-out infinite}
+@keyframes wig{50%{transform:rotate(-6deg) scale(1.05)}}
+.sub{text-align:center;font-size:18px;margin:0 0 14px;color:#7A5A3A}
+.cont{display:flex;justify-content:center;margin:0 0 16px}
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;max-width:1000px;margin:0 auto}
+.book{position:relative;border:0;border-radius:20px;padding:16px 14px 14px;text-align:left;color:#fff;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.2);min-height:150px;font-family:var(--read)}
+.book .em{font-size:54px;line-height:1}
+.book b{display:block;font:400 26px/1 var(--title);letter-spacing:.03em;margin:8px 0 6px;text-shadow:2px 2px 0 rgba(0,0,0,.25)}
+.book small{font-size:15px;font-weight:700;opacity:.95}
+.book.lock{filter:grayscale(1) brightness(.85);cursor:default}
+.book .st{position:absolute;right:12px;top:12px;font-size:20px}
+/* reader */
+#read{display:flex;flex-direction:column;padding:0;background:#FFF4D6}
+#panel{position:relative;flex:1 1 52%;min-height:0;overflow:hidden;border-bottom:6px solid #2B2240;transition:background .6s}
+.actor{position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1;transition:left .6s,top .6s}
+.actor .e{display:block;font-size:var(--s,64px);filter:drop-shadow(0 4px 0 rgba(0,0,0,.18))}
+.actor .n{display:inline-block;margin-top:2px;font:700 12px var(--read);background:rgba(255,255,255,.9);border-radius:99px;padding:1px 7px;white-space:nowrap}
+#caption{position:absolute;left:12px;top:10px;font:400 22px var(--title);letter-spacing:.04em;background:#FFD23F;border:3px solid #2B2240;border-radius:12px;padding:2px 10px;transform:rotate(-2deg)}
+#boom{position:absolute;left:50%;top:18%;transform:translate(-50%,-50%) rotate(-6deg);font:400 clamp(40px,10vw,76px) var(--title);color:#FFD23F;-webkit-text-stroke:3px #2B2240;text-shadow:5px 5px 0 #FF5A1F;pointer-events:none;opacity:0}
+#boom.on{animation:boom 1.4s ease-out}
+@keyframes boom{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-6deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(-6deg)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1) rotate(-6deg)}}
+#panel.shake{animation:pshake .5s linear 2}
+@keyframes pshake{20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
+#textbox{flex:none;max-height:48%;overflow:auto;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:#FFFDF6}
+#ptext{font-size:clamp(20px,3.6vw,28px);line-height:1.45;margin:0 0 12px;max-width:900px}
+#ptext .w{border-radius:6px;transition:background .1s}#ptext .w.on{background:#FFE27A}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#pg{margin-left:auto;font-weight:700;color:#9A8A6A}
+#readBtn{border:0;border-radius:14px;background:#EADFF0;padding:10px 14px;font:700 16px var(--read);cursor:pointer}
+#homeBtn{border:0;border-radius:14px;background:#EADFF0;padding:10px 14px;font:700 16px var(--read);cursor:pointer}
+/* question */
+#qv{position:fixed;inset:0;z-index:20;background:rgba(43,34,64,.6);display:flex;align-items:center;justify-content:center;padding:14px}
+#qbox{width:min(680px,100%);background:#FFFDF6;border:5px solid #2B2240;border-radius:26px;padding:16px 18px;text-align:center;box-shadow:8px 8px 0 #FF7A1A;max-height:100%;overflow:auto}
+#qtag{font:400 22px var(--title);letter-spacing:.05em;color:#FF7A1A}
+#qtext{font-size:clamp(22px,4.6vw,32px);font-weight:700;margin:6px 0 10px;line-height:1.3}
+#qpics{font-size:40px;letter-spacing:2px;margin:-2px 0 8px;line-height:1.15}
+#qlock{height:8px;border-radius:9px;background:#EADFF0;overflow:hidden;max-width:360px;margin:0 auto 12px}
+#qlock i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FF7A1A,#FFD23F)}
+#qopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#qopts button{font:700 clamp(20px,4.4vw,30px) var(--read);padding:14px 8px;border-radius:18px;border:4px solid #2B2240;background:#fff;cursor:pointer;box-shadow:0 5px 0 #2B2240;color:#2B2240}
+#qopts.big button{font-size:clamp(44px,10vw,66px);padding:8px}
+#qopts button:disabled{opacity:.45;cursor:default}
+#qopts button.ok{background:#C8F7D8;border-color:#1E9E5A}
+#qopts button.no{background:#FFD0D6;border-color:#C0304A}
+#qfb{min-height:24px;margin-top:10px;font-size:18px}
+#qfb .work{display:block;margin-top:4px;color:#7A5A3A}
+.done{max-width:620px;margin:8vh auto 0;background:#FFFDF6;border:5px solid #2B2240;border-radius:26px;padding:20px;text-align:center;box-shadow:8px 8px 0 #FF7A1A}
+.done h1{font:400 44px var(--title);color:#FF7A1A;margin:4px 0}
+/* actor animations */
+.a-bob .e{animation:bob 1.6s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-8px)}}
+.a-bounce .e{animation:bnc .7s ease-in-out infinite}@keyframes bnc{50%{transform:translateY(-18px) scale(1.1,.9)}}
+.a-shake .e{animation:shk .25s linear infinite}@keyframes shk{25%{transform:translateX(-4px) rotate(-4deg)}75%{transform:translateX(4px) rotate(4deg)}}
+.a-float .e{animation:flt 3s ease-in-out infinite}@keyframes flt{50%{transform:translateY(-14px) rotate(3deg)}}
+.a-blast .e{animation:bls 1.2s ease-out infinite;transform-origin:left center}@keyframes bls{0%{transform:scale(.4);opacity:.3}60%{transform:scale(1.8);opacity:1}100%{transform:scale(2.4);opacity:0}}
+.a-puff .e{animation:puf 1.5s ease-out infinite}@keyframes puf{0%{transform:scale(.5);opacity:.2}50%{opacity:1}100%{transform:scale(1.4) translateY(-20px);opacity:0}}
+.a-flyaway .e{animation:fly 1.8s ease-in infinite}@keyframes fly{0%{transform:none}100%{transform:translate(60px,-80px) rotate(200deg);opacity:0}}
+.a-flip .e{animation:flp 1s ease-in-out infinite}@keyframes flp{50%{transform:translateY(-30px) rotate(180deg)}}
+.a-flash .e{animation:fls .5s steps(2) infinite}@keyframes fls{50%{opacity:.2}}
+.a-wiggle .e,.a-wave .e,.a-nod .e{animation:wgl 1s ease-in-out infinite}@keyframes wgl{25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+.a-jump .e{animation:jmp .8s ease-in-out infinite}@keyframes jmp{50%{transform:translateY(-24px)}}
+.a-spin .e{animation:spn 1.2s linear infinite}@keyframes spn{to{transform:rotate(360deg)}}
+.a-rise .e{animation:ris 3s ease-in infinite}@keyframes ris{0%{transform:translateY(20px);opacity:0}30%{opacity:1}100%{transform:translateY(-60px);opacity:0}}
+.a-splash .e{animation:spl 1s ease-out infinite}@keyframes spl{0%{transform:scale(.4)}50%{transform:scale(1.3)}100%{transform:scale(1);opacity:.6}}
+.a-roar .e,.a-burp .e,.a-laugh .e,.a-giggle .e{animation:roar .6s ease-in-out infinite}@keyframes roar{50%{transform:scale(1.15) rotate(-4deg)}}
+.a-run .e{animation:run .9s linear infinite}@keyframes run{0%{transform:translateX(0)}100%{transform:translateX(-80px);opacity:0}}
+.a-drop .e{animation:drp 1.4s ease-in infinite}@keyframes drp{0%{transform:translateY(-40px);opacity:0}40%{opacity:1}100%{transform:translateY(10px)}}
+.a-inflate .e{animation:inf 1.6s ease-in-out infinite}@keyframes inf{50%{transform:scale(1.3)}}
+.a-shrink .e{animation:shr 1.6s ease-in-out infinite}@keyframes shr{50%{transform:scale(.7)}}
+.a-fall .e{animation:fal 2s ease-in infinite;transform-origin:bottom center}@keyframes fal{60%,100%{transform:rotate(80deg)}}
+.a-zoom .e{animation:zom 1.2s ease-in-out infinite}@keyframes zom{50%{transform:translateX(30px)}}
+.a-glow .e{animation:glw 1.2s ease-in-out infinite}@keyframes glw{50%{filter:drop-shadow(0 0 16px #FFD23F)}}
+.a-shine .e{animation:glw 1s ease-in-out infinite}
+.a-fly .e{animation:flt 2s ease-in-out infinite}
+.a-tilt .e{animation:tlt 2s ease-in-out infinite}@keyframes tlt{50%{transform:rotate(-14deg)}}
+.a-land .e{animation:lnd 1.4s ease-out}@keyframes lnd{0%{transform:translateY(-120px)}70%{transform:translateY(6px) scale(1.1,.9)}100%{transform:none}}
+.a-faint .e{animation:fnt 2s ease-in-out infinite}@keyframes fnt{40%,100%{transform:rotate(90deg) translateX(10px)}}
+.a-swim .e,.a-surf .e,.a-drift .e,.a-flap .e,.a-quack .e,.a-scrub .e,.a-sweep .e,.a-toss .e,.a-chomp .e,.a-peek .e,.a-climb .e,.a-press .e,.a-roll .e,.a-breathe .e,.a-march .e,.a-tiptoe .e{animation:bob 1s ease-in-out infinite}
+</style></head>
+<body>
+<div id="lib" class="scr"></div>
+<div id="read" class="scr" hidden>
+ <div id="panel"><div id="caption"></div><div id="boom"></div></div>
+ <div id="textbox"><p id="ptext"></p><div class="row"><button id="homeBtn">📚 Books</button><button id="readBtn">🔊 Read it to me</button><span id="pg"></span><button class="btn" id="next">Next ▶</button></div></div>
+</div>
+<div id="qv" hidden><div id="qbox"><div id="qtag"></div><div id="qtext"></div><div id="qpics"></div><div id="qlock"><i></i></div><div id="qopts"></div><div id="qfb"></div></div></div>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),rnd=Math.random,ri=(a,b)=>a+Math.floor(rnd()*(b-a+1)),pick=a=>a[Math.floor(rnd()*a.length)],shuf=a=>a.slice().sort(()=>rnd()-.5);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KID=window.__KID||'',YOUNG=!!(window.__young&&__young());
+/* each boy gets his own kind of question: Luca reads words, Vinny and Jack do story math, spelling and "what happened" */
+const TIER=YOUNG||KID==='luca'?0:KID==='vinny'?1:2;
+const TALES=window.TALES,CAST=window.CAST;
+
+/* ================= save ================= */
+const SKEY='toottales.v1';
+function fresh(){return{v:1,at:{},done:{},stars:{},cur:null,ml:TIER===0?0:TIER===1?4:7,rl:0,q:0,ok:0,streak:0}}
+let S=fresh();try{const s=JSON.parse(localStorage.getItem(SKEY)||'null');if(s&&s.v===1)S=Object.assign(fresh(),s)}catch(e){}
+const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}};
+
+/* ================= sounds (fart noises included, obviously) ================= */
+let AC=null;function ac(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}return AC}
+function noise(dur,f0,f1,vol,q){const a=ac();if(!a)return;const t=a.currentTime,b=a.createBuffer(1,a.sampleRate*dur,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=rnd()*2-1;const n=a.createBufferSource();n.buffer=b;const f=a.createBiquadFilter();f.type='bandpass';f.Q.value=q||1;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(f1,t+dur);const g=a.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);n.connect(f);f.connect(g);g.connect(a.destination);n.start(t)}
+function osc(type,f0,f1,dur,vol,wob){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+ if(wob){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=wob;lg.gain.value=f0*.35;l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(t+dur)}g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.02)}
+const SFX={toot:()=>{osc('sawtooth',110,55,.9,.18,28);noise(.9,300,120,.25,3)},bigtoot:()=>{osc('sawtooth',80,38,1.6,.22,22);noise(1.6,250,80,.35,2)},squeak:()=>osc('square',900,1300,.25,.08,40),
+ burp:()=>osc('sawtooth',140,70,.6,.18,18),bigburp:()=>{osc('sawtooth',120,50,1.2,.22,14);noise(1.2,400,120,.15,2)},rumble:()=>osc('sawtooth',60,45,1.4,.2,8),yum:()=>osc('triangle',500,700,.2,.1),
+ splash:()=>noise(.7,2000,300,.35,.6),flush:()=>noise(1.6,1500,200,.35,.5),drip:()=>osc('sine',1200,400,.15,.12),creak:()=>osc('sawtooth',200,320,.8,.06,6),scream:()=>osc('square',700,1400,.8,.07,12),
+ slurp:()=>osc('sine',300,900,.5,.12,20),pop:()=>{osc('sine',800,200,.08,.2);setTimeout(()=>osc('sine',900,200,.08,.2),150)},boing:()=>osc('sine',200,800,.5,.15,10),whoosh:()=>noise(1,400,2400,.25,.8),
+ robot:()=>{osc('square',300,300,.12,.06);setTimeout(()=>osc('square',500,500,.12,.06),130)},vacuum:()=>noise(1.2,800,900,.2,4),roar:()=>{osc('sawtooth',90,60,1.2,.2,9);noise(1.2,500,200,.2,1)},
+ fanfare:()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>osc('square',f,f,.2,.07),i*120)),drumroll:()=>{for(let i=0;i<14;i++)setTimeout(()=>noise(.06,300,200,.2,1),i*70)},
+ hmm:()=>osc('sine',220,200,.6,.1),scrub:()=>{for(let i=0;i<6;i++)setTimeout(()=>noise(.12,3000,2000,.15,1),i*140)},beep:()=>osc('square',1000,1000,.15,.08),
+ good:()=>[660,880,1100].forEach((f,i)=>setTimeout(()=>osc('triangle',f,f,.18,.12),i*90)),bad:()=>osc('sawtooth',200,120,.35,.1)};
+const sfx=k=>{try{SFX[k]&&SFX[k]()}catch(e){}};
+
+/* ================= reading aloud ================= */
+let voice=null;function pv(){try{const v=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));voice=v.find(x=>/samantha|google us english|aria|jenny|ava|allison/i.test(x.name))||v.find(x=>/en.us/i.test(x.lang))||v[0]||null}catch(e){}}
+try{pv();speechSynthesis.onvoiceschanged=pv}catch(e){}
+let narrating=false;
+function speak(t,rate){return new Promise(res=>{try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\(|\)/g,''));if(voice)u.voice=voice;u.rate=rate||.95;u.pitch=1.05;u.onend=res;u.onerror=res;speechSynthesis.speak(u)}catch(e){res()}})}
+function stopTalk(){try{speechSynthesis.cancel()}catch(e){}narrating=false}
+
+/* ================= questions ================= */
+/* Luca: read a word, tap its picture. Words come from the story world. */
+const WORDS=[['cat','🐱'],['dog','🐶'],['pig','🐷'],['sun','☀️'],['bus','🚌'],['hat','🎩'],['bed','🛏️'],['cup','🥤'],['fox','🦊'],['box','📦'],['bug','🐛'],['hen','🐔'],['pen','🖊️'],['net','🥅'],['web','🕸️'],['map','🗺️'],['van','🚐'],['sock','🧦'],['duck','🦆'],['fish','🐟'],['ship','🚢'],['egg','🥚'],['frog','🐸'],['drum','🥁'],['cake','🎂'],['bike','🚲'],['moon','🌙'],['tree','🌳'],['bee','🐝'],['car','🚗'],['cow','🐄'],['robot','🤖'],['toilet','🚽'],['bubble','🫧'],['beans','🫘'],['dragon','🐉'],['popcorn','🍿'],['pancake','🥞'],['rocket','🚀']];
+const RLV=[w=>w.length<=3,w=>w.length<=4,w=>w.length<=5,w=>true];
+function readQ(){const pool=WORDS.filter(([w])=>RLV[Math.min(S.rl,3)](w));const t=pick(pool);const others=shuf(WORDS.filter(x=>x!==t&&(x[0][0]===t[0][0]||x[0].slice(-2)===t[0].slice(-2)||rnd()<.3)));const opts=[t];for(const o of others.concat(shuf(WORDS))){if(opts.length>=4)break;if(!opts.includes(o)&&o[1]!==t[1])opts.push(o)}
+ return{k:'read',tag:'📖 READ IT!',text:t[0],big:true,ans:t[1],opts:shuf(opts).map(o=>o[1]),work:`The word was "${t[0]}" ${t[1]}.`,say:'Read the word, then tap its picture!',s:'rd',lv:S.rl}}
+/* math dressed up as the story */
+const WHO=['Uncle Brendan','Grandmom','Aunt Rachel','Dad','Mom','Jack','Vinny','Luca'],THINGS=[['beans','🫘'],['smelly socks','🧦'],['burritos','🌯'],['bubbles','🫧'],['pancakes','🥞'],['toots','💨'],['pickles','🥒'],['rubber ducks','🦆'],['donuts','🍩'],['cookies','🍪']];
+const MATH=[
+ ()=>{const a=ri(1,5),b=ri(1,4);return{op:'add',a,b,ans:a+b,pics:true}},
+ ()=>{const a=ri(4,9),b=ri(1,a-1);return{op:'sub',a,b,ans:a-b,pics:true}},
+ ()=>{const a=ri(5,12),b=ri(3,9);return{op:'add',a,b,ans:a+b}},
+ ()=>{const a=ri(11,19),b=ri(3,9);return{op:'sub',a,b,ans:a-b}},
+ ()=>{const a=ri(14,58),b=ri(11,39);return{op:'add',a,b,ans:a+b}},
+ ()=>{const a=ri(40,95),b=ri(12,a-10);return{op:'sub',a,b,ans:a-b}},
+ ()=>{const a=pick([2,5,10]),b=ri(2,10);return{op:'mul',a,b,ans:a*b}},
+ ()=>{const a=ri(3,9),b=ri(3,9);return{op:'mul',a,b,ans:a*b}},
+ ()=>{const b=ri(2,9),q=ri(2,10);return{op:'div',a:b*q,b,ans:q}},
+ ()=>{const a=ri(120,560),b=ri(110,390);return{op:'add',a,b,ans:a+b}},
+ ()=>{const a=ri(310,950),b=ri(120,a-60);return{op:'sub',a,b,ans:a-b}},
+ ()=>{const a=ri(3,8),b=ri(4,9),c=ri(3,a*b-2);return{op:'two',a,b,c,ans:a*b-c}},
+ ()=>{const d=pick([2,3,4,5]),q=ri(2,9);return{op:'frac',a:d*q,b:d,ans:q}},
+ ()=>{const a=ri(12,49),b=ri(3,8);return{op:'mul',a,b,ans:a*b}}];
+function mathQ(){const lv=Math.max(0,Math.min(MATH.length-1,S.ml+(rnd()<.2?-1:0)));const m=MATH[lv](),w=pick(WHO),[th,em]=pick(THINGS);let text,work;
+ if(m.op==='add'){text=`${w} had ${m.a} ${th}. Then ${w==='Luca'?'he':'they'} found ${m.b} more. How many ${th} now?`;work=`${m.a} + ${m.b} = ${m.ans}`}
+ else if(m.op==='sub'){text=`${w} had ${m.a} ${th}. A giant toot blew ${m.b} away! How many are left?`;work=`${m.a} − ${m.b} = ${m.ans}`}
+ else if(m.op==='mul'){text=`${w} filled ${m.a} buckets with ${m.b} ${th} each. How many ${th} in all?`;work=`${m.a} × ${m.b} = ${m.ans}`}
+ else if(m.op==='div'){text=`${m.a} ${th} are shared by ${m.b} cousins. How many does each cousin get?`;work=`${m.a} ÷ ${m.b} = ${m.ans}, because ${m.b} × ${m.ans} = ${m.a}`}
+ else if(m.op==='frac'){text=`Gary the toilet monster ate 1/${m.b} of the ${m.a} ${th}. How many did he eat?`;work=`${m.a} ÷ ${m.b} = ${m.ans}`}
+ else{text=`${w} made ${m.a} plates with ${m.b} ${th} on each. Then Toot-Bot ate ${m.c}. How many are left?`;work=`${m.a} × ${m.b} = ${m.a*m.b}, then ${m.a*m.b} − ${m.c} = ${m.ans}`}
+ const s=new Set([m.ans]);[m.ans+1,m.ans-1,m.ans+10,m.ans-10,m.ans+2,m.op==='mul'?m.a+m.b:m.ans+5].forEach(v=>{if(s.size<4&&v>=0)s.add(v)});while(s.size<4)s.add(m.ans+ri(3,12));
+ const pics=m.pics?`${em.repeat(m.a)} ${m.op==='add'?'+':'−'} ${em.repeat(m.b)}`:'';
+ return{k:'math',tag:'🧮 STORY MATH',text,ans:m.ans,opts:shuf([...s]),work,pics,say:text,s:'ma',lv}}
+/* spelling: which one is spelled right? */
+const SPELL=[['toilet','burping','monster','bubble','dragon','window','sneeze','purple','giggle','popcorn','stinky','robot','pickle','rocket','tummy','beans','plunger','socks'],
+ ['explosion','disgusting','embarrassed','championship','dinosaur','enormous','delicious','squirrel','volcano','toothpaste','vacuum','surprised','tornado','peppermint','neighbor','because','beautiful','breakfast','eyebrows','curtains','laughed','screamed','trophy','bathroom']];
+function misspell(w){const out=new Set();const vow='aeiou';let tries=0;while(out.size<3&&tries++<60){let x=w.split('');const r=rnd();const i=ri(1,x.length-2);
+ if(r<.25&&i<x.length-1){[x[i],x[i+1]]=[x[i+1],x[i]]}else if(r<.5){if(x[i]===x[i+1])x.splice(i,1);else x.splice(i,0,x[i])}else if(r<.8){const vs=[...x.keys()].filter(j=>vow.includes(x[j]));if(vs.length){const j=pick(vs);x[j]=pick([...vow].filter(v=>v!==x[j]))}}else x.splice(i,1);
+ const s=x.join('');if(s!==w)out.add(s)}return[...out]}
+function spellQ(){const list=SPELL[TIER>=2?1:0];const w=pick(list);return{k:'spell',tag:'✏️ SPELL CHECK',text:'Which one is spelled right?',ans:w,opts:shuf([w,...misspell(w)]),work:`It's spelled ${w.toUpperCase().split('').join('-')}.`,say:'Which one is spelled right?',s:'sp',lv:TIER}}
+function storyQ(page){const c=page.c;return{k:'story',tag:'🧐 WHAT HAPPENED?',text:c[0],ans:c[1],opts:shuf(c.slice(1)),work:`The story says: ${c[1]}.`,say:c[0],s:'rd',lv:9}}
+/* the page lock: Luca gets 1 question, Vinny and Jack get 2 (one about the story, one math or spelling) */
+function lockFor(page){if(TIER===0)return[rnd()<.6?readQ():mathQ()];return[storyQ(page),rnd()<.62?mathQ():spellQ()]}
+
+let qOpen=false;
+function ask(q){return new Promise(res=>{qOpen=true;$('#qv').hidden=false;$('#qtag').textContent=q.tag;$('#qtext').textContent=q.text;$('#qtext').style.fontSize=q.big?'clamp(54px,13vw,84px)':'';$('#qpics').textContent=q.pics||'';$('#qfb').innerHTML='';
+ const O=$('#qopts');O.className=q.k==='read'?'big':'';O.innerHTML='';
+ const words=String(q.text).split(/\s+/).length;const ms=q.k==='read'?1800:Math.min(5200,1200+words*(TIER===1?260:200));const bar=$('#qlock i');bar.style.transition='none';bar.style.width='0';void bar.offsetWidth;bar.style.transition=`width ${ms}ms linear`;bar.style.width='100%';
+ if(TIER===0)speak(q.k==='read'?q.say:q.text);
+ let done=false;const unlock=Date.now()+ms;
+ q.opts.forEach(v=>{const b=document.createElement('button');b.textContent=v;b.onclick=()=>{if(done||Date.now()<unlock)return;done=true;const ok=String(v)===String(q.ans);
+   S.q++;if(ok)S.ok++;try{window.__trk&&__trk.ans({s:q.s,f:q.lv,it:String(q.text).slice(0,50),ok})}catch(e){}adapt(q,ok);save();
+   O.querySelectorAll('button').forEach(x=>{x.disabled=true;if(String(x.textContent)===String(q.ans))x.classList.add('ok')});
+   if(ok){sfx('good');$('#qfb').innerHTML=`<b style="color:#1E9E5A">${pick(['Yes!','Correct!','Nailed it!','Toot-tastic!','You got it!'])}</b>`;if(TIER===0)speak(q.k==='read'?q.text+'! Yes!':'Yes!');setTimeout(close,900)}
+   else{b.classList.add('no');sfx('bad');$('#qfb').innerHTML=`<b style="color:#C0304A">Not that one!</b><span class="work">${esc(q.work)}</span><div style="margin-top:10px"><button class="btn" id="qgo" disabled>Try another</button></div>`;if(TIER===0)speak('Not that one. '+q.work);
+    const g=$('#qgo');setTimeout(()=>g.disabled=false,2500);g.onclick=close}
+   function close(){$('#qv').hidden=true;qOpen=false;res(ok)}};O.appendChild(b)})})}
+function adapt(q,ok){S.streak=ok?S.streak+1:0;if(q.k==='math'){if(ok&&S.streak>=3&&rnd()<.5){S.ml=Math.min(MATH.length-1,S.ml+1);S.streak=0}if(!ok)S.ml=Math.max(0,S.ml-(rnd()<.5?1:0))}
+ if(q.k==='read'){if(ok&&S.streak>=4){S.rl=Math.min(3,S.rl+1);S.streak=0}}}
+/* to turn the page you need a right answer for each question; a miss gives you a fresh one of the same kind */
+async function unlockPage(page){for(const first of lockFor(page)){let q=first,ok=await ask(q);while(!ok){q=q.k==='story'?(rnd()<.5?mathQ():spellQ()):q.k==='read'?readQ():q.k==='spell'?spellQ():mathQ();ok=await ask(q)}}}
+
+/* ================= the picture panel ================= */
+const BGS={kitchen:'linear-gradient(#FFE9B8 0 62%,#C98A4A 62%)',living:'linear-gradient(#D8E8FF 0 64%,#B07A4A 64%)',sky:'linear-gradient(#7FC8FF,#D8F1FF 70%,#9BDB7A 70%)',yard:'linear-gradient(#9FDCFF 0 58%,#7CC95C 58%)',bath:'linear-gradient(#CFF3F0 0 60%,#FFFFFF 60%)',
+ bathnight:'linear-gradient(#2A2F6E 0 60%,#4A4F8E 60%)',lab:'linear-gradient(#3A3F6E 0 64%,#5A5F8E 64%)',bubbles:'radial-gradient(circle at 30% 30%,#E6F7FF,#9FDCFF)',pool:'linear-gradient(#9FDCFF 0 50%,#7CC95C 50% 58%,#3EB8E8 58%)',stage:'linear-gradient(#5A2A8E 0 64%,#C9853A 64%)',jungle:'linear-gradient(#FFB070 0 40%,#9BDB7A 40% 62%,#3A8A3A 62%)'};
+function drawPanel(page){const P=$('#panel');P.querySelectorAll('.actor').forEach(x=>x.remove());P.style.background=BGS[page.bg]||BGS.living;const small=innerWidth<560;
+ page.a.forEach(([who,x,y,anim])=>{const c=CAST[who];const d=document.createElement('div');d.className='actor'+(anim?' a-'+anim:'');d.style.left=x+'%';d.style.top=y+'%';const big=c?1:who==='🏠'||who==='🐉'||who==='🦖'||who==='🚽'?1.5:.9;
+  d.style.setProperty('--s',Math.round((small?52:72)*big)+'px');d.innerHTML=`<span class="e">${c?c[0]:who}</span>${c?`<span class="n">${c[1]}</span>`:''}`;P.appendChild(d)});
+ const loud=(page.t.match(/\b[A-Z]{4,}[A-Z!]*\b/g)||[]).filter(w=>!['THE','END'].includes(w));const bm=$('#boom');bm.classList.remove('on');if(loud.length){bm.textContent=loud[0];void bm.offsetWidth;bm.classList.add('on')}
+ if(page.fx==='shake'){P.classList.remove('shake');void P.offsetWidth;P.classList.add('shake')}setTimeout(()=>sfx(page.sfx),250)}
+
+/* ================= reading a story ================= */
+let tale=null,pi=0;
+function openTale(id,restart){tale=TALES.find(t=>t.id===id);pi=restart?0:(S.at[id]||0);if(pi>=tale.pages.length)pi=0;S.cur=id;save();$('#lib').hidden=true;$('#read').hidden=false;showPage()}
+function showPage(){const page=tale.pages[pi];$('#caption').textContent=tale.title;drawPanel(page);
+ $('#ptext').innerHTML=page.t.split(' ').map((w,i)=>`<span class="w" data-i="${i}">${esc(w)}</span>`).join(' ');$('#pg').textContent=`Page ${pi+1} of ${tale.pages.length}`;
+ $('#next').textContent=pi===tale.pages.length-1?'The End ▶':'Next ▶';$('#next').disabled=false;stopTalk();if(TIER===0)narrate()}
+async function narrate(){narrating=true;const page=tale.pages[pi];await speak(page.t,.92);narrating=false}
+$('#readBtn').onclick=()=>{ac();if(narrating){stopTalk();return}narrate()};
+$('#homeBtn').onclick=()=>{stopTalk();library()};
+$('#next').onclick=async()=>{ac();stopTalk();$('#next').disabled=true;const page=tale.pages[pi];
+ await unlockPage(page);pi++;S.at[tale.id]=pi;save();if(pi>=tale.pages.length)return finish();showPage()};
+function finish(){S.done[tale.id]=(S.done[tale.id]||0)+1;S.at[tale.id]=0;S.cur=null;save();sfx('fanfare');const nx=TALES[TALES.indexOf(tale)+1];
+ $('#read').hidden=true;const L=$('#lib');L.hidden=false;L.innerHTML=`<div class="done"><div style="font-size:80px">${tale.em}</div><h1>THE END!</h1><p style="font-size:20px">You finished <b>${esc(tale.title)}</b>!${nx&&(S.done[tale.id]===1)?` A new story unlocked: <b>${esc(nx.title)}</b>!`:''}</p>
+  <div class="row" style="justify-content:center;margin-top:10px">${nx?`<button class="btn" id="dNext">Next story ▶</button>`:''}<button class="btn alt" id="dLib">📚 All stories</button></div></div>`;
+ if(TIER===0)speak(`The end! You finished ${tale.title}!`);try{if(window.HERO&&KID)HERO.bonus(KID,40,10,`📚 Finished "${tale.title}"! +40 XP.`)}catch(e){}
+ if(nx)$('#dNext').onclick=()=>openTale(nx.id,true);$('#dLib').onclick=library}
+
+/* ================= library ================= */
+function unlocked(i){return i<2||!!S.done[TALES[i-1].id]}
+function library(){$('#read').hidden=true;const L=$('#lib');L.hidden=false;const cur=S.cur&&TALES.find(t=>t.id===S.cur);
+ L.innerHTML=`<div class="logo"><span>💨</span> TOOT TALES <span>🚽</span></div><p class="sub">Silly stories starring the Gambesha family. Answer questions to turn the pages!</p>
+  ${cur?`<div class="cont"><button class="btn" id="cont">▶ Keep reading: ${esc(cur.title)} (page ${(S.at[cur.id]||0)+1})</button></div>`:''}
+  <div class="books">${TALES.map((t,i)=>{const ok=unlocked(i),d=S.done[t.id]||0;return`<button class="book${ok?'':' lock'}" data-id="${t.id}" style="background:linear-gradient(150deg,${t.col},#2B2240)"><span class="st">${d?'⭐'.repeat(Math.min(3,d)):ok?'':'🔒'}</span><div class="em">${t.em}</div><b>${esc(t.title)}</b><small>${ok?(d?'Read it again!':S.at[t.id]?`Page ${S.at[t.id]+1}`:'New story!'):'Finish the story before to unlock'}</small></button>`}).join('')}</div>`;
+ const c=$('#cont');if(c)c.onclick=()=>{ac();openTale(cur.id)};
+ L.querySelectorAll('.book').forEach(b=>b.onclick=()=>{ac();const i=TALES.findIndex(t=>t.id===b.dataset.id);if(!unlocked(i)){if(TIER===0)speak('Finish the story before this one to unlock it!');return}openTale(b.dataset.id,!S.at[b.dataset.id])});
+ if(TIER===0)setTimeout(()=>speak(cur?`Welcome back! Tap the yellow button to keep reading ${cur.title}.`:'Pick a story! Tap a book to start.'),400)}
+window.__tt={get S(){return S},openTale,library,mathQ,spellQ,readQ,TIER};
+library();
+})();
+</script>
+</body></html>
