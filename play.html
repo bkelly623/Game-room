@@ -32,10 +32,18 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;height:var(--
 #htoast{opacity:0;visibility:hidden;position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 46px);transform:translate(-50%,-140%);z-index:20;background:#221C4E;color:#fff;border:3px solid #FFD23F;border-radius:18px;padding:9px 16px;font:600 16px Fredoka,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.3,.4,1);pointer-events:none;max-width:92vw;text-align:center}
 #htoast.on{transform:translate(-50%,0);opacity:1;visibility:visible}
 @media (max-width:560px){#hp .b,#hp .m{display:none}#title{display:none}}
+#rs{flex:none;border:0;border-radius:11px;padding:6px 10px;background:#2D2663;color:#FFF6E6;font:inherit;cursor:pointer;margin-left:8px}
+#rsOv{position:fixed;inset:0;z-index:50;background:rgba(10,8,30,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+#rsOv .c{background:#221C4E;border:3px solid #3E3584;border-radius:22px;padding:18px 20px;max-width:420px;width:100%;text-align:center;color:#FFF6E6;font:600 17px Fredoka,system-ui,sans-serif}
+#rsOv h2{margin:0 0 8px;font-size:22px}#rsOv p{margin:0 0 14px;color:#C9C2F0;font-size:15px}
+#rsOv .b{display:block;width:100%;border:0;border-radius:14px;padding:12px;margin:8px 0;font:inherit;cursor:pointer}
+#rsOv .y{background:#F2B632;color:#3A2600;box-shadow:0 4px 0 #B5841A}#rsOv .d{background:#5A1E2E;color:#FFC2C2}#rsOv .g{background:#2D2663;color:#fff}
+#rsOv .pd{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px auto;max-width:240px}#rsOv .pd button{border:0;border-radius:12px;padding:12px;font:700 20px Fredoka,system-ui;background:#2D2663;color:#fff;cursor:pointer}
+#rsOv .dots{letter-spacing:10px;font-size:26px;min-height:32px}
 </style>
 </head>
 <body>
-<div id="bar"><button id="back" aria-label="Back to games"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Games</button><span id="title"></span><span id="hp"></span><span id="who"></span></div>
+<div id="bar"><button id="back" aria-label="Back to games"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Games</button><span id="title"></span><span id="hp"></span><span id="who"></span><button id="rs" aria-label="Restart">↺</button></div>
 <script>/* fit the real visible screen: phone toolbars, gesture bars and in-app browsers */
 (function(){function fit(){var h=(window.visualViewport&&visualViewport.height)||innerHeight;document.documentElement.style.setProperty('--vh',Math.round(Math.min(h,innerHeight))+'px')}fit();addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});window.visualViewport&&visualViewport.addEventListener('resize',fit)})();</script>
 <script src="games/catalog.js"></script>
@@ -55,6 +63,15 @@ f.src='games/'+g.id+'/?kid='+encodeURIComponent(k.id);
 f.addEventListener('load',()=>{try{f.contentWindow.focus()}catch(e){}});
 document.body.appendChild(f);
 HUB.touch(k.id,g.id);
+/* Restart menu: reload where you left off, or start this game over (grown-up PIN when one is set) */
+document.getElementById('rs').onclick=()=>{const S=HUB.load(),pin=S.pin;const ov=document.createElement('div');ov.id='rsOv';
+ const main=()=>{ov.innerHTML=`<div class="c"><h2>${g.emoji} ${g.title}</h2><p>${k.name}'s progress is saved. Pick what to do:</p><button class="b y" id="r1">▶ Keep going from where ${k.name} left off</button><button class="b d" id="r2">↺ Start ${g.title} over from the beginning</button><button class="b g" id="r0">Cancel</button></div>`;
+  ov.querySelector('#r0').onclick=()=>ov.remove();ov.querySelector('#r1').onclick=()=>{ov.remove();f.src=f.src};ov.querySelector('#r2').onclick=()=>pin?askPin():confirm2()};
+ const confirm2=()=>{ov.innerHTML=`<div class="c"><h2>Start over?</h2><p>This erases ${k.name}'s ${g.title} progress on this device and starts fresh. Other games aren't touched.</p><button class="b d" id="c1">Yes, start over</button><button class="b g" id="c0">No, keep it</button></div>`;
+  ov.querySelector('#c0').onclick=()=>ov.remove();ov.querySelector('#c1').onclick=()=>{ov.remove();f.src='about:blank';setTimeout(()=>{HUB.wipe(k.id,g.id);f.src='games/'+g.id+'/?kid='+encodeURIComponent(k.id)+'&fresh='+Date.now()},400)}};
+ const askPin=()=>{let b='';const draw=()=>{ov.innerHTML=`<div class="c"><h2>Grown-up PIN</h2><p>Starting over needs the grown-up PIN.</p><div class="dots">${'●'.repeat(b.length)}${'○'.repeat(4-b.length)}</div><div class="pd">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(n=>n===''?'<span></span>':`<button data-k="${n}">${n}</button>`).join('')}</div><button class="b g" id="p0">Cancel</button></div>`;
+   ov.querySelector('#p0').onclick=()=>ov.remove();ov.querySelectorAll('[data-k]').forEach(x=>x.onclick=()=>{const v=x.dataset.k;if(v==='⌫')b=b.slice(0,-1);else if(b.length<4)b+=v;if(b.length===4){if(b===String(pin)){confirm2();return}b=''}draw()})};draw()};
+ main();document.body.appendChild(ov)};
 /* hero pill + news toasts (the game itself does the counting) */
 if(window.HERO&&!k.tester){HERO.css();const hp=document.getElementById('hp');let seen=Date.now(),q=[],busy=false;
  const tst=document.createElement('div');tst.id='htoast';document.body.appendChild(tst);
