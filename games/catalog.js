@@ -4,6 +4,8 @@ window.CATALOG=[
   blurb:'Race Speedy Sloth and Turbo Taco! Steer through the right letters to spell each word. Grab ? boxes for bananas, shells and rocket boosts.',kind:'Kart racing'},
  {id:'kingswall',title:"King's Wall",emoji:'👑',bg:['#F2A12E','#7A3A10'],subjects:['Math','Reading','Spelling'],
   blurb:'Goblins, wolves and Big Gary the ogre are coming for the King\'s pudding. Every right answer fires a volley of arrows. Pick powers, beat bosses and upgrade your castle.',kind:'Castle defense'},
+ {id:'pet',title:'Word Pet',emoji:'🐣',bg:['#FF8FB8','#7A5CFF'],subjects:['Reading'],
+  blurb:'Hatch a pet that eats words! Read each word and feed it the matching picture. It grows, gets presents and gets hungry when you skip a day.',kind:'Reading pet'},
  {id:'rollbots',title:'Roll Bots',emoji:'🤖',bg:['#1E8FD6','#2A1A6E'],subjects:['Math'],
   blurb:'Battle robots that roll into marbles! Grab the most coins, blast rivals and survive 4 rounds as the arena falls apart. Power Cores and upgrades run on math.',kind:'3D arena battle'},
  {id:'kingdoms',title:'Dawn of Kingdoms',emoji:'🏰',bg:['#3B5BA5','#1E2F5E'],subjects:['Math','Reading','Grammar'],
@@ -26,4 +28,4 @@ window.CATALOG=[
   blurb:'Dig, build and craft on a blocky island. Read to pop sparkly blocks, spell to craft animals and lamps, and zap the Gloomies at night.',kind:'Block building'}
 ];
 /* What each game's save looks like, so the grown-up page can show answers and accuracy. */
-window.SAVEKEYS={kingdoms:'dawnkingdoms.v1',ashvale:'ashvale.v1',snortwood:'snortwood.v1',glorp:'glorpisland.v1',rocket:'rocketpants.v1',echo:'echomines.v1',blocks:'blockparty.v1',lumen:'lumenvale.save.v1',summit:'summitquest.v1',kingswall:'kingswall.v1',racer:'spellracer.v1',rollbots:'rollbots.v1'};
+window.SAVEKEYS={kingdoms:'dawnkingdoms.v1',ashvale:'ashvale.v1',snortwood:'snortwood.v1',glorp:'glorpisland.v1',rocket:'rocketpants.v1',echo:'echomines.v1',blocks:'blockparty.v1',lumen:'lumenvale.save.v1',summit:'summitquest.v1',kingswall:'kingswall.v1',racer:'spellracer.v1',rollbots:'rollbots.v1',pet:'wordpet.v1'};
